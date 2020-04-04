@@ -1,8 +1,8 @@
 #include <iostream>
-#include "agentsHandler.h"
+#include "agentsList.h"
 #include "PPStateSIR.h"
 
 int main(int argc, char const *argv[]) {
-    AgentHandler<PPStateSIR> a;
+    AgentList<PPStateSIR, int> a;
     return 0;
 }
