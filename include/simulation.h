@@ -2,10 +2,12 @@
 #include "agentsList.h"
 #include "location.h"
 
-template<typename PPState, typename PositionType, typename LocationType>
+template<typename PPState, typename PositionType, typename TypeOfLocation>
 class Simulation {
-    std::vector<Location<PositionType, LocationType>> locations;
-    AgentList<PPState, decltype(locations)::value_type> agents;
+    using LocationType = Location<PositionType, TypeOfLocation>;
 
-    //We can make it to a singleton later
+    std::vector<LocationType> locations;
+    AgentList<PPState, LocationType> agents;
+
+    //We can make it to a singleton later, but who knows
 };

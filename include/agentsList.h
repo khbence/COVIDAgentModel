@@ -12,5 +12,7 @@ class AgentList {
     std::vector<Location*> localizations;
 public:
 
+    bool checkConsistency() const; //if all vector are of the same lengths
+
 };
 

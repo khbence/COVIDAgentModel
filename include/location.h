@@ -1,10 +1,10 @@
 #pragma once
 #include <vector>
 
-template<typename PositionType, typename LocationType>
+template<typename PositionType, typename TypeOfLocation>
 class Location {
     PositionType position;
-    LocationType locType;
+    TypeOfLocation locType;
     std::vector<unsigned> agents;
 
 public:
