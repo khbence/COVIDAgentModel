@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.0)
 
 project(covid)
-include_directories(include include/agentData)
+include_directories(include include/agentData include/tools)
 
 set (CMAKE_CXX_STANDARD 20)
 

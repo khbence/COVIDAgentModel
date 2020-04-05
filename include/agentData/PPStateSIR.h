@@ -1,19 +1,15 @@
 #pragma once
+#include "globalStates.h"
+#include "markovChain.h"
 
-//TODO create more specialized SIRD++ class, makes this tempated of that
-//this will be kinda an interface for that
-class PPStateSIR {
-    enum class PP { S = 0, I, R, D };
-
-    PP state = PP::S;
-    unsigned counter = 0;
-    //static MarkovChain mc; //specific for this, but uses only indexes not the enum type
+class PPStateSIRextended {
+    states::SIRD state = states::SIRD::S;
+    char counter = 0; //I1, I2, I3 ... R1, R2
+    static MarkovChain<9> mc; //specific for this, but uses only indexes not the enum type
 
 public:
     void update(/*elapsed time step?*/);
-
     void gotInfected();
-
-    //WBState getWBState() const;
-
+    states::SIRD getSIRD() const;
+    states::WBStates getWBState() const;
 };

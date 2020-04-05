@@ -4,6 +4,7 @@
 #include "simulation.h"
 
 int main(int argc, char const *argv[]) {
-    AgentList<PPStateSIR, int> a;
+    AgentList<PPStateSIRextended, int> a;
+    
     return 0;
 }
