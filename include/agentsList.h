@@ -5,6 +5,8 @@ template<typename T>
 concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
 */
 
+//singleton
+
 template<typename PPState, typename Location>
 class AgentList {
     std::vector<PPState> PPValues;
