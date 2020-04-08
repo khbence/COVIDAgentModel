@@ -4,7 +4,7 @@ void PPStateSIRBasic::update(/*elapsed time step + agent meta*/) {
 	
 }
 void PPStateSIRBasic::gotInfected() {
-
+	this->state = states::SIRD::I;
 }
 [[nodiscard]] states::SIRD PPStateSIRBasic::getSIRD() const {
 	return this->state;

@@ -12,4 +12,7 @@ public:
 	void addAgent(unsigned a) {
 		agents.push_back(a);
 	}
+	std::vector<unsigned>& getAgents() {
+		return agents;
+	}
 };

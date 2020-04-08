@@ -36,4 +36,8 @@ public:
     	//Add this agent to the location provided
     	location->addAgent(PPValues.size()-1);
     }
+
+    PPState& getPPState(unsigned i) {
+    	return PPValues[i];
+    }
 };
