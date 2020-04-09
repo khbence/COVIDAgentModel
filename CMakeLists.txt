@@ -6,7 +6,9 @@ include(cmake/StandardProjectSettings.cmake)
 include_directories(include 
                     include/agentData 
                     include/agentData/PPStates
-                    include/tools)
+                    include/tools
+                    include/infectionPolicies
+                    include/movementPolicies)
 file (GLOB SOURCES
       "src/*.cpp"
       "src/agentData/*.cpp"
