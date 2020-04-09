@@ -8,4 +8,11 @@ class Location {
     std::vector<unsigned> agents;
 
 public:
+	Location(PositionType p, TypeOfLocation t) : position(p), locType(t) {}
+	void addAgent(unsigned a) {
+		agents.push_back(a);
+	}
+	std::vector<unsigned>& getAgents() {
+		return agents;
+	}
 };

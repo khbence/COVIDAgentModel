@@ -3,7 +3,7 @@
 
 template<typename PPState, typename Location>
 class Agent {
-    int id;
+    unsigned id;
     static inline AgentList<PPState, Location>* agentList =
         AgentList<PPState, Location>::getInstance();
 
