@@ -2,6 +2,7 @@
 #include "PPStateSIRBasic.h"
 #include "simulation.h"
 #include "noMovement.h"
+#include "basicInfection.h"
 
 /*
 template<class PPState, class LocationType>
@@ -31,7 +32,7 @@ void infectionAtLocation(LocationType& location,
 
 int main(int argc, char const* argv[]) {
     constexpr unsigned lengthInWeeks = 2;
-    Simulation<PPStateSIRBasic, int, int, NoMovement> s;
+    Simulation<PPStateSIRBasic, int, int, NoMovement, BasicInfection> s;
     s.runSimulation(lengthInWeeks);
     return EXIT_SUCCESS;
 
