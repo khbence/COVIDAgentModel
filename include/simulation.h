@@ -7,14 +7,30 @@ template<typename PPState,
     typename PositionType,
     typename TypeOfLocation,
     template<typename>
+    typename PlanningPolicy,
+    template<typename>
     typename MovementPolicy,
     template<typename>
     typename InfectionPolicy>
 class Simulation
-    : private MovementPolicy<
-          Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>>
-    , InfectionPolicy<
-          Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>> {
+    : private PlanningPolicy<Simulation<PPState,
+          PositionType,
+          TypeOfLocation,
+          PlanningPolicy,
+          MovementPolicy,
+          InfectionPolicy>>
+    , MovementPolicy<Simulation<PPState,
+          PositionType,
+          TypeOfLocation,
+          PlanningPolicy,
+          MovementPolicy,
+          InfectionPolicy>>
+    , InfectionPolicy<Simulation<PPState,
+          PositionType,
+          TypeOfLocation,
+          PlanningPolicy,
+          MovementPolicy,
+          InfectionPolicy>> {
 
 public:
     using LocationType = Location<Simulation, typename InfectionPolicy<Simulation>::StatisticType>;
@@ -39,12 +55,12 @@ public:
     template<unsigned timeStep>
     void runSimulation(unsigned lengthOfSimulationWeeks) {
         Timehandler<timeStep> simTime;
-        Timehandler<timeStep> endOfSimulation(lengthOfSimulationWeeks);
-        while (++simTime < endOfSimulation) {
+        const Timehandler<timeStep> endOfSimulation(lengthOfSimulationWeeks);
+        while (simTime < endOfSimulation) {
+            if (simTime.isMidnight()) { PlanningPolicy<Simulation>::planLocation(); }
             MovementPolicy<Simulation>::movement();
             InfectionPolicy<Simulation>::infectionsAtLocations();
-            std::cout << simTime << '\n';
-            std::cin.ignore();
+            ++simTime;
         }
         /*
         if(daySwitch) planLocation()
