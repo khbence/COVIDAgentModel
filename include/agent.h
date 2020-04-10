@@ -1,10 +1,11 @@
 #pragma once
 #include "agentsList.h"
 
-template<typename PPState, typename Location>
+template<typename AgentListType>
 class Agent {
     unsigned id;
-    static inline AgentList<PPState, Location>* agentList = AgentList<PPState, Location>::getInstance();
+    static inline AgentListType* agentList = AgentListType::getInstance();
 
 public:
+    explicit Agent(unsigned id_p) : id(id_p) {}
 };

@@ -14,10 +14,16 @@ class Simulation
     : private MovementPolicy<Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>>
     , InfectionPolicy<Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>> {
 
-    using LocationType = Location<PositionType, TypeOfLocation, typename InfectionPolicy<Simulation>::StatisticType>;
+public:
+    using LocationType = Location<Simulation, typename InfectionPolicy<Simulation>::StatisticType>;
+    using PPState_t = PPState;
+    using PositionType_t = PositionType;
+    using TypeOfLocation_t = TypeOfLocation;
+    using AgentListType = AgentList<PPState, LocationType>;
 
+private:
     std::vector<LocationType> locations;
-    AgentList<PPState, LocationType>* agents = AgentList<PPState, LocationType>::getInstance();
+    AgentListType* agents = AgentList<PPState, LocationType>::getInstance();
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
