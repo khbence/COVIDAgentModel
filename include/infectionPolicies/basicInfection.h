@@ -1,10 +1,10 @@
 #pragma once
-#include "LocationStats.h"
+#include "basicStats.h"
 
 template<typename SimulationType>
 class BasicInfection {
 public:
-    using StatisticType = LocationStats;
+    using StatisticType = BasicStats;
 
     void infectionsAtLocations() {
         auto realThis = static_cast<SimulationType*>(this);

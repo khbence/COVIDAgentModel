@@ -11,8 +11,8 @@ template<typename PPState,
     template<typename>
     typename InfectionPolicy>
 class Simulation
-    : public MovementPolicy<Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>>
-    , public InfectionPolicy<Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>> {
+    : private MovementPolicy<Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>>
+    , InfectionPolicy<Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>> {
 
     using LocationType = Location<PositionType, TypeOfLocation, typename InfectionPolicy<Simulation>::StatisticType>;
 
