@@ -1,20 +1,41 @@
 #pragma once
 #include "agent.h"
+#include "globalStates.h"
 
 class BasicStats {
 private:
-    unsigned sick = 0;
     unsigned infected = 0;
+    // do we need it? or just set the infecteds directly
+    unsigned newlyInfected = 0;
     unsigned healthy = 0;
 
 public:
-    [[nodiscard]] unsigned getSick() const { return sick; }
-    [[nodiscard]] unsigned getNewlyInfected() const { return infected; }
+    [[nodiscard]] unsigned getInfected() const { return infected; }
+    [[nodiscard]] unsigned getNewlyInfected() const { return newlyInfected; }
     [[nodiscard]] unsigned getHealthy() const { return healthy; }
-    void setSick(unsigned sick_p) { sick = sick_p; }
-    void setNewlyInfected(unsigned infected_p) { infected = infected_p; }
+    void setInfected(unsigned infected_p) { infected = infected_p; }
+    void setNewlyInfected(unsigned newlyInfected_p) { newlyInfected = newlyInfected_p; }
     void setHealthy(unsigned healthy_p) { healthy = healthy_p; }
 
-    template<typename AgentType>
-    void newAgent(const AgentType a) {}
+    // obligatory for every stat type
+    template<typename AgentListType>
+    void refreshStatisticNewAgent(const Agent<AgentListType>& a) {
+        auto state = a.getSIRDState();
+        switch (state) {
+        case states::SIRD::I:
+            ++infected;
+            break;
+        case states::SIRD::S:
+            ++healthy;
+            break;
+        default:
+            break;
+        }
+    }
+
+    void cleanUp() {
+        infected += newlyInfected;
+        healthy -= newlyInfected;
+        newlyInfected = 0;
+    }
 };

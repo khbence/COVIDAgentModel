@@ -3,6 +3,8 @@
 #include "simulation.h"
 #include "noMovement.h"
 #include "basicInfection.h"
+// for testing
+#include <random>
 
 /*
 template<class PPState, class LocationType>
@@ -12,19 +14,22 @@ void infectionAtLocation(LocationType& location,
     LocationStats& stats) {
     std::vector<unsigned>& agents = location.getAgents();
     unsigned sick = std::count_if(agents.begin(), agents.end(), [](unsigned i) {
-        return AgentList<PPState, LocationType>::getInstance()->getPPState(i).getSIRD() == states::SIRD::I;
+        return AgentList<PPState, LocationType>::getInstance()->getPPState(i).getSIRD() ==
+states::SIRD::I;
     });
     stats.sick = sick;
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(0.0, 1.0);
     std::for_each(agents.begin(), agents.end(), [&](unsigned i) {
-        if (AgentList<PPState, LocationType>::getInstance()->getPPState(i).getSIRD() == states::SIRD::S && dis(gen) < 0.1) {
-            AgentList<PPState, LocationType>::getInstance()->getPPState(i).gotInfected();
+        if (AgentList<PPState, LocationType>::getInstance()->getPPState(i).getSIRD() ==
+states::SIRD::S && dis(gen) < 0.1) { AgentList<PPState,
+LocationType>::getInstance()->getPPState(i).gotInfected();
         }
     });
     unsigned sickAfter = std::count_if(agents.begin(), agents.end(), [](unsigned i) {
-        return AgentList<PPState, LocationType>::getInstance()->getPPState(i).getSIRD() == states::SIRD::I;
+        return AgentList<PPState, LocationType>::getInstance()->getPPState(i).getSIRD() ==
+states::SIRD::I;
     });
     stats.infected = sickAfter - sick;
 }
@@ -32,8 +37,30 @@ void infectionAtLocation(LocationType& location,
 
 int main(int argc, char const* argv[]) {
     constexpr unsigned lengthInWeeks = 2;
+    constexpr unsigned timeStep = 10;
     Simulation<PPStateSIRBasic, int, int, NoMovement, BasicInfection> s;
-    s.runSimulation(lengthInWeeks);
+
+    // setup for test
+    {
+        constexpr unsigned numAgents = 1000;
+        constexpr double initial_infected_ratio = 0.01;
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(0.0, 1.0);
+
+        // Create basic location for everyone
+        s.addLocation(0, 0);
+
+        // Populate agent list
+        for (int i = 0; i < numAgents; i++) {
+            s.addAgent(PPStateSIRBasic(
+                           dis(gen) < initial_infected_ratio ? states::SIRD::I : states::SIRD::S),
+                false,
+                0);
+        }
+    }
+
+    s.runSimulation<timeStep>(lengthInWeeks);
     return EXIT_SUCCESS;
 
     /*
@@ -55,7 +82,8 @@ int main(int argc, char const* argv[]) {
 
         // Populate agent list
         for (int i = 0; i < numAgents; i++) {
-            s.agentList()->addAgent(PPStateSIRBasic(dis(gen) < initial_infected_ratio ? states::SIRD::I : states::SIRD::S), false, location);
+            s.agentList()->addAgent(PPStateSIRBasic(dis(gen) < initial_infected_ratio ?
+       states::SIRD::I : states::SIRD::S), false, location);
         }
 
         // Time now
@@ -63,7 +91,8 @@ int main(int argc, char const* argv[]) {
         // Time step
         std::chrono::minutes timeStep = std::chrono::minutes(10);
         // End time
-        std::chrono::system_clock::time_point endTime = simClock + std::chrono::hours(24 * 7 * 2);// two weeks
+        std::chrono::system_clock::time_point endTime = simClock + std::chrono::hours(24 * 7 *
+       2);// two weeks
 
         // Time loop
         while (simClock < endTime) {
@@ -71,7 +100,8 @@ int main(int argc, char const* argv[]) {
             LocationStats stats;
             infectionAtLocation<PPStateSIRBasic>(*location, simClock, timeStep, stats);
             std::time_t t_c = std::chrono::system_clock::to_time_t(simClock);
-            std::cout << std::put_time(std::localtime(&t_c), "%F %T") << " Sick: " << stats.sick << " New Infections: " << stats.infected << '\n';
+            std::cout << std::put_time(std::localtime(&t_c), "%F %T") << " Sick: " << stats.sick
+       << " New Infections: " << stats.infected << '\n';
         }
     */
 }

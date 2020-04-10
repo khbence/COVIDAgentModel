@@ -6,6 +6,8 @@ concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
 */
 
 // singleton
+template<typename T>
+class Agent;
 
 template<typename PPState, typename Location>
 class AgentList {
@@ -14,6 +16,7 @@ class AgentList {
     std::vector<Location*> locations;
 
     AgentList() = default;
+    friend class Agent<AgentList>;
 
 public:
     [[nodiscard]] static AgentList* getInstance() {

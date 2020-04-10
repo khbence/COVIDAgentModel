@@ -11,8 +11,10 @@ template<typename PPState,
     template<typename>
     typename InfectionPolicy>
 class Simulation
-    : private MovementPolicy<Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>>
-    , InfectionPolicy<Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>> {
+    : private MovementPolicy<
+          Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>>
+    , InfectionPolicy<
+          Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>> {
 
 public:
     using LocationType = Location<Simulation, typename InfectionPolicy<Simulation>::StatisticType>;
@@ -29,14 +31,21 @@ private:
     friend class InfectionPolicy<Simulation>;
     // We can make it to a singleton later, but who knows
 public:
-    AgentList<PPState, LocationType>* agentList() { return agents; }
-    // TODO add addLocation function instead
-    std::vector<LocationType>& locationList() { return locations; }
+    void addLocation(PositionType p, TypeOfLocation t) { locations.emplace_back(p, t); }
+    void addAgent(PPState state, bool isDiagnosed, unsigned locationID) {
+        agents->addAgent(state, isDiagnosed, &locations[locationID]);
+    }
 
+    template<unsigned timeStep>
     void runSimulation(unsigned lengthOfSimulationWeeks) {
-        MovementPolicy<Simulation>::movement();
-        InfectionPolicy<Simulation>::infectionsAtLocations();
-        std::cout << Timehandler<10>(lengthOfSimulationWeeks) << '\n';
+        Timehandler<timeStep> simTime;
+        Timehandler<timeStep> endOfSimulation(lengthOfSimulationWeeks);
+        while (++simTime < endOfSimulation) {
+            MovementPolicy<Simulation>::movement();
+            InfectionPolicy<Simulation>::infectionsAtLocations();
+            std::cout << simTime << '\n';
+            std::cin.ignore();
+        }
         /*
         if(daySwitch) planLocation()
         movement();

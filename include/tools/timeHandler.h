@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iomanip>
 
+// TODO static_assert<day % timeStepMin == 0>
 template<unsigned timeStepMin>
 class Timehandler {
     std::chrono::system_clock::time_point current = std::chrono::system_clock::now();
@@ -17,7 +18,8 @@ public:
     Timehandler() = default;
 
     explicit Timehandler(unsigned weeksInTheFuture)
-        : current(std::chrono::system_clock::now() + std::chrono::hours(hoursPerWeek * weeksInTheFuture)) {}
+        : current(std::chrono::system_clock::now()
+                  + std::chrono::hours(hoursPerWeek * weeksInTheFuture)) {}
 
     template<unsigned M>
     bool operator<(const Timehandler<M>& rhs) {
