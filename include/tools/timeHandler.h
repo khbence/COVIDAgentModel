@@ -55,4 +55,9 @@ public:
         out << std::put_time(std::localtime(&t_c), "%F %T");
         return out;
     }
+
+    void printDay() const {
+        auto t_c = std::chrono::system_clock::to_time_t(current);
+        std::cout << std::put_time(std::localtime(&t_c), "%F\n");
+    }
 };

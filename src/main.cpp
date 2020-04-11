@@ -3,6 +3,7 @@
 #include "simulation.h"
 #include "noMovement.h"
 #include "basicInfection.h"
+#include "noPlanning.h"
 // for testing
 #include <random>
 
@@ -38,7 +39,7 @@ states::SIRD::I;
 int main(int argc, char const* argv[]) {
     constexpr unsigned lengthInWeeks = 2;
     constexpr unsigned timeStep = 10;
-    Simulation<PPStateSIRBasic, int, int, NoMovement, BasicInfection> s;
+    Simulation<PPStateSIRBasic, int, int, NoPlanning, NoMovement, BasicInfection> s;
 
     // setup for test
     {

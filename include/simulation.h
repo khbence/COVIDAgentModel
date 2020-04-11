@@ -57,7 +57,11 @@ public:
         Timehandler<timeStep> simTime;
         const Timehandler<timeStep> endOfSimulation(lengthOfSimulationWeeks);
         while (simTime < endOfSimulation) {
-            if (simTime.isMidnight()) { PlanningPolicy<Simulation>::planLocation(); }
+            if (simTime.isMidnight()) {
+                PlanningPolicy<Simulation>::planLocations();
+                // std::cout << simTime << '\n';
+                simTime.printDay();
+            }
             MovementPolicy<Simulation>::movement();
             InfectionPolicy<Simulation>::infectionsAtLocations();
             ++simTime;

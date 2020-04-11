@@ -16,7 +16,7 @@ public:
             loc.cleanUp();
             unsigned infected = loc.getInfected();
             unsigned healthy = loc.getHealthy();
-            std::cout << "Healthy: " << healthy << " - Infected: " << infected << " Date: ";
+            // std::cout << "Healthy: " << healthy << " - Infected: " << infected << " Date: ";
         }
     }
 };
