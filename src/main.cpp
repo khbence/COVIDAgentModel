@@ -1,9 +1,9 @@
 #include <iostream>
 #include "PPStateSIRBasic.h"
 #include "simulation.h"
-#include "noMovement.h"
-#include "basicInfection.h"
-#include "noPlanning.h"
+#include "movementPolicies.h"
+#include "infectionPolicies.h"
+#include "planningPolicies.h"
 // for testing
 #include <random>
 

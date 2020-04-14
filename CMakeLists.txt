@@ -7,9 +7,8 @@ include_directories(include
                     include/agentData 
                     include/agentData/PPStates
                     include/tools
-                    include/infectionPolicies
-                    include/movementPolicies
-                    include/planningPolicy)
+                    include/policies
+                    )
 file (GLOB SOURCES
       "src/*.cpp"
       "src/agentData/*.cpp"
