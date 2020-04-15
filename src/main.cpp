@@ -3,8 +3,8 @@
 #include "simulation.h"
 #include "movementPolicies.h"
 #include "infectionPolicies.h"
-#include "planningPolicies.h"
 // for testing
+#include <inputJSON.h>
 #include <random>
 
 /*
@@ -36,10 +36,13 @@ states::SIRD::I;
 }
 */
 
+using PositionType = int;
+using TypeOfLocation = int;
+
 int main(int argc, char const* argv[]) {
     constexpr unsigned lengthInWeeks = 2;
     constexpr unsigned timeStep = 10;
-    Simulation<PPStateSIRBasic, int, int, NoPlanning, NoMovement, BasicInfection> s;
+    Simulation<PPStateSIRBasic, PositionType, TypeOfLocation, NoMovement, BasicInfection> s;
 
     // setup for test
     {

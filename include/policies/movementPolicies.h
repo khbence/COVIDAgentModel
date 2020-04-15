@@ -4,5 +4,6 @@
 template<typename SimulationType>
 class NoMovement {
 protected:
+    void planLocations() {}
     void movement() {}
 };

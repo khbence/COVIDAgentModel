@@ -8,7 +8,8 @@ include_directories(include
                     include/agentData/PPStates
                     include/tools
                     include/policies
-                    )
+                    rapidjson/include
+                    include/IO)
 file (GLOB SOURCES
       "src/*.cpp"
       "src/agentData/*.cpp"

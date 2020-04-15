@@ -13,7 +13,7 @@ function agent_states_new=disease_progression_related_agent_state_update(agent_i
    % dead - D
 
 global probability_of_not_getting_sick_when_infected
-
+ 
 global probability_of_I2_I3_transition
 
 global probability_of_I3_I4_transition
@@ -136,7 +136,7 @@ elseif agent_states_akt.PP(t)=='3'
          elseif  (agent_states_akt.PPsc/144)>t_min_immunity & rand<0.5
             agent_states_akt.PP(t+1)='I';
             agent_states_akt.WB(t+1)='W';
-            agent_states_akt.PPsc=0; 
+            agent_states_akt.PPsc=0;
             agent_states_akt.flag_diagnosed=0;             
              
          else
