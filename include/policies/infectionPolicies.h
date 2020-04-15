@@ -25,7 +25,7 @@ class BasicInfection {
         return 0.01;
     }
 
-public:
+protected:
     using StatisticType = BasicStats;
 
     void infectionsAtLocations() {

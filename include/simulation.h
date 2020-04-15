@@ -9,12 +9,28 @@ template<typename PPState,
     template<typename>
     typename MovementPolicy,
     template<typename>
-    typename InfectionPolicy>
+    typename InfectionPolicy,
+    template<typename>
+    typename ProgressionPolicy>
 class Simulation
-    : private MovementPolicy<
-          Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>>
-    , InfectionPolicy<
-          Simulation<PPState, PositionType, TypeOfLocation, MovementPolicy, InfectionPolicy>> {
+    : private MovementPolicy<Simulation<PPState,
+          PositionType,
+          TypeOfLocation,
+          MovementPolicy,
+          InfectionPolicy,
+          ProgressionPolicy>>
+    , InfectionPolicy<Simulation<PPState,
+          PositionType,
+          TypeOfLocation,
+          MovementPolicy,
+          InfectionPolicy,
+          ProgressionPolicy>>
+    , ProgressionPolicy<Simulation<PPState,
+          PositionType,
+          TypeOfLocation,
+          MovementPolicy,
+          InfectionPolicy,
+          ProgressionPolicy>> {
 
 public:
     using LocationType = Location<Simulation, typename InfectionPolicy<Simulation>::StatisticType>;
@@ -29,6 +45,7 @@ private:
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
+    friend class ProgressionPolicy<Simulation>;
     // We can make it to a singleton later, but who knows
 public:
     void addLocation(PositionType p, TypeOfLocation t) { locations.emplace_back(p, t); }
@@ -43,6 +60,7 @@ public:
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();//+disease progession
+                ProgressionPolicy<Simulation>::updateDiseaseStates();
                 simTime.printDay();
             }
             MovementPolicy<Simulation>::movement();
