@@ -1,6 +1,7 @@
 #pragma once
 #include "agentsList.h"
 #include "location.h"
+#include "basicStats.h"
 #include "timeHandler.h"
 
 template<typename PPState,
@@ -33,7 +34,8 @@ class Simulation
           ProgressionPolicy>> {
 
 public:
-    using LocationType = Location<Simulation, typename InfectionPolicy<Simulation>::StatisticType>;
+    using StatisticType = BasicStats;
+    using LocationType = Location<Simulation, StatisticType>;
     using PPState_t = PPState;
     using PositionType_t = PositionType;
     using TypeOfLocation_t = TypeOfLocation;
