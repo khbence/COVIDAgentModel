@@ -3,8 +3,7 @@
 #include "location.h"
 #include "timeHandler.h"
 
-template<typename PPState,
-    typename PositionType,
+template<typename PositionType,
     typename TypeOfLocation,
     template<typename>
     typename MovementPolicy,
@@ -13,20 +12,17 @@ template<typename PPState,
     template<typename>
     typename ProgressionPolicy>
 class Simulation
-    : private MovementPolicy<Simulation<PPState,
-          PositionType,
+    : private MovementPolicy<Simulation<PositionType,
           TypeOfLocation,
           MovementPolicy,
           InfectionPolicy,
           ProgressionPolicy>>
-    , InfectionPolicy<Simulation<PPState,
-          PositionType,
+    , InfectionPolicy<Simulation<PositionType,
           TypeOfLocation,
           MovementPolicy,
           InfectionPolicy,
           ProgressionPolicy>>
-    , ProgressionPolicy<Simulation<PPState,
-          PositionType,
+    , ProgressionPolicy<Simulation<PositionType,
           TypeOfLocation,
           MovementPolicy,
           InfectionPolicy,
@@ -34,14 +30,14 @@ class Simulation
 
 public:
     using LocationType = Location<Simulation, typename InfectionPolicy<Simulation>::StatisticType>;
-    using PPState_t = PPState;
+    using PPState_t = typename ProgressionPolicy<Simulation>::PPStateType;
     using PositionType_t = PositionType;
     using TypeOfLocation_t = TypeOfLocation;
-    using AgentListType = AgentList<PPState, LocationType>;
+    using AgentListType = AgentList<PPState_t, LocationType>;
 
 private:
     std::vector<LocationType> locations;
-    AgentListType* agents = AgentList<PPState, LocationType>::getInstance();
+    AgentListType* agents = AgentList<PPState_t, LocationType>::getInstance();
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -49,7 +45,7 @@ private:
     // We can make it to a singleton later, but who knows
 public:
     void addLocation(PositionType p, TypeOfLocation t) { locations.emplace_back(p, t); }
-    void addAgent(PPState state, bool isDiagnosed, unsigned locationID) {
+    void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
         agents->addAgent(state, isDiagnosed, &locations[locationID]);
     }
 

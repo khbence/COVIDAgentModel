@@ -1,5 +1,4 @@
 #include <iostream>
-#include "PPStateSIRBasic.h"
 #include "simulation.h"
 #include "movementPolicies.h"
 #include "infectionPolicies.h"
@@ -43,13 +42,7 @@ using TypeOfLocation = int;
 int main(int argc, char const* argv[]) {
     constexpr unsigned lengthInWeeks = 2;
     constexpr unsigned timeStep = 10;
-    Simulation<PPStateSIRBasic,
-        PositionType,
-        TypeOfLocation,
-        NoMovement,
-        BasicInfection,
-        BasicProgression>
-        s;
+    Simulation<PositionType, TypeOfLocation, NoMovement, BasicInfection, BasicProgression> s;
 
     // setup for test
     {
