@@ -21,6 +21,10 @@ public:
         Statistics::refreshStatisticNewAgent(newAgent);
     }
 
+    std::vector<Agent<typename SimulationType::AgentListType>>& getAgents() {
+        return agents;
+    }
+
     // TODO this should be a policy, which we'll optimise for performance
     void infectAgents(double ratio) {
         unsigned newInfections = 0;
