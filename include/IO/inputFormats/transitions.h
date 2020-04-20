@@ -19,9 +19,9 @@ namespace parser {
             BEGIN_MEMBER_DECLARATIONS();
 
             DECODABLE_MEMBER(std::string, stateName);
-            DECODABLE_MEMBER(std::vector<Progression>, progressions);
             DECODABLE_MEMBER(int, avgLength);
             DECODABLE_MEMBER(int, maxlength);
+            DECODABLE_MEMBER(std::vector<Progression>, progressions);
 
             END_MEMBER_DECLARATIONS();
         };

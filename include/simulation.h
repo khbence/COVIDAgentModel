@@ -2,6 +2,7 @@
 #include "agentsList.h"
 #include "location.h"
 #include "timeHandler.h"
+#include "customExceptions.h"
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -57,7 +58,15 @@ public:
         agents->addAgent(state, isDiagnosed, &locations[locationID]);
     }
 
-    void initialization() { PPState_t::initTransitionMatrix("../inputFiles/transitions.json"); }
+    bool initialization() {
+        try {
+            PPState_t::initTransitionMatrix("../inputFiles/transition.json");
+        } catch (TransitionInputError& e) {
+            std::cerr << e.what();
+            return false;
+        }
+        return true;
+    }
 
     template<unsigned timeStep>
     void runSimulation(unsigned lengthOfSimulationWeeks) {

@@ -76,13 +76,17 @@ class SingleBadTransitionMatrix {
 public:
     SingleBadTransitionMatrix() = default;
     explicit SingleBadTransitionMatrix(const std::string& fileName) {
-        auto inputData = jsond::JSONDecodable<parser::TransitionFormat>::DecodeFromFile(fileName);
+        const auto inputData =
+            jsond::JSONDecodable<parser::TransitionFormat>::DecodeFromFile(fileName);
         if (inputData.states.size() != N) {
             throw(WrongNumberOfStates(N, inputData.states.size()));
         }
         auto getStateIndex = [&inputData](const std::string& name) {
             unsigned idx = 0;
-            while (inputData.states[idx].stateName != name) { ++idx; }
+            while (inputData.states[idx].stateName != name && idx < inputData.states.size()) {
+                ++idx;
+            }
+            if (idx == inputData.states.size()) { throw(WrongStateName(name)); }
             return idx;
         };
 
@@ -99,7 +103,8 @@ public:
                     transitions[i].addNeutral(std::make_pair(idx, t.chance));
                 }
             }
-            if (sumChance != 1.0) { throw(BadChances(s.stateName)); }
+            transitions[i].cleanUp(i);
+            if (sumChance != 1.0 && !s.progressions.empty()) { throw(BadChances(s.stateName)); }
             ++i;
         }
     }

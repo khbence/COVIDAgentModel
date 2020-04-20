@@ -25,6 +25,12 @@ public:
                                + std::to_string(got) + ".\n") {}
 };
 
+class WrongStateName : public TransitionInputError {
+public:
+    explicit WrongStateName(const std::string& stateName)
+        : TransitionInputError(stateName + " doesn't exists.\n") {}
+};
+
 class TooMuchBad : public TransitionInputError {
 public:
     explicit TooMuchBad(unsigned state)
