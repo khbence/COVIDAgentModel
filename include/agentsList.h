@@ -9,9 +9,10 @@ concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
 template<typename T>
 class Agent;
 
-template<typename PPState, typename Location>
+template<typename PPState, typename AgentMeta, typename Location>
 class AgentList {
     std::vector<PPState> PPValues;
+    std::vector<AgentMeta> agentMetaData;
     std::vector<bool> diagnosed;
     std::vector<Location*> locations;
 

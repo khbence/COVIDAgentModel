@@ -3,38 +3,11 @@
 #include "movementPolicies.h"
 #include "infectionPolicies.h"
 #include "diseaseProgressionPolicies.h"
+#include "transitionMatrix.h"
+#include "agentMeta.h"
 // for testing
 #include <inputJSON.h>
 #include <random>
-
-/*
-template<class PPState, class LocationType>
-void infectionAtLocation(LocationType& location,
-    std::chrono::system_clock::time_point simClock,
-    std::chrono::minutes timeStep,
-    LocationStats& stats) {
-    std::vector<unsigned>& agents = location.getAgents();
-    unsigned sick = std::count_if(agents.begin(), agents.end(), [](unsigned i) {
-        return AgentList<PPState, LocationType>::getInstance()->getPPState(i).getSIRD() ==
-states::SIRD::I;
-    });
-    stats.sick = sick;
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(0.0, 1.0);
-    std::for_each(agents.begin(), agents.end(), [&](unsigned i) {
-        if (AgentList<PPState, LocationType>::getInstance()->getPPState(i).getSIRD() ==
-states::SIRD::S && dis(gen) < 0.1) { AgentList<PPState,
-LocationType>::getInstance()->getPPState(i).gotInfected();
-        }
-    });
-    unsigned sickAfter = std::count_if(agents.begin(), agents.end(), [](unsigned i) {
-        return AgentList<PPState, LocationType>::getInstance()->getPPState(i).getSIRD() ==
-states::SIRD::I;
-    });
-    stats.infected = sickAfter - sick;
-}
-*/
 
 using PositionType = int;
 using TypeOfLocation = int;
@@ -42,7 +15,13 @@ using TypeOfLocation = int;
 int main(int argc, char const* argv[]) {
     constexpr unsigned lengthInWeeks = 2;
     constexpr unsigned timeStep = 10;
-    Simulation<PositionType, TypeOfLocation, NoMovement, BasicInfection, BasicProgression> s;
+    Simulation<PositionType,
+        TypeOfLocation,
+        BasicAgentMeta,
+        NoMovement,
+        BasicInfection,
+        ExtendedProgression>
+        s;
 
     // setup for test
     {
@@ -57,7 +36,7 @@ int main(int argc, char const* argv[]) {
 
         // Populate agent list
         for (int i = 0; i < numAgents; i++) {
-            s.addAgent(PPStateSIRBasic(
+            s.addAgent(PPStateSIRextended(
                            dis(gen) < initial_infected_ratio ? states::SIRD::I : states::SIRD::S),
                 false,
                 0);

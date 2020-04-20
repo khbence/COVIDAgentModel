@@ -1,16 +1,14 @@
 #pragma once
-#include "PPStateSIRBasic.h"
+#include "PPStateTypes.h"
 
 template<typename SimulationType>
-class BasicProgression {
+class ExtendedProgression {
 protected:
-    using PPStateType = PPStateSIRBasic;
+    using PPStateType = PPStateSIRextended;
 
     void updateDiseaseStates() {
         auto realThis = static_cast<SimulationType*>(this);
         auto& agents = realThis->agents->getAgentsList();
-        for (auto& agent : agents) {
-            // Here comes the progression code
-        }
+        for (auto& agent : agents) { agent.progressDisease(/*additional scaling factor = 1.0*/); }
     }
 };

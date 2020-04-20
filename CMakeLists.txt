@@ -4,12 +4,12 @@ project(covid CXX)
 include(cmake/StandardProjectSettings.cmake)
 
 include_directories(include 
-                    include/agentData 
-                    include/agentData/PPStates
+                    include/agentData
                     include/tools
                     include/policies
                     rapidjson/include
-                    include/IO)
+                    include/IO
+                    include/IO/inputFormats)
 file (GLOB SOURCES
       "src/*.cpp"
       "src/agentData/*.cpp"

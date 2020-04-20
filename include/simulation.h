@@ -5,6 +5,7 @@
 
 template<typename PositionType,
     typename TypeOfLocation,
+    typename AgentMeta,
     template<typename>
     typename MovementPolicy,
     template<typename>
@@ -14,16 +15,19 @@ template<typename PositionType,
 class Simulation
     : private MovementPolicy<Simulation<PositionType,
           TypeOfLocation,
+          AgentMeta,
           MovementPolicy,
           InfectionPolicy,
           ProgressionPolicy>>
     , InfectionPolicy<Simulation<PositionType,
           TypeOfLocation,
+          AgentMeta,
           MovementPolicy,
           InfectionPolicy,
           ProgressionPolicy>>
     , ProgressionPolicy<Simulation<PositionType,
           TypeOfLocation,
+          AgentMeta,
           MovementPolicy,
           InfectionPolicy,
           ProgressionPolicy>> {
@@ -32,15 +36,16 @@ public:
     // using LocationType = Location<Simulation, typename
     // InfectionPolicy<Simulation>::StatisticType>;
     using PPState_t = typename ProgressionPolicy<Simulation>::PPStateType;
+    using AgentMeta_t = AgentMeta;
     using StatisticType = typename InfectionPolicy<Simulation>::StatisticType;
     using LocationType = Location<Simulation, StatisticType>;
     using PositionType_t = PositionType;
     using TypeOfLocation_t = TypeOfLocation;
-    using AgentListType = AgentList<PPState_t, LocationType>;
+    using AgentListType = AgentList<PPState_t, AgentMeta_t, LocationType>;
 
 private:
     std::vector<LocationType> locations;
-    AgentListType* agents = AgentList<PPState_t, LocationType>::getInstance();
+    AgentListType* agents = AgentListType::getInstance();
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -52,13 +57,15 @@ public:
         agents->addAgent(state, isDiagnosed, &locations[locationID]);
     }
 
+    void initialization() { PPState_t::initTransitionMatrix("../inputFiles/transitions.json"); }
+
     template<unsigned timeStep>
     void runSimulation(unsigned lengthOfSimulationWeeks) {
         Timehandler<timeStep> simTime;
         const Timehandler<timeStep> endOfSimulation(lengthOfSimulationWeeks);
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
-                MovementPolicy<Simulation>::planLocations();//+disease progession
+                MovementPolicy<Simulation>::planLocations();
                 ProgressionPolicy<Simulation>::updateDiseaseStates();
                 simTime.printDay();
             }
