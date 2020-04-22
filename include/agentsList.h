@@ -35,6 +35,7 @@ public:
         if (PPValues.size() == PPValues.capacity()) {
             diagnosed.reserve(PPValues.size() * 1.5 + 1);
             locations.reserve(PPValues.size() * 1.5 + 1);
+            agentMetaData.reserve(PPValues.size() * 1.5 + 1);
             agents.reserve(PPValues.size() * 1.5 + 1);
 
             // This has to be the last one!
@@ -44,6 +45,7 @@ public:
         diagnosed.push_back(isDiagnosed);
         locations.push_back(location);
         agents.push_back(Agent<AgentList>(PPValues.size() - 1));
+        agentMetaData.push_back(AgentMeta());
         // Add this agent to the location provided
         location->addAgent(PPValues.size() - 1);
     }
