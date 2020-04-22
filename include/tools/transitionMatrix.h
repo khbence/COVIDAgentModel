@@ -112,7 +112,11 @@ public:
     [[nodiscard]] std::pair<unsigned, int> calculateNextState(unsigned currentState,
         float scalingSymptons) const {
         unsigned nextState = transitions[currentState].selectNext(scalingSymptons);
-        unsigned days = lengths[nextState].calculateDays();
+        int days = lengths[nextState].calculateDays();
         return std::make_pair(nextState, days);
+    }
+
+    [[nodiscard]] int calculateJustDays(unsigned state) const {
+        return lengths[state].calculateDays();
     }
 };

@@ -2,21 +2,20 @@
 #include <chrono>
 #include <iostream>
 #include <iomanip>
+#include <cassert>
 
 // TODO update after C++20
-template<unsigned timeStepMin>
 class Timehandler {
     std::chrono::system_clock::time_point current = std::chrono::system_clock::now();
-    std::chrono::minutes timeStep = std::chrono::minutes(timeStepMin);
+    std::chrono::minutes timeStep;
 
     static constexpr unsigned hoursPerWeek = 168;
     static constexpr unsigned minsPerDay = 1440;
-    static_assert(minsPerDay % timeStepMin == 0);
 
     unsigned counter = 0;
-    const unsigned stepsPerDay = minsPerDay / timeStepMin;
+    const unsigned stepsPerDay;
 
-    auto nextMidnight() {
+    static auto nextMidnight() {
         auto now = std::chrono::system_clock::now();
         time_t tnow = std::chrono::system_clock::to_time_t(now);
         tm* date = std::localtime(&tnow);
@@ -29,18 +28,14 @@ class Timehandler {
     }
 
 public:
-    template<unsigned>
-    friend class Timehandler;
-
-    Timehandler() : current(nextMidnight()) {}
-
-    explicit Timehandler(unsigned weeksInTheFuture)
-        : current(nextMidnight() + std::chrono::hours(hoursPerWeek * weeksInTheFuture)) {}
-
-    template<unsigned M>
-    bool operator<(const Timehandler<M>& rhs) {
-        return current < rhs.current;
+    explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0)
+        : timeStep(std::chrono::minutes(timeStep_p)),
+          current(nextMidnight() + std::chrono::hours(hoursPerWeek * weeksInTheFuture)),
+          stepsPerDay(minsPerDay / timeStep_p) {
+        assert(minsPerDay % timeStep_p == 0);
     }
+
+    bool operator<(const Timehandler& rhs) { return current < rhs.current; }
 
     Timehandler& operator++() {
         current += timeStep;

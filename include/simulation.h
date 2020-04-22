@@ -47,6 +47,7 @@ public:
 private:
     std::vector<LocationType> locations;
     AgentListType* agents = AgentListType::getInstance();
+    unsigned timeStep = 10;
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -68,10 +69,10 @@ public:
         return true;
     }
 
-    template<unsigned timeStep>
-    void runSimulation(unsigned lengthOfSimulationWeeks) {
-        Timehandler<timeStep> simTime;
-        const Timehandler<timeStep> endOfSimulation(lengthOfSimulationWeeks);
+    void runSimulation(unsigned timeStep_p, unsigned lengthOfSimulationWeeks) {
+        timeStep = timeStep_p;
+        Timehandler simTime(timeStep);
+        const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();

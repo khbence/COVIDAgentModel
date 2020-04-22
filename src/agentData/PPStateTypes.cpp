@@ -46,7 +46,11 @@ PPStateSIRextended::PPStateSIRextended(char idx_p)
     applyNewIdx();
 }
 
-void PPStateSIRextended::gotInfected() { idx = 1; applyNewIdx(); }
+void PPStateSIRextended::gotInfected() {
+    idx = 1;
+    applyNewIdx();
+    daysBeforeNextState = transition.calculateJustDays(idx);
+}
 
 void PPStateSIRextended::update(float scalingSymptons) {
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }

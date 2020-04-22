@@ -21,7 +21,8 @@ class BasicInfection {
         double p = 0.35 - virulency;
         double k = p / 5.0;
         double y = 1.0 / (1.0 + exp((p - densityOfInfected) / k));
-        return y/144.0; //Has to be scaled with time I think
+        unsigned timeStepCopy = static_cast<SimulationType*>(this)->timeStep;
+        return y / 144.0;// Has to be scaled with time I think
     }
 
 protected:
