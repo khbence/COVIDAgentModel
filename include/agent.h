@@ -13,7 +13,7 @@ public:
     [[nodiscard]] auto& getPPState() { return agentList->PPValues[id]; }
     void gotInfected() { agentList->PPValues[id].gotInfected(); }
     void progressDisease(float additionalFactor = 1.0) {
-        float scalingFactor = additionalFactor * agentList->agentMetaData[id].getScalingSymptons();
+        float scalingFactor = additionalFactor * agentList->agentMetaData[id].getScalingSymptoms();
         agentList->PPValues[id].update(scalingFactor);
     }
 };

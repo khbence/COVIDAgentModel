@@ -44,6 +44,6 @@ int main(int argc, char const* argv[]) {
     }
 
     s.initialization();
-    // s.runSimulation<timeStep>(lengthInWeeks);
+    s.runSimulation<timeStep>(lengthInWeeks);
     return EXIT_SUCCESS;
 }

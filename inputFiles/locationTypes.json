@@ -1,0 +1,12 @@
+{
+    "types": [
+        {
+            "id": 0,
+            "name": "Public space"
+        },
+        {
+            "id": 1,
+            "name": "Residence"
+        }
+    ]
+}

@@ -44,6 +44,7 @@ public:
         diagnosed.push_back(isDiagnosed);
         locations.push_back(location);
         agents.push_back(Agent<AgentList>(PPValues.size() - 1));
+        agentMetaData.emplace_back();
         // Add this agent to the location provided
         location->addAgent(PPValues.size() - 1);
     }

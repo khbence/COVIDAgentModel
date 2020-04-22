@@ -1,0 +1,22 @@
+{
+    "types": [
+        {
+            "name": "Manager",
+            "id": 4,
+            "schedule": [
+                {
+                    "id": 2,
+                    "chance": 1,
+                    "start": 7.05,
+                    "max": 7.40
+                },
+                {
+                    "id": 8,
+                    "chance": 0.8,
+                    "start": 16,
+                    "max": 16.30
+                }
+            ]
+        }
+    ]
+}
