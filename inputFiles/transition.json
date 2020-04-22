@@ -8,8 +8,8 @@
         },
         {
             "stateName": "I1",
-            "avgLength": 3,
-            "maxlength": 6,
+            "avgLength": 1,
+            "maxlength": 2,
             "progressions": [
                 {
                     "name": "I2",
@@ -37,8 +37,8 @@
         },
         {
             "stateName": "I3",
-            "avgLength": 5,
-            "maxlength": 10,
+            "avgLength": 3,
+            "maxlength": 5,
             "progressions": [
                 {
                     "name": "I4",
@@ -54,8 +54,8 @@
         },
         {
             "stateName": "I4",
-            "avgLength": 7,
-            "maxlength": 14,
+            "avgLength": 5,
+            "maxlength": 10,
             "progressions": [
                 {
                     "name": "I5",
@@ -71,8 +71,8 @@
         },
         {
             "stateName": "I5",
-            "avgLength": 14,
-            "maxlength": 18,
+            "avgLength": 2,
+            "maxlength": 4,
             "progressions": [
                 {
                     "name": "I6",
@@ -88,17 +88,17 @@
         },
         {
             "stateName": "I6",
-            "avgLength": 7,
-            "maxlength": 10,
+            "avgLength": 2,
+            "maxlength": 4,
             "progressions": [
                 {
                     "name": "D",
-                    "chance": 0.5,
+                    "chance": 0.6,
                     "isBadProgression": true
                 },
                 {
                     "name": "R1",
-                    "chance": 0.5,
+                    "chance": 0.4,
                     "isBadProgression": false
                 }
             ]

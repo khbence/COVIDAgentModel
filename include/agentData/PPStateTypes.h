@@ -11,7 +11,7 @@ public:
 
     explicit PPStateSIRAbstract(states::SIRD s);
     virtual void update(float scalingSymptons) = 0;
-    void gotInfected();
+    virtual void gotInfected();
     [[nodiscard]] states::SIRD getSIRD() const;
     [[nodiscard]] states::WBStates getWBState() const;
 };
@@ -40,6 +40,7 @@ public:
     PPStateSIRextended();
     explicit PPStateSIRextended(states::SIRD s);
     explicit PPStateSIRextended(char idx_p);
+    void gotInfected() override;
     static void initTransitionMatrix(const std::string& inputFile) {
         transition = decltype(transition)(inputFile);
     }
