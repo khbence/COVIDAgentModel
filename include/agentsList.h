@@ -35,6 +35,7 @@ public:
         if (PPValues.size() == PPValues.capacity()) {
             diagnosed.reserve(PPValues.size() * 1.5 + 1);
             locations.reserve(PPValues.size() * 1.5 + 1);
+            agentMetaData.reserve(PPValues.size() * 1.5 + 1);
             agents.reserve(PPValues.size() * 1.5 + 1);
 
             // This has to be the last one!

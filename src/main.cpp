@@ -13,7 +13,7 @@ using PositionType = int;
 using TypeOfLocation = int;
 
 int main(int argc, char const* argv[]) {
-    constexpr unsigned lengthInWeeks = 2;
+    constexpr unsigned lengthInWeeks = 10;
     constexpr unsigned timeStep = 10;
     Simulation<PositionType,
         TypeOfLocation,
