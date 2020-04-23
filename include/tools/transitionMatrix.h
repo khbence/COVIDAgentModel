@@ -6,7 +6,7 @@
 #include "transitions.h"
 #include "customExceptions.h"
 #include <algorithm>
-#include <random>
+#include "randomGenerator.h"
 
 template<unsigned N>
 class SingleBadTransitionMatrix {
@@ -14,7 +14,7 @@ class SingleBadTransitionMatrix {
         // pair<index of new state,  raw chance to get there>
         std::optional<std::pair<unsigned, float>> bad;
         std::vector<std::pair<unsigned, float>> neutral;
-        
+
     public:
         NextStates() = default;
 
@@ -37,10 +37,7 @@ class SingleBadTransitionMatrix {
         }
 
         [[nodiscard]] unsigned selectNext(float scalingSypmtons) const {
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            std::uniform_real_distribution<> dis(0.0, 1.0);
-            double random = dis(gen);// TODO create random number creator
+            double random = RandomGenerator::randomUnit();
             double iterator = 0.0;
             double remainders = 0.0;
             if (bad) {
