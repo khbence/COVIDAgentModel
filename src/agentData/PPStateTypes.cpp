@@ -30,12 +30,11 @@ void PPStateSIRAbstract::gotInfected() { this->state = states::SIRD::I; }
 // Extended
 void PPStateSIRextended::applyNewIdx() {
     state = states::SIRD::S;
-    for (const auto s : startingIdx) {
-        if (s >= idx) {
-            subState = static_cast<char>(idx - s);
-            break;
+    for (int i = 0; i < 4; i++) {
+        if (idx>=startingIdx[i] && idx<startingIdx[i+1]) {
+            state = (states::SIRD)i;
+            subState = idx - startingIdx[i];
         }
-        ++state;
     }
 }
 
@@ -50,6 +49,7 @@ void PPStateSIRextended::gotInfected() {
     idx = 1;
     applyNewIdx();
     daysBeforeNextState = transition.calculateJustDays(idx);
+    //std::cout << "From " << 0 << " -> " << (int)idx<<"\n";
 }
 
 void PPStateSIRextended::update(float scalingSymptons) {
@@ -57,6 +57,7 @@ void PPStateSIRextended::update(float scalingSymptons) {
     if (daysBeforeNextState == 0) {
         auto [stateIdx, days] = transition.calculateNextState(idx, scalingSymptons);
         daysBeforeNextState = days;
+        //std::cout << "From " << (int)idx << " -> " <<stateIdx<<"\n";
         idx = stateIdx;
         applyNewIdx();
     }

@@ -77,7 +77,7 @@ public:
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
                 ProgressionPolicy<Simulation>::updateDiseaseStates();
-                simTime.printDay();
+                //simTime.printDay();
             }
             MovementPolicy<Simulation>::movement();
             InfectionPolicy<Simulation>::infectionsAtLocations();

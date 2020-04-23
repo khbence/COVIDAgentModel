@@ -17,7 +17,7 @@ class BasicInfection {
             [](auto agent) { return agent.getSIRDState() == states::SIRD::I; });
         unsigned total = agents.size();
         if (numInfectedAgentsPresent == 0) return 0;
-        double densityOfInfected = double(numInfectedAgentsPresent) / 1000.0;
+        double densityOfInfected = double(numInfectedAgentsPresent) / 1200.0;
         double p = 0.35 - virulency;
         double k = p / 5.0;
         double y = 1.0 / (1.0 + exp((p - densityOfInfected) / k));
