@@ -8,6 +8,7 @@
 // for testing
 #include <inputJSON.h>
 #include <random>
+#include "randomGenerator.h"
 
 using PositionType = int;
 using TypeOfLocation = int;
@@ -15,6 +16,7 @@ using TypeOfLocation = int;
 int main(int argc, char const* argv[]) {
     constexpr unsigned lengthInWeeks = 10;
     constexpr unsigned timeStep = 10;
+    RandomGenerator::init(1);
     Simulation<PositionType,
         TypeOfLocation,
         BasicAgentMeta,

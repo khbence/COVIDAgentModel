@@ -31,7 +31,7 @@ void PPStateSIRAbstract::gotInfected() { this->state = states::SIRD::I; }
 void PPStateSIRextended::applyNewIdx() {
     state = states::SIRD::S;
     for (int i = 0; i < 4; i++) {
-        if (idx>=startingIdx[i] && idx<startingIdx[i+1]) {
+        if (idx >= startingIdx[i] && idx < startingIdx[i + 1]) {
             state = (states::SIRD)i;
             subState = idx - startingIdx[i];
         }
@@ -39,17 +39,21 @@ void PPStateSIRextended::applyNewIdx() {
 }
 
 PPStateSIRextended::PPStateSIRextended() : PPStateSIRAbstract(states::SIRD::S) {}
-PPStateSIRextended::PPStateSIRextended(states::SIRD s) : PPStateSIRAbstract(s) {}
+PPStateSIRextended::PPStateSIRextended(states::SIRD s) : PPStateSIRAbstract(s) {
+    idx = static_cast<char>(state);
+    daysBeforeNextState = transition.calculateJustDays(idx);
+}
 PPStateSIRextended::PPStateSIRextended(char idx_p)
     : PPStateSIRAbstract(states::SIRD::S), idx(idx_p) {
     applyNewIdx();
+    daysBeforeNextState = transition.calculateJustDays(idx);
 }
 
 void PPStateSIRextended::gotInfected() {
     idx = 1;
     applyNewIdx();
     daysBeforeNextState = transition.calculateJustDays(idx);
-    //std::cout << "From " << 0 << " -> " << (int)idx<<"\n";
+    // std::cout << "From " << 0 << " -> " << (int)idx<<"\n";
 }
 
 void PPStateSIRextended::update(float scalingSymptons) {
@@ -57,7 +61,7 @@ void PPStateSIRextended::update(float scalingSymptons) {
     if (daysBeforeNextState == 0) {
         auto [stateIdx, days] = transition.calculateNextState(idx, scalingSymptons);
         daysBeforeNextState = days;
-        //std::cout << "From " << (int)idx << " -> " <<stateIdx<<"\n";
+        // std::cout << "From " << (int)idx << " -> " <<stateIdx<<"\n";
         idx = stateIdx;
         applyNewIdx();
     }

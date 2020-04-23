@@ -13,7 +13,7 @@ include_directories(include
 file (GLOB SOURCES
       "src/*.cpp"
       "src/agentData/*.cpp"
-      "src/agentData/PPStates/*.cpp")
+      "src/tools/*.cpp")
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
