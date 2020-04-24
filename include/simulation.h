@@ -3,6 +3,7 @@
 #include "location.h"
 #include "timeHandler.h"
 #include "customExceptions.h"
+#include "globalStates.h"
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -77,7 +78,7 @@ public:
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
                 ProgressionPolicy<Simulation>::updateDiseaseStates();
-                //simTime.printDay();
+                // simTime.printDay();
             }
             MovementPolicy<Simulation>::movement();
             InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
