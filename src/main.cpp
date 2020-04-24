@@ -27,7 +27,7 @@ int main(int argc, char const* argv[]) {
 
     // setup for test
     {
-        constexpr unsigned numAgents = 1000;
+        constexpr unsigned numAgents = 10000;
         constexpr double initial_infected_ratio = 0.01;
         std::random_device rd;
         std::mt19937 gen(rd());
