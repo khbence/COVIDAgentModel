@@ -80,7 +80,7 @@ public:
                 //simTime.printDay();
             }
             MovementPolicy<Simulation>::movement();
-            InfectionPolicy<Simulation>::infectionsAtLocations();
+            InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
             ++simTime;
         }
     }
