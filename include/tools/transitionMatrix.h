@@ -26,7 +26,7 @@ class SingleBadTransitionMatrix {
         void addNeutral(std::pair<unsigned, float> newNeutral) { neutral.push_back(newNeutral); }
 
         void cleanUp(unsigned ownIndex) {
-            if (neutral.size() == 0) {
+            if (neutral.empty()) {
                 if (bad) {
                     neutral.push_back(bad.value());
                     bad.reset();
@@ -58,16 +58,26 @@ class SingleBadTransitionMatrix {
     class LengthOfState {
         int avgLength;
         int maxLength;
+        double p;
 
     public:
         LengthOfState() = default;
 
         LengthOfState(int avgLength_p, int maxLength_p)
-            : avgLength(avgLength_p), maxLength(maxLength_p) {}
+            : avgLength(avgLength_p),
+              maxLength(maxLength_p),
+              p(1.0 / static_cast<double>(avgLength_p)) {
+            if (maxLength == -1) { maxLength = std::numeric_limits<decltype(maxLength)>::max(); }
+        }
 
+        // Note: [0, maxLength), because the 0 will run for a day, so the maxLength would run for
+        // maxLength+1 days
         [[nodiscard]] int calculateDays() const {
-            return avgLength;
-        }// TODO make the nice distribution
+            if (avgLength == -1) { return -1; }
+            int days = RandomGenerator::geometric(p);
+            while (maxLength < days) { days = RandomGenerator::geometric(p); }
+            return days;
+        }
     };
 
     std::array<NextStates, N> transitions;

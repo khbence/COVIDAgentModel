@@ -27,4 +27,9 @@ public:
         std::uniform_int_distribution<unsigned> dis(0, max);
         return dis(generators[omp_get_thread_num()]);
     }
+
+    [[nodiscard]] static int geometric(double p) {
+        std::geometric_distribution<> dis(p);
+        return dis(generators[omp_get_thread_num()]);
+    }
 };
