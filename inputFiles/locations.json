@@ -1,0 +1,26 @@
+{
+    "places": [
+        {
+            "id": 0,
+            "type": 1,
+            "coordinates": [
+                0.8,
+                125.9
+            ],
+            "area": 250,
+            "state": "ON",
+            "capacity": 10
+        },
+        {
+            "id": 1,
+            "type": 0,
+            "coordinates": [
+                0.0,
+                1.8
+            ],
+            "area": 100,
+            "state": "ON",
+            "capacity": -1
+        }
+    ]
+}

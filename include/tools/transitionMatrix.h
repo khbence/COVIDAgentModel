@@ -87,8 +87,7 @@ class SingleBadTransitionMatrix {
 public:
     SingleBadTransitionMatrix() = default;
     explicit SingleBadTransitionMatrix(const std::string& fileName) {
-        const auto inputData =
-            jsond::JSONDecodable<parser::TransitionFormat>::DecodeFromFile(fileName);
+        const auto inputData = DECODE_JSON_FILE(fileName);
         if (inputData.states.size() != N) {
             throw(WrongNumberOfStates(N, inputData.states.size()));
         }
