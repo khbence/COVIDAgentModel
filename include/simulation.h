@@ -1,4 +1,5 @@
 #pragma once
+#include "datatypes.h"
 #include "agentsList.h"
 #include "location.h"
 #include "timeHandler.h"
@@ -55,7 +56,7 @@ private:
     friend class ProgressionPolicy<Simulation>;
     // We can make it to a singleton later, but who knows
 public:
-    void addLocation(PositionType p, TypeOfLocation t) { locations.emplace_back(p, t); }
+    void addLocation(PositionType p, TypeOfLocation t) { locations.push_back(LocationType(p, t)); }
     void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
         agents->addAgent(state, isDiagnosed, &locations[locationID]);
     }

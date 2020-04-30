@@ -11,17 +11,17 @@ template<typename SimulationType, typename Statistics>
 class Location : public Statistics {
     typename SimulationType::PositionType_t position;
     typename SimulationType::TypeOfLocation_t locType;
-    std::vector<Agent<typename SimulationType::AgentListType>> agents;
+    device_vector<unsigned> agents;
 
 public:
     Location(decltype(position) p, decltype(locType) t) : position(p), locType(t) {}
 
     void addAgent(unsigned a) {
-        const auto& newAgent = agents.emplace_back(a);
-        Statistics::refreshStatisticNewAgent(newAgent);
+        agents.push_back(a);
+        //Statistics::refreshStatisticNewAgent<typename SimulationType::AgentListType>(a);
     }
 
-    std::vector<Agent<typename SimulationType::AgentListType>>& getAgents() {
+    device_vector<unsigned>& getAgents() {
         return agents;
     }
 
@@ -32,8 +32,10 @@ public:
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(0.0, 1.0);
-        std::for_each(agents.begin(), agents.end(), [&](auto a) {
-            if (a.getSIRDState() == states::SIRD::S && dis(gen) < ratio) {
+        auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
+        for_each(make_permutation_iterator(ppstates.begin(), agents.begin()),
+                 make_permutation_iterator(ppstates.begin(), agents.end()),[&](auto &a) {
+            if (a.getSIRD() == states::SIRD::S && dis(gen) < ratio) {
                 a.gotInfected();
                 ++newInfections;
             }

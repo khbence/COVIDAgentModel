@@ -3,11 +3,16 @@ cmake_minimum_required (VERSION 3.0)
 project(covid CXX)
 include(cmake/StandardProjectSettings.cmake)
 
+#set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_CUDA)
+set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_OMP)
+#set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_TBB)
+set(CMAKE_CXX_FLAGS "-DTHRUST_DEVICE_SYSTEM=${THRUST_DEVICE_SYSTEM}")
 include_directories(include 
                     include/agentData
                     include/tools
                     include/policies
                     rapidjson/include
+                    thrust/
                     include/IO
                     include/IO/inputFormats)
 file (GLOB SOURCES

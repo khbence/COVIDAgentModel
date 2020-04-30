@@ -19,8 +19,8 @@ public:
 
     // obligatory for every stat type
     template<typename AgentListType>
-    void refreshStatisticNewAgent(const Agent<AgentListType>& a) {
-        auto state = a.getSIRDState();
+    void refreshStatisticNewAgent(unsigned a) {
+        auto state = AgentListType::getInstance()->PPValues[a].getSIRD();
         switch (state) {
         case states::SIRD::I:
             ++infected;
