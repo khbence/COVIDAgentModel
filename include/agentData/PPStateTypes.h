@@ -41,6 +41,7 @@ public:
     explicit PPStateSIRextended(states::SIRD s);
     explicit PPStateSIRextended(char idx_p);
     void gotInfected() override;
+    char getSubState() {return subState;}
     static void initTransitionMatrix(const std::string& inputFile) {
         transition = decltype(transition)(inputFile);
     }
