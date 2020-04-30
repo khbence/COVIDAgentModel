@@ -1,3 +1,6 @@
 [submodule "rapidjson"]
 	path = rapidjson
 	url = https://github.com/Tencent/rapidjson.git
+[submodule "thrust"]
+	path = thrust
+	url = https://github.com/thrust/thrust.git
