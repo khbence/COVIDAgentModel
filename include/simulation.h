@@ -7,37 +7,30 @@
 
 template<typename PositionType,
     typename TypeOfLocation,
+    typename PPState,
     typename AgentMeta,
     template<typename>
     typename MovementPolicy,
     template<typename>
-    typename InfectionPolicy,
-    template<typename>
-    typename ProgressionPolicy>
+    typename InfectionPolicy>
 class Simulation
     : private MovementPolicy<Simulation<PositionType,
           TypeOfLocation,
+          PPState,
           AgentMeta,
           MovementPolicy,
-          InfectionPolicy,
-          ProgressionPolicy>>
+          InfectionPolicy>>
     , InfectionPolicy<Simulation<PositionType,
           TypeOfLocation,
+          PPState,
           AgentMeta,
           MovementPolicy,
-          InfectionPolicy,
-          ProgressionPolicy>>
-    , ProgressionPolicy<Simulation<PositionType,
-          TypeOfLocation,
-          AgentMeta,
-          MovementPolicy,
-          InfectionPolicy,
-          ProgressionPolicy>> {
+          InfectionPolicy>> {
 
 public:
     // using LocationType = Location<Simulation, typename
     // InfectionPolicy<Simulation>::StatisticType>;
-    using PPState_t = typename ProgressionPolicy<Simulation>::PPStateType;
+    using PPState_t = PPState;
     using AgentMeta_t = AgentMeta;
     using StatisticType = typename InfectionPolicy<Simulation>::StatisticType;
     using LocationType = Location<Simulation, StatisticType>;
@@ -52,7 +45,6 @@ private:
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
-    friend class ProgressionPolicy<Simulation>;
     // We can make it to a singleton later, but who knows
 public:
     void addLocation(PositionType p, TypeOfLocation t) { locations.emplace_back(p, t); }
@@ -71,13 +63,14 @@ public:
     }
 
     void runSimulation(unsigned timeStep_p, unsigned lengthOfSimulationWeeks) {
+        auto& agentList = agents->getAgentsList();
         timeStep = timeStep_p;
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
-                ProgressionPolicy<Simulation>::updateDiseaseStates();
+                for (auto& a : agentList) { a.progressDisease(); }
                 // simTime.printDay();
             }
             MovementPolicy<Simulation>::movement();

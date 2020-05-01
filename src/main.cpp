@@ -18,10 +18,10 @@ int main(int argc, char const* argv[]) {
     RandomGenerator::init(1);
     Simulation<PositionType,
         TypeOfLocation,
+        PPStateSIRextended,
         BasicAgentMeta,
         NoMovement,
-        BasicInfection,
-        ExtendedProgression>
+        BasicInfection>
         s;
 
     // setup for test
