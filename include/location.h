@@ -27,19 +27,19 @@ public:
 
     // TODO this should be a policy, which we'll optimise for performance
     void infectAgents(double ratio) {
-        unsigned newInfections = 0;
         // TODO random device and gen should be defined once
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(0.0, 1.0);
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
-        for_each(make_permutation_iterator(ppstates.begin(), agents.begin()),
+        int newInfections = transform_reduce(make_permutation_iterator(ppstates.begin(), agents.begin()),
                  make_permutation_iterator(ppstates.begin(), agents.end()),[&](auto &a) {
             if (a.getSIRD() == states::SIRD::S && dis(gen) < ratio) {
                 a.gotInfected();
-                ++newInfections;
+                return 1;
             }
-        });
+            return 0;
+        },0,plus<int>());
         Statistics::setNewlyInfected(newInfections);
     }
 };
