@@ -82,7 +82,16 @@ public:
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
-                for (auto& a : agentList) { a.progressDisease(); }
+                auto& ppstates = agents->PPValues;
+                auto& agentMeta = agents->agentMetaData;
+                //Update states
+                for_each(make_zip_iterator(make_tuple(ppstates.begin(), agentMeta.begin())),
+                        make_zip_iterator(make_tuple(ppstates.end(), agentMeta.end())),
+                        [](auto tup){
+                            auto &ppstate = get<0>(tup);
+                            auto &meta = get<1>(tup);
+                            ppstate.update(meta.getScalingSymptoms());
+                        });
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement();

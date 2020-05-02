@@ -8,6 +8,7 @@ class Agent {
     static inline AgentListType* agentList = AgentListType::getInstance();
 
 public:
+    using AgentListType_t = AgentListType;
     explicit Agent(unsigned id_p) : id(id_p) {}
     //[[nodiscard]] states::SIRD getSIRDState() const { return agentList->PPValues[id].getSIRD(); }
     //[[nodiscard]] auto& getPPState() { return agentList->PPValues[id]; }

@@ -27,16 +27,15 @@ public:
 
     void addAgent(unsigned a) {
         agents.push_back(a);
-        stat.refreshStatisticNewAgent(Agent(a));
+        stat.refreshStatisticNewAgent(a);
     }
 
     void removeAgent(unsigned idx) {
-        agents.back().swap(agents[idx]);
-        stat.refreshStatisticRemoveAgent(Agent(agents.back()));
+        //agents.back().swap(agents[idx]);
+        swap(agents.back(), agents[idx]);
+        stat.refreshStatisticRemoveAgent(agents.back());
         agents.pop_back();
     }
-
-    std::vector<AgentType>& getAgents() { return agents; }
 
     // TODO optimise randoms for performance
     void infectAgents(double ratio) {

@@ -54,7 +54,6 @@ public:
     explicit PPStateSIRextended(char idx_p);
     void gotInfected() override;
     [[nodiscard]] char getSubState() {return subState;}
-    [[nodiscard]] char getIdx() {return idx;}
     static void initTransitionMatrix(const std::string& inputFile) {
         transition = decltype(transition)(inputFile);
     }

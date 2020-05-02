@@ -8,5 +8,6 @@
 #include <thrust/iterator/constant_iterator.h>
 #include <thrust/binary_search.h>
 #include <thrust/sort.h>
+#include <thrust/sequence.h>
 
 using namespace thrust;
