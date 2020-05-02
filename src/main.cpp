@@ -2,12 +2,13 @@
 #include "simulation.h"
 #include "movementPolicies.h"
 #include "infectionPolicies.h"
-#include "diseaseProgressionPolicies.h"
 #include "agentMeta.h"
+#include "PPStateTypes.h"
 // for testing
 #include <inputJSON.h>
 #include <random>
 #include "randomGenerator.h"
+
 
 using PositionType = int;
 using TypeOfLocation = int;

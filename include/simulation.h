@@ -4,6 +4,7 @@
 #include "timeHandler.h"
 #include "customExceptions.h"
 #include "globalStates.h"
+#include "statistics.h"
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -28,12 +29,9 @@ class Simulation
           InfectionPolicy>> {
 
 public:
-    // using LocationType = Location<Simulation, typename
-    // InfectionPolicy<Simulation>::StatisticType>;
     using PPState_t = PPState;
     using AgentMeta_t = AgentMeta;
-    using StatisticType = typename InfectionPolicy<Simulation>::StatisticType;
-    using LocationType = Location<Simulation, StatisticType>;
+    using LocationType = Location<Simulation>;
     using PositionType_t = PositionType;
     using TypeOfLocation_t = TypeOfLocation;
     using AgentListType = AgentList<PPState_t, AgentMeta_t, LocationType>;
@@ -46,6 +44,18 @@ private:
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
     // We can make it to a singleton later, but who knows
+    void refreshAndPrintStatistics() {
+        auto init = locations.begin()->refreshAndGetStatistic();
+        auto result =
+            std::accumulate(locations.begin() + 1, locations.end(), init, [](auto& sum, auto& loc) {
+                const auto& stat = loc.refreshAndGetStatistic();
+                for (unsigned i = 0; i < sum.size(); ++i) { sum[i] += stat[i]; }
+                return sum;
+            });
+        for (auto val : result) { std::cout << val << ", "; }
+        std::cout << '\n';
+    }
+
 public:
     void addLocation(PositionType p, TypeOfLocation t) { locations.emplace_back(p, t); }
     void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
@@ -67,11 +77,12 @@ public:
         timeStep = timeStep_p;
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
+        PPState_t::printHeader();
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
                 for (auto& a : agentList) { a.progressDisease(); }
-                // simTime.printDay();
+                refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement();
             InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);

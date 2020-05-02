@@ -5,39 +5,45 @@
 #include <cmath>
 #include <algorithm>
 #include <random>
+#include "randomGenerator.h"
+#include "statistics.h"
 
 // concept
-template<typename SimulationType, typename Statistics>
-class Location : public Statistics {
+template<typename SimulationType>
+class Location {
+    using AgentType = Agent<typename SimulationType::AgentListType>;
+
     typename SimulationType::PositionType_t position;
     typename SimulationType::TypeOfLocation_t locType;
-    std::vector<Agent<typename SimulationType::AgentListType>> agents;
+    std::vector<AgentType> agents;
+    Statistic<typename SimulationType::PPState_t, AgentType> stat;
 
 public:
     Location(decltype(position) p, decltype(locType) t) : position(p), locType(t) {}
 
     void addAgent(unsigned a) {
         const auto& newAgent = agents.emplace_back(a);
-        Statistics::refreshStatisticNewAgent(newAgent);
+        stat.refreshStatisticNewAgent(newAgent);
     }
 
-    std::vector<Agent<typename SimulationType::AgentListType>>& getAgents() {
-        return agents;
+    void removeAgent(unsigned idx) {
+        std::swap(agents[idx], agents.back());
+        stat.refreshStatisticRemoveAgent(agents.back());
+        agents.pop_back();
     }
 
-    // TODO this should be a policy, which we'll optimise for performance
+    std::vector<AgentType>& getAgents() { return agents; }
+
+    // TODO optimise randoms for performance
     void infectAgents(double ratio) {
         unsigned newInfections = 0;
-        // TODO random device and gen should be defined once
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(0.0, 1.0);
         std::for_each(agents.begin(), agents.end(), [&](auto a) {
-            if (a.getSIRDState() == states::SIRD::S && dis(gen) < ratio) {
+            if (a.getSIRDState() == states::SIRD::S && RandomGenerator::randomUnit() < ratio) {
                 a.gotInfected();
                 ++newInfections;
             }
         });
-        Statistics::setNewlyInfected(newInfections);
     }
+
+    const auto& refreshAndGetStatistic() { return stat.refreshandGetAfterMidnight(agents); }
 };
