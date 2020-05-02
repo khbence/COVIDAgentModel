@@ -5,27 +5,40 @@
 #include <cmath>
 #include <algorithm>
 #include <random>
+#include "randomGenerator.h"
+#include "statistics.h"
 
 // concept
-template<typename SimulationType, typename Statistics>
-class Location : public Statistics {
+template<typename SimulationType>
+class Location {
+    using AgentType = Agent<typename SimulationType::AgentListType>;
+
     typename SimulationType::PositionType_t position;
     typename SimulationType::TypeOfLocation_t locType;
     device_vector<unsigned> agents;
+    Statistic<typename SimulationType::PPState_t, AgentType> stat;
 
 public:
     Location(decltype(position) p, decltype(locType) t) : position(p), locType(t) {}
-
-    void addAgent(unsigned a) {
-        agents.push_back(a);
-        //Statistics::refreshStatisticNewAgent<typename SimulationType::AgentListType>(a);
-    }
 
     device_vector<unsigned>& getAgents() {
         return agents;
     }
 
-    // TODO this should be a policy, which we'll optimise for performance
+    void addAgent(unsigned a) {
+        agents.push_back(a);
+        stat.refreshStatisticNewAgent(Agent(a));
+    }
+
+    void removeAgent(unsigned idx) {
+        agents.back().swap(agents[idx]);
+        stat.refreshStatisticRemoveAgent(Agent(agents.back()));
+        agents.pop_back();
+    }
+
+    std::vector<AgentType>& getAgents() { return agents; }
+
+    // TODO optimise randoms for performance
     void infectAgents(double ratio) {
         // TODO random device and gen should be defined once
         std::random_device rd;
@@ -40,6 +53,7 @@ public:
             }
             return 0;
         },0,plus<int>());
-        Statistics::setNewlyInfected(newInfections);
     }
+
+    const auto& refreshAndGetStatistic() { return stat.refreshandGetAfterMidnight(agents); }
 };

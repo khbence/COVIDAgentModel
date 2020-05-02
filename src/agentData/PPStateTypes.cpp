@@ -38,6 +38,11 @@ void PPStateSIRextended::applyNewIdx() {
     }
 }
 
+void PPStateSIRextended::printHeader() {
+    // I was lazy to do it properly
+    std::cout << "S, I1, I2, I3, I4, I5, I6, R1, R2, R3, D\n";
+}
+
 PPStateSIRextended::PPStateSIRextended() : PPStateSIRAbstract(states::SIRD::S) {}
 PPStateSIRextended::PPStateSIRextended(states::SIRD s) : PPStateSIRAbstract(s) {
     idx = static_cast<char>(state);
@@ -61,8 +66,9 @@ void PPStateSIRextended::update(float scalingSymptons) {
     if (daysBeforeNextState == 0) {
         auto [stateIdx, days] = transition.calculateNextState(idx, scalingSymptons);
         daysBeforeNextState = days;
-        // std::cout << "From " << (int)idx << " -> " <<stateIdx<<"\n";
         idx = stateIdx;
         applyNewIdx();
     }
 }
+
+char PPStateSIRextended::getStateIdx() const { return idx; }

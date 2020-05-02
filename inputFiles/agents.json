@@ -1,5 +1,25 @@
 {
     "people": [
-        {}
+        {
+            "age": 48,
+            "sex": "M",
+            "preCond": "cancer",
+            "SIRD": "S",
+            "typeID": 4,
+            "locations": [
+                {
+                    "typeID": 0,
+                    "locID": 12587
+                },
+                {
+                    "typeID": 1,
+                    "locID": 125
+                },
+                {
+                    "typeID": 2,
+                    "locID": 87
+                }
+            ]
+        }
     ]
 }

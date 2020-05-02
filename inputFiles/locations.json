@@ -9,7 +9,11 @@
             ],
             "area": 250,
             "state": "ON",
-            "capacity": 10
+            "capacity": 10,
+            "ageInter": [
+                10,
+                70
+            ]
         },
         {
             "id": 1,
@@ -20,7 +24,11 @@
             ],
             "area": 100,
             "state": "ON",
-            "capacity": -1
+            "capacity": -1,
+            "ageInter": [
+                10,
+                70
+            ]
         }
     ]
 }

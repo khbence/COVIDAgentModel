@@ -5,43 +5,34 @@
 #include "timeHandler.h"
 #include "customExceptions.h"
 #include "globalStates.h"
+#include "statistics.h"
 
 template<typename PositionType,
     typename TypeOfLocation,
+    typename PPState,
     typename AgentMeta,
     template<typename>
     typename MovementPolicy,
     template<typename>
-    typename InfectionPolicy,
-    template<typename>
-    typename ProgressionPolicy>
+    typename InfectionPolicy>
 class Simulation
     : private MovementPolicy<Simulation<PositionType,
           TypeOfLocation,
+          PPState,
           AgentMeta,
           MovementPolicy,
-          InfectionPolicy,
-          ProgressionPolicy>>
+          InfectionPolicy>>
     , InfectionPolicy<Simulation<PositionType,
           TypeOfLocation,
+          PPState,
           AgentMeta,
           MovementPolicy,
-          InfectionPolicy,
-          ProgressionPolicy>>
-    , ProgressionPolicy<Simulation<PositionType,
-          TypeOfLocation,
-          AgentMeta,
-          MovementPolicy,
-          InfectionPolicy,
-          ProgressionPolicy>> {
+          InfectionPolicy>> {
 
 public:
-    // using LocationType = Location<Simulation, typename
-    // InfectionPolicy<Simulation>::StatisticType>;
-    using PPState_t = typename ProgressionPolicy<Simulation>::PPStateType;
+    using PPState_t = PPState;
     using AgentMeta_t = AgentMeta;
-    using StatisticType = typename InfectionPolicy<Simulation>::StatisticType;
-    using LocationType = Location<Simulation, StatisticType>;
+    using LocationType = Location<Simulation>;
     using PositionType_t = PositionType;
     using TypeOfLocation_t = TypeOfLocation;
     using AgentListType = AgentList<PPState_t, AgentMeta_t, LocationType>;
@@ -53,8 +44,19 @@ private:
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
-    friend class ProgressionPolicy<Simulation>;
     // We can make it to a singleton later, but who knows
+    void refreshAndPrintStatistics() {
+        auto init = locations.begin()->refreshAndGetStatistic();
+        auto result =
+            std::accumulate(locations.begin() + 1, locations.end(), init, [](auto& sum, auto& loc) {
+                const auto& stat = loc.refreshAndGetStatistic();
+                for (unsigned i = 0; i < sum.size(); ++i) { sum[i] += stat[i]; }
+                return sum;
+            });
+        for (auto val : result) { std::cout << val << ", "; }
+        std::cout << '\n';
+    }
+
 public:
     void addLocation(PositionType p, TypeOfLocation t) { locations.push_back(LocationType(p, t)); }
     void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
@@ -72,14 +74,16 @@ public:
     }
 
     void runSimulation(unsigned timeStep_p, unsigned lengthOfSimulationWeeks) {
+        auto& agentList = agents->getAgentsList();
         timeStep = timeStep_p;
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
+        PPState_t::printHeader();
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
-                ProgressionPolicy<Simulation>::updateDiseaseStates();
-                // simTime.printDay();
+                for (auto& a : agentList) { a.progressDisease(); }
+                refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement();
             InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);

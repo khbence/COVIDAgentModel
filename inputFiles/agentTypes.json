@@ -1,4 +1,23 @@
 {
+    "commonSchedules": [
+        {
+            "id": 0,
+            "schedule": [
+                {
+                    "type": 2,
+                    "chance": 1,
+                    "start": 7.05,
+                    "end": 7.40
+                },
+                {
+                    "type": 8,
+                    "chance": 0.8,
+                    "start": 16,
+                    "end": 16.30
+                }
+            ]
+        }
+    ],
     "types": [
         {
             "name": "Manager",
@@ -9,21 +28,30 @@
                     "dayType": "weekday",
                     "schedule": [
                         {
+                            "id": 0,
                             "type": 2,
                             "chance": 1,
                             "start": 7.05,
-                            "max": 7.40
+                            "end": 7.40
                         },
                         {
+                            "id": 1,
                             "type": 8,
                             "chance": 0.8,
                             "start": 16,
-                            "max": 16.30
+                            "end": 16.30
                         }
                     ]
                 }
             ],
-            "schedulesTypic": []
+            "schedulesTypic": [
+                {
+                    "id": 2,
+                    "WB": "w",
+                    "dayType": "weekday",
+                    "scheduleId": 5
+                }
+            ]
         }
     ]
 }
