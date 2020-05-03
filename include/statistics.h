@@ -11,12 +11,12 @@ class Statistic {
 
 public:
     void refreshStatisticNewAgent(const unsigned& a) {
-        const auto& state = AgentType::AgentListType_t::getInstance()->PPValues[a];
+        typename AgentType::AgentListType_t::PPState_t state = AgentType::AgentListType_t::getInstance()->PPValues[a];
         ++states[state.getStateIdx()];
     }
 
     void refreshStatisticRemoveAgent(const unsigned& a) {
-        const auto& state = AgentType::AgentListType_t::getInstance()->PPValues[a];
+        typename AgentType::AgentListType_t::PPState_t state = AgentType::AgentListType_t::getInstance()->PPValues[a];
         --states[state.getStateIdx()];
     }
 

@@ -17,6 +17,8 @@ class AgentList {
     device_vector<bool> diagnosed;
     device_vector<Location*> locations;
 
+    using PPState_t = PPState;
+
     AgentList() = default;
     friend class Agent<AgentList>;
 
