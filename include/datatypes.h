@@ -9,5 +9,3 @@
 #include <thrust/binary_search.h>
 #include <thrust/sort.h>
 #include <thrust/sequence.h>
-
-using namespace thrust;

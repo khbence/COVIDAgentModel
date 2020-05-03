@@ -7,6 +7,7 @@
 #include <random>
 #include "randomGenerator.h"
 #include "statistics.h"
+#include "datatypes.h"
 
 // concept
 template<typename SimulationType>
@@ -15,15 +16,13 @@ class Location {
 
     typename SimulationType::PositionType_t position;
     typename SimulationType::TypeOfLocation_t locType;
-    device_vector<unsigned> agents;
+    thrust::device_vector<unsigned> agents;
     Statistic<typename SimulationType::PPState_t, AgentType> stat;
 
 public:
     Location(decltype(position) p, decltype(locType) t) : position(p), locType(t) {}
 
-    device_vector<unsigned>& getAgents() {
-        return agents;
-    }
+    thrust::device_vector<unsigned>& getAgents() { return agents; }
 
     void addAgent(unsigned a) {
         agents.push_back(a);
@@ -31,27 +30,27 @@ public:
     }
 
     void removeAgent(unsigned idx) {
-        //agents.back().swap(agents[idx]);
-        swap(agents.back(), agents[idx]);
+        // agents.back().swap(agents[idx]);
+        thrust::swap(agents.back(), agents[idx]);
         stat.refreshStatisticRemoveAgent(agents.back());
         agents.pop_back();
     }
 
     // TODO optimise randoms for performance
     void infectAgents(double ratio) {
-        // TODO random device and gen should be defined once
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(0.0, 1.0);
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
-        int newInfections = transform_reduce(make_permutation_iterator(ppstates.begin(), agents.begin()),
-                 make_permutation_iterator(ppstates.begin(), agents.end()),[&](auto &a) {
-            if (a.getSIRD() == states::SIRD::S && dis(gen) < ratio) {
-                a.gotInfected();
-                return 1;
-            }
-            return 0;
-        },0,plus<int>());
+        int newInfections = thrust::transform_reduce(
+            thrust::make_permutation_iterator(ppstates.begin(), agents.begin()),
+            thrust::make_permutation_iterator(ppstates.begin(), agents.end()),
+            [&](auto& a) {
+                if (a.getSIRD() == states::SIRD::S && RandomGenerator::randomUnit() < ratio) {
+                    a.gotInfected();
+                    return 1;
+                }
+                return 0;
+            },
+            0,
+            thrust::plus<int>());
     }
 
     const auto& refreshAndGetStatistic() { return stat.refreshandGetAfterMidnight(agents); }

@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "datatypes.h"
 /*
 template<typename T>
 concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
@@ -11,18 +12,18 @@ class Agent;
 
 template<typename PPState, typename AgentMeta, typename Location>
 class AgentList {
-    public:
-    device_vector<PPState> PPValues;
-    device_vector<AgentMeta> agentMetaData;
-    device_vector<bool> diagnosed;
-    device_vector<Location*> locations;
+public:
+    thrust::device_vector<PPState> PPValues;
+    thrust::device_vector<AgentMeta> agentMetaData;
+    thrust::device_vector<bool> diagnosed;
+    thrust::device_vector<Location*> locations;
 
     using PPState_t = PPState;
 
     AgentList() = default;
     friend class Agent<AgentList>;
 
-    device_vector<Agent<AgentList>> agents;
+    thrust::device_vector<Agent<AgentList>> agents;
 
 
     [[nodiscard]] static AgentList* getInstance() {
@@ -53,7 +54,7 @@ class AgentList {
         location->addAgent(PPValues.size() - 1);
     }
 
-    device_vector<Agent<AgentList>>& getAgentsList() { return agents; }
+    thrust::device_vector<Agent<AgentList>>& getAgentsList() { return agents; }
 
     PPState& getPPState(unsigned i) { return PPValues[i]; }
 };

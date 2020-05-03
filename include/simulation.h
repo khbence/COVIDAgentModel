@@ -84,14 +84,15 @@ public:
                 MovementPolicy<Simulation>::planLocations();
                 auto& ppstates = agents->PPValues;
                 auto& agentMeta = agents->agentMetaData;
-                //Update states
-                for_each(make_zip_iterator(make_tuple(ppstates.begin(), agentMeta.begin())),
-                        make_zip_iterator(make_tuple(ppstates.end(), agentMeta.end())),
-                        [](auto tup){
-                            auto &ppstate = get<0>(tup);
-                            auto &meta = get<1>(tup);
-                            ppstate.update(meta.getScalingSymptoms());
-                        });
+                // Update states
+                thrust::for_each(thrust::make_zip_iterator(
+                                     thrust::make_tuple(ppstates.begin(), agentMeta.begin())),
+                    thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end())),
+                    [](auto tup) {
+                        auto& ppstate = thrust::get<0>(tup);
+                        auto& meta = thrust::get<1>(tup);
+                        ppstate.update(meta.getScalingSymptoms());
+                    });
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement();

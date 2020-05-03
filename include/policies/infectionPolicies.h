@@ -12,10 +12,10 @@ class BasicInfection {
         auto& agents = loc.getAgents();
         auto realThis = static_cast<SimulationType*>(this);
         auto& ppstates = realThis->agents->PPValues;
-        unsigned numInfectedAgentsPresent = count_if(
-                make_permutation_iterator(ppstates.begin(), agents.begin()),
+        unsigned numInfectedAgentsPresent =
+            count_if(make_permutation_iterator(ppstates.begin(), agents.begin()),
                 make_permutation_iterator(ppstates.begin(), agents.end()),
-            [](auto ppstate) { return ppstate.getSIRD() == states::SIRD::I; });
+                [](auto ppstate) { return ppstate.getSIRD() == states::SIRD::I; });
         unsigned total = agents.size();
         if (numInfectedAgentsPresent == 0) return 0;
         double densityOfInfected = double(numInfectedAgentsPresent) / (agents.size() * 1.2);
@@ -29,8 +29,7 @@ class BasicInfection {
 protected:
     void infectionsAtLocations(unsigned timeStep) {
         auto realThis = static_cast<SimulationType*>(this);
-        std::for_each(realThis->locations.begin(),realThis->locations.end(),
-        [=] (auto& loc) {
+        std::for_each(realThis->locations.begin(), realThis->locations.end(), [&](auto& loc) {
             loc.infectAgents(getInfectionRatio(loc, timeStep));
             // std::cout << "Healthy: " << healthy << " - Infected: " << infected << " Date: ";
         });
