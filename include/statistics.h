@@ -26,7 +26,7 @@ public:
         auto ppstates = AgentType::AgentListType_t::getInstance()->PPValues;
         transform(make_permutation_iterator(ppstates.begin(), agents.begin()),
                   make_permutation_iterator(ppstates.begin(), agents.begin()),
-                  idxs.begin(),[](auto &ppstate){return ppstate.getIdx();});
+                  idxs.begin(),[](auto &ppstate){return ppstate.getStateIdx();});
         //Sort them
         sort(idxs.begin(),idxs.end());
 
