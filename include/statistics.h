@@ -28,11 +28,14 @@ public:
         thrust::device_vector<char> idxs(agents.size());
         auto ppstates = AgentType::AgentListType_t::getInstance()->PPValues;
         thrust::transform(thrust::make_permutation_iterator(ppstates.begin(), agents.begin()),
-            thrust::make_permutation_iterator(ppstates.begin(), agents.begin()),
+            thrust::make_permutation_iterator(ppstates.begin(), agents.end()),
             idxs.begin(),
             [](auto& ppstate) { return ppstate.getStateIdx(); });
         // Sort them
         thrust::sort(idxs.begin(), idxs.end());
+        thrust::host_vector<int> h_idxs(idxs);
+//        thrust::copy(h_idxs.begin(), h_idxs.end(), std::ostream_iterator<int>(std::cout, " "));
+//        std::cout << std::endl;
 
         thrust::device_vector<char> d_states(PPStateType::numberOfStates);
         thrust::device_vector<unsigned int> offsets(PPStateType::numberOfStates);

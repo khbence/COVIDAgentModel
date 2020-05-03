@@ -39,11 +39,20 @@ public:
     // TODO optimise randoms for performance
     void infectAgents(double ratio) {
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
+        thrust::device_vector<float> rnds(agents.size());
+        rnds = RandomGenerator::fillUnitf(agents.size());
+        //auto &rnds_host 
+        //thrust::copy(rnds_host.begin(), rnds_host.end(), rnds.begin());
+
         int newInfections = thrust::transform_reduce(
-            thrust::make_permutation_iterator(ppstates.begin(), agents.begin()),
-            thrust::make_permutation_iterator(ppstates.begin(), agents.end()),
-            [&](auto& a) {
-                if (a.getSIRD() == states::SIRD::S && RandomGenerator::randomUnit() < ratio) {
+            thrust::make_zip_iterator(thrust::make_tuple(rnds.begin(),
+                thrust::make_permutation_iterator(ppstates.begin(), agents.begin()))),
+            thrust::make_zip_iterator(thrust::make_tuple(rnds.end(),
+                thrust::make_permutation_iterator(ppstates.begin(), agents.end()))),
+            [=](auto& i) {
+                auto &rnd = thrust::get<0>(i);
+                auto &a = thrust::get<1>(i);
+                if (a.getSIRD() == states::SIRD::S && rnd < ratio) {
                     a.gotInfected();
                     return 1;
                 }
@@ -51,6 +60,7 @@ public:
             },
             0,
             thrust::plus<int>());
+        //if (newInfections) std::cout << newInfections << std::endl;
     }
 
     const auto& refreshAndGetStatistic() { return stat.refreshandGetAfterMidnight(agents); }
