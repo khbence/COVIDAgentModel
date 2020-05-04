@@ -16,7 +16,7 @@ using TypeOfLocation = int;
 int main(int argc, char const* argv[]) {
     constexpr unsigned lengthInWeeks = 12;
     constexpr unsigned timeStep = 10;
-    RandomGenerator::init(1);
+    RandomGenerator::init(omp_get_max_threads());
     Simulation<PositionType,
         TypeOfLocation,
         PPStateSIRextended,
@@ -27,8 +27,8 @@ int main(int argc, char const* argv[]) {
 
     // setup for test
     {
-        constexpr unsigned numAgents = 100;
-        constexpr double initial_infected_ratio = 0.05;
+        constexpr unsigned numAgents = 1000000;
+        constexpr double initial_infected_ratio = 0.01;
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(0.0, 1.0);
