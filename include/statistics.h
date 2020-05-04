@@ -43,7 +43,7 @@ public:
         thrust::lower_bound(
             idxs.begin(), idxs.end(), d_states.begin(), d_states.end(), offsets.begin());
         thrust::host_vector<unsigned int> h_offsets(offsets);
-        for (int i = 0; i < offsets.size(); i++) { states[i] = h_offsets[i + 1] - h_offsets[i]; }
+        for (int i = 0; i < offsets.size()-1; i++) { states[i] = h_offsets[i + 1] - h_offsets[i]; }
         states.back() = agents.size() - h_offsets.back();
         return states;
     }
