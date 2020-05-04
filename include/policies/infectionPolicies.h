@@ -13,7 +13,7 @@ class BasicInfection {
         auto realThis = static_cast<SimulationType*>(this);
         auto& ppstates = realThis->agents->PPValues;
         unsigned numInfectedAgentsPresent =
-            count_if(make_permutation_iterator(ppstates.begin(), agents.begin()),
+            thrust::count_if(make_permutation_iterator(ppstates.begin(), agents.begin()),
                 make_permutation_iterator(ppstates.begin(), agents.end()),
                 [](auto ppstate) { return ppstate.getSIRD() == states::SIRD::I; });
         unsigned total = agents.size();

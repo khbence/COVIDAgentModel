@@ -41,18 +41,17 @@ public:
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
         thrust::device_vector<float> rnds(agents.size());
         rnds = RandomGenerator::fillUnitf(agents.size());
-        int inf1 = count_if(ppstates.begin(), ppstates.end(), [](auto &ppstate) {return ppstate.getSIRD() == states::SIRD::I;});
-        thrust::for_each(
-            thrust::make_zip_iterator(thrust::make_tuple(rnds.begin(),
-                thrust::make_permutation_iterator(ppstates.begin(), agents.begin()))),
-            thrust::make_zip_iterator(thrust::make_tuple(rnds.end(),
-                thrust::make_permutation_iterator(ppstates.begin(), agents.end()))),
+        int inf1 = count_if(ppstates.begin(), ppstates.end(), [](auto& ppstate) {
+            return ppstate.getSIRD() == states::SIRD::I;
+        });
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(rnds.begin(),
+                             thrust::make_permutation_iterator(ppstates.begin(), agents.begin()))),
+            thrust::make_zip_iterator(thrust::make_tuple(
+                rnds.end(), thrust::make_permutation_iterator(ppstates.begin(), agents.end()))),
             [=](auto i) {
-                auto &rnd = thrust::get<0>(i);
-                auto &a = thrust::get<1>(i);
-                if (a.getSIRD() == states::SIRD::S && rnd < ratio) {
-                    a.gotInfected();
-                }
+                auto& rnd = thrust::get<0>(i);
+                auto& a = thrust::get<1>(i);
+                if (a.getSIRD() == states::SIRD::S && rnd < ratio) { a.gotInfected(); }
             });
     }
 

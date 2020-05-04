@@ -31,7 +31,8 @@ class PPStateSIRextended : public PPStateSIRAbstract {
     char subState = 0;// I1, I2, I3 ... R1, R2
     char idx = 0;
 
-    // future
+    // -1 it will remain in that state until something special event happens, like got infected
+    // -2 has to be calculated during update
     int daysBeforeNextState = -1;
 
 public:
@@ -53,7 +54,7 @@ public:
     explicit PPStateSIRextended(states::SIRD s);
     explicit PPStateSIRextended(char idx_p);
     void gotInfected() override;
-    [[nodiscard]] char getSubState() {return subState;}
+    [[nodiscard]] char getSubState() { return subState; }
     static void initTransitionMatrix(const std::string& inputFile) {
         transition = decltype(transition)(inputFile);
     }

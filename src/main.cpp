@@ -8,6 +8,7 @@
 #include <inputJSON.h>
 #include <random>
 #include "randomGenerator.h"
+#include <omp.h>
 
 
 using PositionType = int;
@@ -16,7 +17,7 @@ using TypeOfLocation = int;
 int main(int argc, char const* argv[]) {
     constexpr unsigned lengthInWeeks = 12;
     constexpr unsigned timeStep = 10;
-    RandomGenerator::init(1);
+    RandomGenerator::init(omp_get_max_threads());
     Simulation<PositionType,
         TypeOfLocation,
         PPStateSIRextended,
@@ -27,7 +28,7 @@ int main(int argc, char const* argv[]) {
 
     // setup for test
     {
-        constexpr unsigned numAgents = 100;
+        constexpr unsigned numAgents = 10000;
         constexpr double initial_infected_ratio = 0.05;
         std::random_device rd;
         std::mt19937 gen(rd());

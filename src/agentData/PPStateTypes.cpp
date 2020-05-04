@@ -57,11 +57,13 @@ PPStateSIRextended::PPStateSIRextended(char idx_p)
 void PPStateSIRextended::gotInfected() {
     idx = 1;
     applyNewIdx();
-    daysBeforeNextState = transition.calculateJustDays(idx);
+    daysBeforeNextState = -2;
     // std::cout << "From " << 0 << " -> " << (int)idx<<"\n";
 }
 
 void PPStateSIRextended::update(float scalingSymptons) {
+    // the order of the first two if is intentional
+    if (daysBeforeNextState == -2) { daysBeforeNextState = transition.calculateJustDays(idx); }
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }
     if (daysBeforeNextState == 0) {
         auto [stateIdx, days] = transition.calculateNextState(idx, scalingSymptons);
