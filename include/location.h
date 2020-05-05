@@ -8,6 +8,7 @@
 #include "randomGenerator.h"
 #include "statistics.h"
 #include "datatypes.h"
+#include "timing.h"
 
 // concept
 template<typename SimulationType>
@@ -38,6 +39,7 @@ public:
 
     // TODO optimise randoms for performance
     void infectAgents(double ratio) {
+        Timing::startTimer("Location::infectAgents");
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
         thrust::device_vector<float> rnds(agents.size());
         rnds = RandomGenerator::fillUnitf(agents.size());
@@ -50,6 +52,7 @@ public:
                 auto& a = thrust::get<1>(i);
                 if (a.getSIRD() == states::SIRD::S && rnd < ratio) { a.gotInfected(); }
             });
+        Timing::stopTimer("Location::infectAgents");
     }
 
     const auto& refreshAndGetStatistic() { return stat.refreshandGetAfterMidnight(agents); }

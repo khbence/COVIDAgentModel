@@ -47,6 +47,7 @@ private:
     friend class InfectionPolicy<Simulation>;
 
     void updateAgents() {
+        Timing::startTimer("Simulation::updateAgents");
         auto& ppstates = agents->PPValues;
         auto& agentMeta = agents->agentMetaData;
         // Update states
@@ -58,9 +59,11 @@ private:
                 auto& meta = thrust::get<1>(tup);
                 ppstate.update(meta.getScalingSymptoms());
             });
+        Timing::stopTimer("Simulation::updateAgents");
     }
 
     void refreshAndPrintStatistics() {
+        Timing::startTimer("Simulation::refreshAndPrintStatistics");
         auto init = locations.begin()->refreshAndGetStatistic();
         auto result =
             std::accumulate(locations.begin() + 1, locations.end(), init, [](auto& sum, auto& loc) {
@@ -70,6 +73,7 @@ private:
             });
         for (auto val : result) { std::cout << val << ", "; }
         std::cout << '\n';
+        Timing::stopTimer("Simulation::refreshAndPrintStatistics");
     }
 
 public:

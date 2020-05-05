@@ -24,6 +24,7 @@ public:
 
     const decltype(states)& refreshandGetAfterMidnight(
         const thrust::device_vector<unsigned>& agents) {
+        Timing::startTimer("Statistics::refreshandGetAfterMidnight");
         // Extract Idxs
         thrust::device_vector<char> idxs(agents.size());
         auto ppstates = AgentType::AgentListType_t::getInstance()->PPValues;
@@ -45,6 +46,7 @@ public:
         thrust::host_vector<unsigned int> h_offsets(offsets);
         for (int i = 0; i < offsets.size()-1; i++) { states[i] = h_offsets[i + 1] - h_offsets[i]; }
         states.back() = agents.size() - h_offsets.back();
+        Timing::stopTimer("Statistics::refreshandGetAfterMidnight");
         return states;
     }
 };

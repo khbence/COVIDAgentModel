@@ -3,6 +3,7 @@
 #include <vector>
 #include <omp.h>
 #include "datatypes.h"
+#include "timing.h"
 
 class RandomGenerator {
     static std::vector<std::mt19937_64> generators;
@@ -15,12 +16,14 @@ public:
     }
 
     [[nodiscard]] static thrust::host_vector<float> fillUnitf(unsigned size) {
+        Timing::startTimer("RandomGenerator::fillUnitf");
         thrust::host_vector<float> tmp(size);
         std::uniform_real_distribution<double> dis(0, 1);
         //#pragma omp parallel for private(dis)
         for (int i = 0; i < size; i++) {
             tmp[i] = dis(generators[0]);
         }
+        Timing::stopTimer("RandomGenerator::fillUnitf");
         return tmp;
     }
 
