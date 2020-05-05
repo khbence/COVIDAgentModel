@@ -28,12 +28,11 @@ class BasicInfection {
 
 protected:
     void infectionsAtLocations(unsigned timeStep) {
-        Timing::startTimer("BasicInfection::infectionsAtLocations");
+        PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
         std::for_each(realThis->locations.begin(), realThis->locations.end(), [&](auto& loc) {
             loc.infectAgents(getInfectionRatio(loc, timeStep));
             // std::cout << "Healthy: " << healthy << " - Infected: " << infected << " Date: ";
         });
-        Timing::stopTimer("BasicInfection::infectionsAtLocations");
     }
 };

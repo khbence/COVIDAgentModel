@@ -47,7 +47,7 @@ private:
     friend class InfectionPolicy<Simulation>;
 
     void updateAgents() {
-        Timing::startTimer("Simulation::updateAgents");
+        PROFILE_FUNCTION();
         auto& ppstates = agents->PPValues;
         auto& agentMeta = agents->agentMetaData;
         // Update states
@@ -59,11 +59,10 @@ private:
                 auto& meta = thrust::get<1>(tup);
                 ppstate.update(meta.getScalingSymptoms());
             });
-        Timing::stopTimer("Simulation::updateAgents");
     }
 
     void refreshAndPrintStatistics() {
-        Timing::startTimer("Simulation::refreshAndPrintStatistics");
+        PROFILE_FUNCTION();
         auto init = locations.begin()->refreshAndGetStatistic();
         auto result =
             std::accumulate(locations.begin() + 1, locations.end(), init, [](auto& sum, auto& loc) {
@@ -73,7 +72,6 @@ private:
             });
         for (auto val : result) { std::cout << val << ", "; }
         std::cout << '\n';
-        Timing::stopTimer("Simulation::refreshAndPrintStatistics");
     }
 
 public:
@@ -83,19 +81,18 @@ public:
     }
 
     bool initialization() {
-        Timing::startTimer("Simulation::initialization");
+        PROFILE_FUNCTION();
         try {
             PPState_t::initTransitionMatrix("../inputFiles/transition.json");
         } catch (TransitionInputError& e) {
             std::cerr << e.what();
             return false;
         }
-        Timing::stopTimer("Simulation::initialization");
         return true;
     }
 
     void runSimulation(unsigned timeStep_p, unsigned lengthOfSimulationWeeks) {
-        Timing::startTimer("Simulation::runSimulation");
+        PROFILE_FUNCTION();
         auto& agentList = agents->getAgentsList();
         timeStep = timeStep_p;
         Timehandler simTime(timeStep);
@@ -111,6 +108,5 @@ public:
             InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
             ++simTime;
         }
-        Timing::stopTimer("Simulation::runSimulation");
     }
 };

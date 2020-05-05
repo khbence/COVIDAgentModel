@@ -3,6 +3,7 @@
 #include "globalStates.h"
 #include <array>
 #include <algorithm>
+#include "timing.h"
 
 template<typename PPStateType, typename AgentType>
 class Statistic {
@@ -24,7 +25,7 @@ public:
 
     const decltype(states)& refreshandGetAfterMidnight(
         const thrust::device_vector<unsigned>& agents) {
-        Timing::startTimer("Statistics::refreshandGetAfterMidnight");
+        PROFILE_FUNCTION();
         // Extract Idxs
         thrust::device_vector<char> idxs(agents.size());
         auto ppstates = AgentType::AgentListType_t::getInstance()->PPValues;
@@ -35,8 +36,8 @@ public:
         // Sort them
         thrust::sort(idxs.begin(), idxs.end());
         thrust::host_vector<int> h_idxs(idxs);
-//        thrust::copy(h_idxs.begin(), h_idxs.end(), std::ostream_iterator<int>(std::cout, " "));
-//        std::cout << std::endl;
+        //        thrust::copy(h_idxs.begin(), h_idxs.end(), std::ostream_iterator<int>(std::cout, "
+        //        ")); std::cout << std::endl;
 
         thrust::device_vector<char> d_states(PPStateType::numberOfStates);
         thrust::device_vector<unsigned int> offsets(PPStateType::numberOfStates);
@@ -44,9 +45,10 @@ public:
         thrust::lower_bound(
             idxs.begin(), idxs.end(), d_states.begin(), d_states.end(), offsets.begin());
         thrust::host_vector<unsigned int> h_offsets(offsets);
-        for (int i = 0; i < offsets.size()-1; i++) { states[i] = h_offsets[i + 1] - h_offsets[i]; }
+        for (int i = 0; i < offsets.size() - 1; i++) {
+            states[i] = h_offsets[i + 1] - h_offsets[i];
+        }
         states.back() = agents.size() - h_offsets.back();
-        Timing::stopTimer("Statistics::refreshandGetAfterMidnight");
         return states;
     }
 };
