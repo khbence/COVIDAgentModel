@@ -6,6 +6,7 @@
 #include "customExceptions.h"
 #include "globalStates.h"
 #include "statistics.h"
+#include "timing.h"
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -78,16 +79,19 @@ public:
     }
 
     bool initialization() {
+        Timing::startTimer("Simulation::initialization");
         try {
             PPState_t::initTransitionMatrix("../inputFiles/transition.json");
         } catch (TransitionInputError& e) {
             std::cerr << e.what();
             return false;
         }
+        Timing::stopTimer("Simulation::initialization");
         return true;
     }
 
     void runSimulation(unsigned timeStep_p, unsigned lengthOfSimulationWeeks) {
+        Timing::startTimer("Simulation::runSimulation");
         auto& agentList = agents->getAgentsList();
         timeStep = timeStep_p;
         Timehandler simTime(timeStep);
@@ -103,5 +107,6 @@ public:
             InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
             ++simTime;
         }
+        Timing::stopTimer("Simulation::runSimulation");
     }
 };

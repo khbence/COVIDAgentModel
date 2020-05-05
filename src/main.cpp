@@ -9,14 +9,16 @@
 #include <random>
 #include "randomGenerator.h"
 #include <omp.h>
+#include "timing.h"
 
 
 using PositionType = int;
 using TypeOfLocation = int;
 
 int main(int argc, char const* argv[]) {
-    constexpr unsigned lengthInWeeks = 12;
+    constexpr unsigned lengthInWeeks = 6;
     constexpr unsigned timeStep = 10;
+    Timing::startTimer("main");
     RandomGenerator::init(omp_get_max_threads());
     Simulation<PositionType,
         TypeOfLocation,
@@ -29,7 +31,7 @@ int main(int argc, char const* argv[]) {
     // setup for test
     {
         constexpr unsigned numAgents = 10000;
-        constexpr double initial_infected_ratio = 0.05;
+        constexpr double initial_infected_ratio = 0.01;
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(0.0, 1.0);
@@ -48,5 +50,7 @@ int main(int argc, char const* argv[]) {
 
     s.initialization();
     s.runSimulation(timeStep, lengthInWeeks);
+    Timing::stopTimer("main");
+    Timing::report();
     return EXIT_SUCCESS;
 }
