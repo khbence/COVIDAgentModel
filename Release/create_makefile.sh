@@ -2,4 +2,4 @@
 if [ -f CMakeCache.txt ]; then
     rm CMakeCache.txt
 fi
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
