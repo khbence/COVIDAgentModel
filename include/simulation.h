@@ -7,6 +7,7 @@
 #include "globalStates.h"
 #include "statistics.h"
 #include "timing.h"
+#include "util.h"
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -40,8 +41,8 @@ public:
 
 private:
     std::vector<LocationType> locations;
-    device_vector<unsigned> locationAgentList; //indices of agents sorted by location, and sorted by agent index
-    device_vector<unsigned> locationListOffsets; //into locationAgentList
+    thrust::device_vector<unsigned> locationAgentList; //indices of agents sorted by location, and sorted by agent index
+    thrust::device_vector<unsigned> locationListOffsets; //into locationAgentList
 
     AgentListType* agents = AgentListType::getInstance();
     unsigned timeStep = 10;

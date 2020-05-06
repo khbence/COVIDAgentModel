@@ -33,7 +33,7 @@ public:
 
     [[nodiscard]] bool checkConsistency() const;// if all vector are of the same lengths
 
-    unsigned addAgent(PPState state, bool isDiagnosed, unsigned location) {
+    unsigned addAgent(PPState state, bool isDiagnosed, unsigned agentLocation) {
         // Or should we just trust push_back? I would trust it, or probably best would be if we
         // should write the numbers in the input file
         /*if (PPValues.size() == PPValues.capacity()) {
@@ -47,7 +47,7 @@ public:
         }*/
         PPValues.push_back(state);
         diagnosed.push_back(isDiagnosed);
-        location.push_back(location);
+        location.push_back(agentLocation);
         agents.push_back(Agent<AgentList>(PPValues.size() - 1));
         agentMetaData.push_back(AgentMeta());
         // Add this agent to the location provided
