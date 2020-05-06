@@ -40,6 +40,9 @@ public:
 
 private:
     std::vector<LocationType> locations;
+    device_vector<unsigned> locationAgentList; //indices of agents sorted by location, and sorted by agent index
+    device_vector<unsigned> locationListOffsets; //into locationAgentList
+
     AgentListType* agents = AgentListType::getInstance();
     unsigned timeStep = 10;
 
@@ -77,11 +80,16 @@ private:
 public:
     void addLocation(PositionType p, TypeOfLocation t) { locations.push_back(LocationType(p, t)); }
     void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
-        agents->addAgent(state, isDiagnosed, &locations[locationID]);
+        unsigned idx = agents->addAgent(state, isDiagnosed, locationID);
+        locations[locationID].addAgent(idx);
     }
 
+    //Must be called after all agents have been added
     bool initialization() {
         PROFILE_FUNCTION();
+        locationAgentList.resize(agents->location.size());
+        locationListOffsets.resize(locations.size()+1);
+        Util::updatePerLocationAgentLists(agents->location,locationAgentList,locationListOffsets);
         try {
             PPState_t::initTransitionMatrix("../inputFiles/transition.json");
         } catch (TransitionInputError& e) {
