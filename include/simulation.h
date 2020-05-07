@@ -42,6 +42,7 @@ public:
 private:
     std::vector<LocationType> locations;
     thrust::device_vector<unsigned> locationAgentList; //indices of agents sorted by location, and sorted by agent index
+    thrust::device_vector<unsigned> locationIdsOfAgents; //indices of locations of the agents sorted by location, and sorted by agent index
     thrust::device_vector<unsigned> locationListOffsets; //into locationAgentList
 
     AgentListType* agents = AgentListType::getInstance();
@@ -67,10 +68,16 @@ private:
 
     void refreshAndPrintStatistics() {
         PROFILE_FUNCTION();
-        auto init = locations.begin()->refreshAndGetStatistic();
+        thrust::host_vector<unsigned> h_locationListOffsets(locationListOffsets);
+        for (unsigned i = 0; i < locations.size(); i++) {
+            std::pair<unsigned, unsigned> &idxs = locations[i].getAgents();
+            idxs.first = h_locationListOffsets[i];
+            idxs.second = h_locationListOffsets[i+1];
+        }
+        auto init = locations.begin()->refreshAndGetStatistic(locationAgentList);
         auto result =
-            std::accumulate(locations.begin() + 1, locations.end(), init, [](auto& sum, auto& loc) {
-                const auto& stat = loc.refreshAndGetStatistic();
+            std::accumulate(locations.begin() + 1, locations.end(), init, [&](auto& sum, auto& loc) {
+                const auto& stat = loc.refreshAndGetStatistic(locationAgentList);
                 for (unsigned i = 0; i < sum.size(); ++i) { sum[i] += stat[i]; }
                 return sum;
             });
@@ -89,8 +96,9 @@ public:
     bool initialization() {
         PROFILE_FUNCTION();
         locationAgentList.resize(agents->location.size());
+        locationIdsOfAgents.resize(agents->location.size());
         locationListOffsets.resize(locations.size()+1);
-        Util::updatePerLocationAgentLists(agents->location,locationAgentList,locationListOffsets);
+        Util::updatePerLocationAgentLists(agents->location,locationIdsOfAgents,locationAgentList,locationListOffsets);
         try {
             PPState_t::initTransitionMatrix("../inputFiles/transition.json");
         } catch (TransitionInputError& e) {
@@ -113,7 +121,7 @@ public:
                 updateAgents();
                 refreshAndPrintStatistics();
             }
-            MovementPolicy<Simulation>::movement();
+            MovementPolicy<Simulation>::movement(simTime);
             InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
             ++simTime;
         }

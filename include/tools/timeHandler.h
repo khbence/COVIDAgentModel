@@ -45,6 +45,8 @@ public:
 
     [[nodiscard]] bool isMidnight() const { return (counter % stepsPerDay) == 0; }
 
+    [[nodiscard]] unsigned getStepsPerDay() const {return stepsPerDay;}
+
     friend std::ostream& operator<<(std::ostream& out, const Timehandler& t) {
         auto t_c = std::chrono::system_clock::to_time_t(t.current);
         out << std::put_time(std::localtime(&t_c), "%F %T");

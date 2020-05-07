@@ -1,4 +1,5 @@
 #pragma once
+#include "datatypes.h"
 #include "agent.h"
 #include "globalStates.h"
 #include <array>
@@ -24,13 +25,17 @@ public:
     }
 
     const decltype(states)& refreshandGetAfterMidnight(
-        const thrust::device_vector<unsigned>& agents) {
+        const std::pair<unsigned,unsigned>& agents,
+        const thrust::device_vector<unsigned> &locationAgentList) {
         PROFILE_FUNCTION();
         // Extract Idxs
-        thrust::device_vector<char> idxs(agents.size());
+        unsigned numAgentsAtLocation = agents.second - agents.first;
+        thrust::device_vector<char> idxs(numAgentsAtLocation);
         auto ppstates = AgentType::AgentListType_t::getInstance()->PPValues;
-        thrust::transform(thrust::make_permutation_iterator(ppstates.begin(), agents.begin()),
-            thrust::make_permutation_iterator(ppstates.begin(), agents.end()),
+        //DESC: for (unsigned i = agents.first; i < agents.second; i++) {ppstate = ppstates[locationAgentList[i]];}
+        thrust::transform(
+            thrust::make_permutation_iterator(ppstates.begin(), locationAgentList.begin()+agents.first),
+            thrust::make_permutation_iterator(ppstates.begin(), locationAgentList.begin()+agents.second),
             idxs.begin(),
             [](auto& ppstate) { return ppstate.getStateIdx(); });
         // Sort them
@@ -48,7 +53,7 @@ public:
         for (int i = 0; i < offsets.size() - 1; i++) {
             states[i] = h_offsets[i + 1] - h_offsets[i];
         }
-        states.back() = agents.size() - h_offsets.back();
+        states.back() = numAgentsAtLocation - h_offsets.back();
         return states;
     }
 };

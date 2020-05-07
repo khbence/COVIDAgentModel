@@ -30,8 +30,8 @@ int main(int argc, char const* argv[]) {
 
     // setup for test
     {
-        constexpr unsigned numAgents = 100000;
-        constexpr double initial_infected_ratio = 0.01;
+        constexpr unsigned numAgents = 1000;
+        constexpr double initial_infected_ratio = 0.05;
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(0.0, 1.0);
