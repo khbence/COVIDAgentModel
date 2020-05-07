@@ -32,6 +32,7 @@ public:
         unsigned numAgentsAtLocation = agents.second - agents.first;
         thrust::device_vector<char> idxs(numAgentsAtLocation);
         auto ppstates = AgentType::AgentListType_t::getInstance()->PPValues;
+        //DEBUG thrust::copy(locationAgentList.begin()+agents.first, locationAgentList.begin()+agents.second, std::ostream_iterator<int>(std::cout, " ")); std::cout << std::endl;
         //DESC: for (unsigned i = agents.first; i < agents.second; i++) {ppstate = ppstates[locationAgentList[i]];}
         thrust::transform(
             thrust::make_permutation_iterator(ppstates.begin(), locationAgentList.begin()+agents.first),
@@ -41,8 +42,7 @@ public:
         // Sort them
         thrust::sort(idxs.begin(), idxs.end());
         thrust::host_vector<int> h_idxs(idxs);
-        //        thrust::copy(h_idxs.begin(), h_idxs.end(), std::ostream_iterator<int>(std::cout, "
-        //        ")); std::cout << std::endl;
+        //DEBUG thrust::copy(h_idxs.begin(), h_idxs.end(), std::ostream_iterator<int>(std::cout, " ")); std::cout << std::endl;
 
         thrust::device_vector<char> d_states(PPStateType::numberOfStates);
         thrust::device_vector<unsigned int> offsets(PPStateType::numberOfStates);

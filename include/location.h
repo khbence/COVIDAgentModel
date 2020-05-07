@@ -38,6 +38,7 @@ public:
                              thrust::device_vector<unsigned> &agentLocations) {
         PROFILE_FUNCTION();
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
+        //DEBUG unsigned count1 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto &ppstate) {return ppstate.getSIRD() == states::SIRD::I;});
         //DESC: for (int i = 0; i < number_of_agents; i++) {ppstate = ppstates[i]; infectionRatio = infectionRatioAtLocations[agentLocations[i]];...}
         thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(),
                                                    thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.begin()))),
@@ -50,9 +51,11 @@ public:
                                 ppstate.gotInfected();
                             }
                          });
+        //DEBUG unsigned count2 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto &ppstate) {return ppstate.getSIRD() == states::SIRD::I;});
+        //DEBUG std::cout << count1 <<  " " << count2 << std::endl;
     }
 
-    const auto& refreshAndGetStatistic(thrust::device_vector<unsigned> &locationAgentList) { 
+    const auto& refreshAndGetStatistic(thrust::device_vector<unsigned> &locationAgentList) {
         //TODO: this should only be called after agents was updated 
         return stat.refreshandGetAfterMidnight(agents, locationAgentList);
     }
