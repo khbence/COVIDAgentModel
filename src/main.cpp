@@ -24,7 +24,7 @@ int main(int argc, char const* argv[]) {
         TypeOfLocation,
         PPStateSIRextended,
         BasicAgentMeta,
-        NoMovement,
+        DummyMovement,
         BasicInfection>
         s;
 

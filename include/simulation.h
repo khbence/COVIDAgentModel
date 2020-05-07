@@ -74,7 +74,7 @@ private:
             idxs.first = h_locationListOffsets[i];
             idxs.second = h_locationListOffsets[i+1];
         }
-        thrust::copy(locationListOffsets.begin(), locationListOffsets.end(), std::ostream_iterator<int>(std::cout, " ")); std::cout << std::endl;
+        //thrust::copy(locationListOffsets.begin(), locationListOffsets.end(), std::ostream_iterator<int>(std::cout, " ")); std::cout << std::endl;
         auto init = locations.begin()->refreshAndGetStatistic(locationAgentList);
         auto result =
             std::accumulate(locations.begin() + 1, locations.end(), init, [&](auto& sum, auto& loc) {
@@ -122,7 +122,7 @@ public:
                 updateAgents();
                 refreshAndPrintStatistics();
             }
-            MovementPolicy<Simulation>::movement(simTime);
+            MovementPolicy<Simulation>::movement(simTime, timeStep);
             InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
             ++simTime;
         }

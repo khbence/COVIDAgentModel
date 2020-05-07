@@ -37,6 +37,8 @@ protected:
         thrust::device_vector<unsigned> actualLocations(locationListOffsets.size()-1);
         thrust::device_vector<unsigned> infectedCounts(locationListOffsets.size()-1);
         auto& ppstates = realThis->agents->PPValues;
+        //DEBUG thrust::copy(locationIdsOfAgents.begin(), locationIdsOfAgents.end(), std::ostream_iterator<int>(std::cout, " ")); std::cout << std::endl;
+        //DEBUG std::cout << actualLocations.size() <<std::endl;
         auto endIters = thrust::reduce_by_key(locationIdsOfAgents.begin(), locationIdsOfAgents.end(),
                                     thrust::make_transform_iterator(ppstates.begin(),[](auto ppstate){
                                         return (unsigned)(ppstate.getSIRD() == states::SIRD::I);
