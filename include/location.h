@@ -9,23 +9,49 @@
 #include "statistics.h"
 #include "datatypes.h"
 #include "timing.h"
+#include "util.h"
 
 // concept
 template<typename SimulationType>
-class Location {
+class LocationsList {
     using AgentType = Agent<typename SimulationType::AgentListType>;
 
-    typename SimulationType::PositionType_t position;
-    typename SimulationType::TypeOfLocation_t locType;
-    std::pair<unsigned,unsigned> agents;
-    //Statistic<typename SimulationType::PPState_t, AgentType> stat;
+    using PositionType = typename SimulationType::PositionType_t;
+    using TypeOfLocation = typename SimulationType::TypeOfLocation_t;
+
+    Statistic<typename SimulationType::PPState_t, AgentType> globalStats;
+
+    LocationsList() {}
 
 public:
-    Location(decltype(position) p, decltype(locType) t) : position(p), locType(t) {}
+    thrust::device_vector<PositionType> position;
+    thrust::device_vector<TypeOfLocation> locType;
+    thrust::device_vector<unsigned> locationAgentList; //indices of agents sorted by location, and sorted by agent index
+    thrust::device_vector<unsigned> locationIdsOfAgents; //indices of locations of the agents sorted by location, and sorted by agent index
+    thrust::device_vector<unsigned> locationListOffsets; //into locationAgentList
 
-    std::pair<unsigned,unsigned>& getAgents() { return agents; }
 
-/*    void addAgent(unsigned a) {
+    [[nodiscard]] static LocationsList* getInstance() {
+        static LocationsList instance;
+        return &instance;
+    }
+
+    unsigned addLocation(PositionType p, TypeOfLocation l) {
+        position.push_back(p);
+        locType.push_back(l);
+    }
+
+    void initialize() {
+        auto agents = SimulationType::AgentListType::getInstance();
+        locationAgentList.resize(agents->location.size());
+        locationIdsOfAgents.resize(agents->location.size());
+        locationListOffsets.resize(position.size()+1);
+        Util::updatePerLocationAgentLists(agents->location,locationIdsOfAgents,locationAgentList,locationListOffsets);
+    }
+
+/*    std::pair<unsigned,unsigned>& getAgents() { return agents; }
+
+    void addAgent(unsigned a) {
         stat.refreshStatisticNewAgent(a);
     }
 
@@ -55,8 +81,8 @@ public:
         //DEBUG std::cout << count1 <<  " " << count2 << std::endl;
     }
 
-    //const auto& refreshAndGetStatistic(thrust::device_vector<unsigned> &locationAgentList) {
-    //    //TODO: this should only be called after agents was updated 
-    //    return stat.refreshandGetAfterMidnight(agents, locationAgentList);
-    //}
+    const auto& refreshAndGetStatistic() {
+        std::pair<unsigned,unsigned> agents{locationListOffsets[0],locationListOffsets.back()};
+        return globalStats.refreshandGetAfterMidnight(agents, locationAgentList);
+    }
 };

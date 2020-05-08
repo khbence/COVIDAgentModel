@@ -34,21 +34,16 @@ class Simulation
 public:
     using PPState_t = PPState;
     using AgentMeta_t = AgentMeta;
-    using LocationType = Location<Simulation>;
+    using LocationType = LocationsList<Simulation>;
     using PositionType_t = PositionType;
     using TypeOfLocation_t = TypeOfLocation;
     using AgentListType = AgentList<PPState_t, AgentMeta_t, LocationType>;
 
 private:
-    std::vector<LocationType> locations;
-    thrust::device_vector<unsigned> locationAgentList; //indices of agents sorted by location, and sorted by agent index
-    thrust::device_vector<unsigned> locationIdsOfAgents; //indices of locations of the agents sorted by location, and sorted by agent index
-    thrust::device_vector<unsigned> locationListOffsets; //into locationAgentList
-
+    
     AgentListType* agents = AgentListType::getInstance();
+    LocationType* locs = LocationType::getInstance();
     unsigned timeStep = 10;
-
-    Statistic<PPState, Agent<AgentListType>> globalStats;
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -70,14 +65,13 @@ private:
 
     void refreshAndPrintStatistics() {
         PROFILE_FUNCTION();
-        std::pair<unsigned, unsigned> idxs{locationListOffsets[0],locationListOffsets.back()};
-        auto result = globalStats.refreshandGetAfterMidnight(idxs,locationAgentList);
+        auto result = locs->refreshAndGetStatistic();
         for (auto val : result) { std::cout << val << ", "; }
         std::cout << '\n';
     }
 
 public:
-    void addLocation(PositionType p, TypeOfLocation t) { locations.push_back(LocationType(p, t)); }
+    void addLocation(PositionType p, TypeOfLocation t) { locs->addLocation(p, t); }
     void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
         unsigned idx = agents->addAgent(state, isDiagnosed, locationID);
     }
@@ -85,10 +79,7 @@ public:
     //Must be called after all agents have been added
     bool initialization() {
         PROFILE_FUNCTION();
-        locationAgentList.resize(agents->location.size());
-        locationIdsOfAgents.resize(agents->location.size());
-        locationListOffsets.resize(locations.size()+1);
-        Util::updatePerLocationAgentLists(agents->location,locationIdsOfAgents,locationAgentList,locationListOffsets);
+        locs->initialize();
         try {
             PPState_t::initTransitionMatrix("../inputFiles/transition.json");
         } catch (TransitionInputError& e) {

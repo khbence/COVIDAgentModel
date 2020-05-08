@@ -30,9 +30,9 @@ protected:
     void infectionsAtLocations(unsigned timeStep) {
         PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
-        thrust::device_vector<unsigned>& locationAgentList = realThis->locationAgentList;   //indices of agents sorted by location, and sorted by agent index
-        thrust::device_vector<unsigned>& locationListOffsets = realThis->locationListOffsets;  //offsets into locationAgentList and locationIdsOfAgents
-        thrust::device_vector<unsigned>& locationIdsOfAgents = realThis->locationIdsOfAgents; //indices of locations of the agents sorted by location, and sorted by agent index
+        thrust::device_vector<unsigned>& locationAgentList = realThis->locs->locationAgentList;   //indices of agents sorted by location, and sorted by agent index
+        thrust::device_vector<unsigned>& locationListOffsets = realThis->locs->locationListOffsets;  //offsets into locationAgentList and locationIdsOfAgents
+        thrust::device_vector<unsigned>& locationIdsOfAgents = realThis->locs->locationIdsOfAgents; //indices of locations of the agents sorted by location, and sorted by agent index
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
         thrust::device_vector<unsigned> actualLocations(locationListOffsets.size()-1);
         thrust::device_vector<unsigned> infectedCounts(locationListOffsets.size()-1);
@@ -68,6 +68,6 @@ protected:
                               return y / (60.0 * 24.0 / (double)timeStep);
                           });
 
-        Location<SimulationType>::infectAgents(infectionRatios, agentLocations);
+        LocationsList<SimulationType>::infectAgents(infectionRatios, agentLocations);
     }
 };

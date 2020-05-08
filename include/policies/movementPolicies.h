@@ -27,9 +27,9 @@ protected:
     }
     void movement(Timehandler simTime, unsigned timeStep) {
         auto realThis = static_cast<SimulationType*>(this);
-        thrust::device_vector<unsigned>& locationAgentList = realThis->locationAgentList;
-        thrust::device_vector<unsigned>& locationListOffsets = realThis->locationListOffsets;
-        thrust::device_vector<unsigned>& locationIdsOfAgents = realThis->locationIdsOfAgents;
+        thrust::device_vector<unsigned>& locationAgentList = realThis->locs->locationAgentList;
+        thrust::device_vector<unsigned>& locationListOffsets = realThis->locs->locationListOffsets;
+        thrust::device_vector<unsigned>& locationIdsOfAgents = realThis->locs->locationIdsOfAgents;
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
         unsigned numberOfAgents = agentLocations.size();
         unsigned numberOfLocations = locationListOffsets.size()-1;
