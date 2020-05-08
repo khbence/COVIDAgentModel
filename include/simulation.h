@@ -7,6 +7,7 @@
 #include "globalStates.h"
 #include "statistics.h"
 #include "timing.h"
+#include "util.h"
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -33,14 +34,15 @@ class Simulation
 public:
     using PPState_t = PPState;
     using AgentMeta_t = AgentMeta;
-    using LocationType = Location<Simulation>;
+    using LocationType = LocationsList<Simulation>;
     using PositionType_t = PositionType;
     using TypeOfLocation_t = TypeOfLocation;
     using AgentListType = AgentList<PPState_t, AgentMeta_t, LocationType>;
 
 private:
-    std::vector<LocationType> locations;
+    
     AgentListType* agents = AgentListType::getInstance();
+    LocationType* locs = LocationType::getInstance();
     unsigned timeStep = 10;
 
     friend class MovementPolicy<Simulation>;
@@ -63,25 +65,21 @@ private:
 
     void refreshAndPrintStatistics() {
         PROFILE_FUNCTION();
-        auto init = locations.begin()->refreshAndGetStatistic();
-        auto result =
-            std::accumulate(locations.begin() + 1, locations.end(), init, [](auto& sum, auto& loc) {
-                const auto& stat = loc.refreshAndGetStatistic();
-                for (unsigned i = 0; i < sum.size(); ++i) { sum[i] += stat[i]; }
-                return sum;
-            });
+        auto result = locs->refreshAndGetStatistic();
         for (auto val : result) { std::cout << val << ", "; }
         std::cout << '\n';
     }
 
 public:
-    void addLocation(PositionType p, TypeOfLocation t) { locations.push_back(LocationType(p, t)); }
+    void addLocation(PositionType p, TypeOfLocation t) { locs->addLocation(p, t); }
     void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
-        agents->addAgent(state, isDiagnosed, &locations[locationID]);
+        unsigned idx = agents->addAgent(state, isDiagnosed, locationID);
     }
 
+    //Must be called after all agents have been added
     bool initialization() {
         PROFILE_FUNCTION();
+        locs->initialize();
         try {
             PPState_t::initTransitionMatrix("../inputFiles/transition.json");
         } catch (TransitionInputError& e) {
@@ -104,7 +102,7 @@ public:
                 updateAgents();
                 refreshAndPrintStatistics();
             }
-            MovementPolicy<Simulation>::movement();
+            MovementPolicy<Simulation>::movement(simTime, timeStep);
             InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
             ++simTime;
         }

@@ -16,7 +16,7 @@ public:
     thrust::device_vector<PPState> PPValues;
     thrust::device_vector<AgentMeta> agentMetaData;
     thrust::device_vector<bool> diagnosed;
-    thrust::device_vector<Location*> locations;
+    thrust::device_vector<unsigned> location;
 
     using PPState_t = PPState;
 
@@ -33,25 +33,25 @@ public:
 
     [[nodiscard]] bool checkConsistency() const;// if all vector are of the same lengths
 
-    void addAgent(PPState state, bool isDiagnosed, Location* location) {
+    unsigned addAgent(PPState state, bool isDiagnosed, unsigned agentLocation) {
         // Or should we just trust push_back? I would trust it, or probably best would be if we
         // should write the numbers in the input file
-        /*if (PPValues.size() == PPValues.capacity()) {
+        if (PPValues.size() == PPValues.capacity()) {
             diagnosed.reserve(PPValues.size() * 1.5 + 10);
-            locations.reserve(PPValues.size() * 1.5 + 10);
+            location.reserve(PPValues.size() * 1.5 + 10);
             agentMetaData.reserve(PPValues.size() * 1.5 + 10);
             agents.reserve(PPValues.size() * 1.5 + 10);
 
             // This has to be the last one!
             PPValues.reserve(PPValues.size() * 1.5 + 10);
-        }*/
+        }
         PPValues.push_back(state);
         diagnosed.push_back(isDiagnosed);
-        locations.push_back(location);
+        location.push_back(agentLocation);
         agents.push_back(Agent<AgentList>(PPValues.size() - 1));
         agentMetaData.push_back(AgentMeta());
         // Add this agent to the location provided
-        location->addAgent(PPValues.size() - 1);
+        return PPValues.size() - 1;
     }
 
     thrust::device_vector<Agent<AgentList>>& getAgentsList() { return agents; }

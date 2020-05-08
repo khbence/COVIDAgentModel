@@ -9,52 +9,80 @@
 #include "statistics.h"
 #include "datatypes.h"
 #include "timing.h"
+#include "util.h"
 
 // concept
 template<typename SimulationType>
-class Location {
+class LocationsList {
     using AgentType = Agent<typename SimulationType::AgentListType>;
 
-    typename SimulationType::PositionType_t position;
-    typename SimulationType::TypeOfLocation_t locType;
-    thrust::device_vector<unsigned> agents;
-    Statistic<typename SimulationType::PPState_t, AgentType> stat;
+    using PositionType = typename SimulationType::PositionType_t;
+    using TypeOfLocation = typename SimulationType::TypeOfLocation_t;
+
+    Statistic<typename SimulationType::PPState_t, AgentType> globalStats;
+
+    LocationsList() {}
 
 public:
-    Location(decltype(position) p, decltype(locType) t) : position(p), locType(t) {}
+    thrust::device_vector<PositionType> position;
+    thrust::device_vector<TypeOfLocation> locType;
+    thrust::device_vector<unsigned> locationAgentList; //indices of agents sorted by location, and sorted by agent index
+    thrust::device_vector<unsigned> locationIdsOfAgents; //indices of locations of the agents sorted by location, and sorted by agent index
+    thrust::device_vector<unsigned> locationListOffsets; //into locationAgentList
 
-    thrust::device_vector<unsigned>& getAgents() { return agents; }
+
+    [[nodiscard]] static LocationsList* getInstance() {
+        static LocationsList instance;
+        return &instance;
+    }
+
+    unsigned addLocation(PositionType p, TypeOfLocation l) {
+        position.push_back(p);
+        locType.push_back(l);
+    }
+
+    void initialize() {
+        auto agents = SimulationType::AgentListType::getInstance();
+        locationAgentList.resize(agents->location.size());
+        locationIdsOfAgents.resize(agents->location.size());
+        locationListOffsets.resize(position.size()+1);
+        Util::updatePerLocationAgentLists(agents->location,locationIdsOfAgents,locationAgentList,locationListOffsets);
+    }
+
+/*    std::pair<unsigned,unsigned>& getAgents() { return agents; }
 
     void addAgent(unsigned a) {
-        agents.push_back(a);
         stat.refreshStatisticNewAgent(a);
     }
 
     void removeAgent(unsigned idx) {
-        // agents.back().swap(agents[idx]);
-        thrust::swap(agents.back(), agents[idx]);
-        stat.refreshStatisticRemoveAgent(agents.back());
-        agents.pop_back();
-    }
+        stat.refreshStatisticRemoveAgent(idx);
+    }*/
 
     // TODO optimise randoms for performance
-    void infectAgents(double ratio) {
+    static void infectAgents(thrust::device_vector<double> &infectionRatioAtLocations,
+                             thrust::device_vector<unsigned> &agentLocations) {
         PROFILE_FUNCTION();
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
-        thrust::device_vector<float> rnds(agents.size());
-        // rnds = RandomGenerator::fillUnitf(agents.size());
-        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(rnds.begin(),
-                             thrust::make_permutation_iterator(ppstates.begin(), agents.begin()))),
-            thrust::make_zip_iterator(thrust::make_tuple(
-                rnds.end(), thrust::make_permutation_iterator(ppstates.begin(), agents.end()))),
-            [=](auto i) {
-                auto& rnd = thrust::get<0>(i);
-                auto& a = thrust::get<1>(i);
-                if (a.getSIRD() == states::SIRD::S && RandomGenerator::randomUnit() < ratio) {
-                    a.gotInfected();
-                }
-            });
+        //DEBUG unsigned count1 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto &ppstate) {return ppstate.getSIRD() == states::SIRD::I;});
+        //DESC: for (int i = 0; i < number_of_agents; i++) {ppstate = ppstates[i]; infectionRatio = infectionRatioAtLocations[agentLocations[i]];...}
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(),
+                                                   thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.begin()))),
+                         thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(),
+                                                   thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.end()))),
+                         [](auto tuple) {
+                            auto& ppstate = thrust::get<0>(tuple);
+                            double& infectionRatio = thrust::get<1>(tuple);
+                            if (ppstate.getSIRD() == states::SIRD::S && RandomGenerator::randomUnit() < infectionRatio) {
+                                ppstate.gotInfected();
+                            }
+                         });
+        //DEBUG unsigned count2 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto &ppstate) {return ppstate.getSIRD() == states::SIRD::I;});
+        //DEBUG std::cout << count1 <<  " " << count2 << std::endl;
     }
 
-    const auto& refreshAndGetStatistic() { return stat.refreshandGetAfterMidnight(agents); }
+    const auto& refreshAndGetStatistic() {
+        std::pair<unsigned,unsigned> agents{locationListOffsets[0],locationListOffsets.back()};
+        return globalStats.refreshandGetAfterMidnight(agents, locationAgentList);
+    }
 };
