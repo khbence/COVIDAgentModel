@@ -48,6 +48,8 @@ private:
     AgentListType* agents = AgentListType::getInstance();
     unsigned timeStep = 10;
 
+    Statistic<PPState, Agent<AgentListType>> globalStats;
+
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
 
@@ -68,20 +70,8 @@ private:
 
     void refreshAndPrintStatistics() {
         PROFILE_FUNCTION();
-        thrust::host_vector<unsigned> h_locationListOffsets(locationListOffsets);
-        for (unsigned i = 0; i < locations.size(); i++) {
-            std::pair<unsigned, unsigned> &idxs = locations[i].getAgents();
-            idxs.first = h_locationListOffsets[i];
-            idxs.second = h_locationListOffsets[i+1];
-        }
-        //thrust::copy(locationListOffsets.begin(), locationListOffsets.end(), std::ostream_iterator<int>(std::cout, " ")); std::cout << std::endl;
-        auto init = locations.begin()->refreshAndGetStatistic(locationAgentList);
-        auto result =
-            std::accumulate(locations.begin() + 1, locations.end(), init, [&](auto& sum, auto& loc) {
-                const auto& stat = loc.refreshAndGetStatistic(locationAgentList);
-                for (unsigned i = 0; i < sum.size(); ++i) { sum[i] += stat[i]; }
-                return sum;
-            });
+        std::pair<unsigned, unsigned> idxs{locationListOffsets[0],locationListOffsets.back()};
+        auto result = globalStats.refreshandGetAfterMidnight(idxs,locationAgentList);
         for (auto val : result) { std::cout << val << ", "; }
         std::cout << '\n';
     }
@@ -90,7 +80,6 @@ public:
     void addLocation(PositionType p, TypeOfLocation t) { locations.push_back(LocationType(p, t)); }
     void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
         unsigned idx = agents->addAgent(state, isDiagnosed, locationID);
-        locations[locationID].addAgent(idx);
     }
 
     //Must be called after all agents have been added

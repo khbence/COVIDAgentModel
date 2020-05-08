@@ -17,7 +17,7 @@ using TypeOfLocation = int;
 
 int main(int argc, char const* argv[]) {
     BEGIN_PROFILING("main");
-    constexpr unsigned lengthInWeeks = 6;
+    constexpr unsigned lengthInWeeks = 12;
     constexpr unsigned timeStep = 10;
     RandomGenerator::init(omp_get_max_threads());
     Simulation<PositionType,
@@ -30,7 +30,7 @@ int main(int argc, char const* argv[]) {
 
     // setup for test
     {
-        constexpr unsigned numAgents = 1000;
+        constexpr unsigned numAgents = 1000000;
         constexpr double initial_infected_ratio = 0.05;
         std::random_device rd;
         std::mt19937 gen(rd());

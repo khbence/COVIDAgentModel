@@ -36,15 +36,15 @@ public:
     unsigned addAgent(PPState state, bool isDiagnosed, unsigned agentLocation) {
         // Or should we just trust push_back? I would trust it, or probably best would be if we
         // should write the numbers in the input file
-        /*if (PPValues.size() == PPValues.capacity()) {
+        if (PPValues.size() == PPValues.capacity()) {
             diagnosed.reserve(PPValues.size() * 1.5 + 10);
-            locations.reserve(PPValues.size() * 1.5 + 10);
+            location.reserve(PPValues.size() * 1.5 + 10);
             agentMetaData.reserve(PPValues.size() * 1.5 + 10);
             agents.reserve(PPValues.size() * 1.5 + 10);
 
             // This has to be the last one!
             PPValues.reserve(PPValues.size() * 1.5 + 10);
-        }*/
+        }
         PPValues.push_back(state);
         diagnosed.push_back(isDiagnosed);
         location.push_back(agentLocation);

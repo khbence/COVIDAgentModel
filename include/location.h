@@ -18,20 +18,20 @@ class Location {
     typename SimulationType::PositionType_t position;
     typename SimulationType::TypeOfLocation_t locType;
     std::pair<unsigned,unsigned> agents;
-    Statistic<typename SimulationType::PPState_t, AgentType> stat;
+    //Statistic<typename SimulationType::PPState_t, AgentType> stat;
 
 public:
     Location(decltype(position) p, decltype(locType) t) : position(p), locType(t) {}
 
     std::pair<unsigned,unsigned>& getAgents() { return agents; }
 
-    void addAgent(unsigned a) {
+/*    void addAgent(unsigned a) {
         stat.refreshStatisticNewAgent(a);
     }
 
     void removeAgent(unsigned idx) {
         stat.refreshStatisticRemoveAgent(idx);
-    }
+    }*/
 
     // TODO optimise randoms for performance
     static void infectAgents(thrust::device_vector<double> &infectionRatioAtLocations,
@@ -55,8 +55,8 @@ public:
         //DEBUG std::cout << count1 <<  " " << count2 << std::endl;
     }
 
-    const auto& refreshAndGetStatistic(thrust::device_vector<unsigned> &locationAgentList) {
-        //TODO: this should only be called after agents was updated 
-        return stat.refreshandGetAfterMidnight(agents, locationAgentList);
-    }
+    //const auto& refreshAndGetStatistic(thrust::device_vector<unsigned> &locationAgentList) {
+    //    //TODO: this should only be called after agents was updated 
+    //    return stat.refreshandGetAfterMidnight(agents, locationAgentList);
+    //}
 };
