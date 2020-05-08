@@ -26,7 +26,9 @@ void Util::updatePerLocationAgentLists(const thrust::device_vector<unsigned> &lo
     thrust::copy(locationOfAgents.begin(), locationOfAgents.end(), locationIdsOfAgents.begin());
     thrust::sequence(locationAgentList.begin(),locationAgentList.end());
     //Now sort by location, so locationAgentList contains agent IDs sorted by location
+    BEGIN_PROFILING("sort")
     thrust::stable_sort_by_key(locationIdsOfAgents.begin(), locationIdsOfAgents.end(), locationAgentList.begin());
+    END_PROFILING("sort")
     //Now extract offsets into locationAgentList where locations begin
     unsigned *locationIdsOfAgentsPtr = thrust::raw_pointer_cast(locationIdsOfAgents.data());
     unsigned *locationListOffsetsPtr = thrust::raw_pointer_cast(locationListOffsets.data());

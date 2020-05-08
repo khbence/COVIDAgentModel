@@ -31,7 +31,7 @@ public:
 };
 
 #if PROFILING
-#define BEGIN_PROFILING(name) Timing::startTimer(name)
+#define BEGIN_PROFILING(name) Timing::startTimer(name);
 #define END_PROFILING(name) Timing::stopTimer(name);
 
 #define PROFILE_SCOPE(name) Timing timer##__LINE__(name)

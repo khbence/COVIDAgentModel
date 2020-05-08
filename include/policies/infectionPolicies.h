@@ -39,11 +39,12 @@ protected:
         auto& ppstates = realThis->agents->PPValues;
         //DEBUG thrust::copy(locationIdsOfAgents.begin(), locationIdsOfAgents.end(), std::ostream_iterator<int>(std::cout, " ")); std::cout << std::endl;
         //DEBUG std::cout << actualLocations.size() <<std::endl;
+        BEGIN_PROFILING("reduce_by_key")
         auto endIters = thrust::reduce_by_key(locationIdsOfAgents.begin(), locationIdsOfAgents.end(),
                                     thrust::make_transform_iterator(ppstates.begin(),[](auto ppstate){
                                         return (unsigned)(ppstate.getSIRD() == states::SIRD::I);
                                     }),actualLocations.begin(), infectedCounts.begin());
-
+        END_PROFILING("reduce_by_key")
         unsigned count = thrust::distance(actualLocations.begin(),endIters.first);
 
         //At this point actualLocations and infectedCounts will contain location-count pairs. Some locations will be missing
