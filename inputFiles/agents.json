@@ -3,7 +3,7 @@
         {
             "age": 48,
             "sex": "M",
-            "preCond": "cancer",
+            "preCond": 5,
             "SIRD": "S",
             "typeID": 4,
             "locations": [

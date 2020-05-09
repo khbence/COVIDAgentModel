@@ -40,7 +40,6 @@ public:
     using AgentListType = AgentList<PPState_t, AgentMeta_t, LocationType>;
 
 private:
-    
     AgentListType* agents = AgentListType::getInstance();
     LocationType* locs = LocationType::getInstance();
     unsigned timeStep = 10;
@@ -76,7 +75,7 @@ public:
         unsigned idx = agents->addAgent(state, isDiagnosed, locationID);
     }
 
-    //Must be called after all agents have been added
+    // Must be called after all agents have been added
     bool initialization() {
         PROFILE_FUNCTION();
         locs->initialize();

@@ -1,0 +1,125 @@
+{
+    "sex": [
+        {
+            "name": "M",
+            "symptoms": 1
+        },
+        {
+            "name": "F",
+            "symptoms": 0.7
+        }
+    ],
+    "age": [
+        {
+            "from": 0,
+            "to": 3,
+            "symptoms": 0.1,
+            "transmission": 0.2
+        },
+        {
+            "from": 3,
+            "to": 6,
+            "symptoms": 0.1,
+            "transmission": 0.2
+        },
+        {
+            "from": 6,
+            "to": 14,
+            "symptoms": 0.1,
+            "transmission": 0.5
+        },
+        {
+            "from": 14,
+            "to": 19,
+            "symptoms": 0.1,
+            "transmission": 1
+        },
+        {
+            "from": 19,
+            "to": 25,
+            "symptoms": 0.25,
+            "transmission": 1
+        },
+        {
+            "from": 25,
+            "to": 40,
+            "symptoms": 0.5,
+            "transmission": 1
+        },
+        {
+            "from": 40,
+            "to": 65,
+            "symptoms": 0.7,
+            "transmission": 1
+        },
+        {
+            "from": 65,
+            "to": 75,
+            "symptoms": 1,
+            "transmission": 1
+        },
+        {
+            "from": 75,
+            "to": -1,
+            "symptoms": 1,
+            "transmission": 1
+        }
+    ],
+    "preCondition": [
+        {
+            "ID": 0,
+            "condition": "healthy",
+            "symptoms": 0.25
+        },
+        {
+            "ID": 1,
+            "condition": "flu",
+            "symptoms": 0.5
+        },
+        {
+            "ID": 2,
+            "condition": "heart disease",
+            "symptoms": 0.9
+        },
+        {
+            "ID": 3,
+            "condition": "lung disease",
+            "symptoms": 1
+        },
+        {
+            "ID": 4,
+            "condition": "diabetes",
+            "symptoms": 0.5
+        },
+        {
+            "ID": 5,
+            "condition": "cancer",
+            "symptoms": 0.7
+        },
+        {
+            "ID": 6,
+            "condition": "asthma/allergy",
+            "symptoms": 0.4
+        },
+        {
+            "ID": 7,
+            "condition": "High blood pressure",
+            "symptoms": 0.6
+        },
+        {
+            "ID": 8,
+            "condition": "Transplanted",
+            "symptoms": 0.8
+        },
+        {
+            "ID": 9,
+            "condition": "Other mild disease treated at home",
+            "symptoms": 0.5
+        },
+        {
+            "ID": 10,
+            "condition": "Other severe disease treated at hospital",
+            "symptoms": 0.7
+        }
+    ]
+}

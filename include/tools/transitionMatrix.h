@@ -3,7 +3,7 @@
 #include <optional>
 #include <vector>
 #include <string>
-#include "transitions.h"
+#include "progressionMatrix.h"
 #include "customExceptions.h"
 #include <algorithm>
 #include "randomGenerator.h"
