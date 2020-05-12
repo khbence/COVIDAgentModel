@@ -1,5 +1,6 @@
 #pragma once
 #include "location.h"
+#include "util.h"
 #include <iostream>
 
 template<class SimulationType>
@@ -30,30 +31,15 @@ protected:
     void infectionsAtLocations(unsigned timeStep) {
         PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
-        thrust::device_vector<unsigned>& locationAgentList = realThis->locs->locationAgentList;   //indices of agents sorted by location, and sorted by agent index
         thrust::device_vector<unsigned>& locationListOffsets = realThis->locs->locationListOffsets;  //offsets into locationAgentList and locationIdsOfAgents
-        thrust::device_vector<unsigned>& locationIdsOfAgents = realThis->locs->locationIdsOfAgents; //indices of locations of the agents sorted by location, and sorted by agent index
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
-        thrust::device_vector<unsigned> actualLocations(locationListOffsets.size()-1);
-        thrust::device_vector<unsigned> infectedCounts(locationListOffsets.size()-1);
         auto& ppstates = realThis->agents->PPValues;
-        //DEBUG thrust::copy(locationIdsOfAgents.begin(), locationIdsOfAgents.end(), std::ostream_iterator<int>(std::cout, " ")); std::cout << std::endl;
-        //DEBUG std::cout << actualLocations.size() <<std::endl;
-        BEGIN_PROFILING("reduce_by_key")
-        auto endIters = thrust::reduce_by_key(locationIdsOfAgents.begin(), locationIdsOfAgents.end(),
-                                    thrust::make_transform_iterator(ppstates.begin(),[](auto ppstate){
-                                        return (unsigned)(ppstate.getSIRD() == states::SIRD::I);
-                                    }),actualLocations.begin(), infectedCounts.begin());
-        END_PROFILING("reduce_by_key")
-        unsigned count = thrust::distance(actualLocations.begin(),endIters.first);
 
-        //At this point actualLocations and infectedCounts will contain location-count pairs. Some locations will be missing
         thrust::device_vector<double> infectionRatios(locationListOffsets.size()-1,0.0);
         thrust::device_vector<unsigned> fullInfectedCounts(locationListOffsets.size()-1,0);
-        //Scatter infectedCounts to full location list
-        thrust::copy(infectedCounts.begin(), infectedCounts.begin()+count,
-            thrust::make_permutation_iterator(fullInfectedCounts.begin(), actualLocations.begin()));
-
+        reduce_by_location(locationListOffsets, fullInfectedCounts, ppstates, [](auto ppstate){
+                                        return (unsigned)(ppstate.getSIRD() == states::SIRD::I);
+                                    });
         thrust::transform(thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.begin(),locationListOffsets.begin(), locationListOffsets.begin()+1)),
                           thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.end(),  locationListOffsets.end()-1, locationListOffsets.end())),
                           infectionRatios.begin(),[=](auto tuple) {
