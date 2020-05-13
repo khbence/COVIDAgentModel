@@ -1,5 +1,8 @@
 #include "PPStateTypes.h"
 
+SingleBadTransitionMatrix<PPStateSIRextended::numberOfStates> PPStateSIRextended::transition;
+constexpr std::array<unsigned, 5> PPStateSIRextended::startingIdx;
+
 // Abstract
 PPStateSIRAbstract::PPStateSIRAbstract(states::SIRD s) : state(s) {}
 

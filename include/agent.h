@@ -5,7 +5,7 @@
 template<typename AgentListType>
 class Agent {
     unsigned id;
-    static inline AgentListType* agentList = AgentListType::getInstance();
+    static AgentListType* agentList;
 
 public:
     using AgentListType_t = AgentListType;
@@ -18,3 +18,6 @@ public:
         agentList->PPValues[id].update(scalingFactor);
     }
 };
+
+template<typename AgentListType>
+AgentListType* Agent<AgentListType>::agentList = AgentListType::getInstance();

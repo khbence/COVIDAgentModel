@@ -30,7 +30,7 @@ int main(int argc, char const* argv[]) {
 
     // setup for test
     {
-        constexpr unsigned numAgents = 1000000;
+        constexpr unsigned numAgents = 100000;
         constexpr double initial_infected_ratio = 0.05;
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -38,16 +38,15 @@ int main(int argc, char const* argv[]) {
 
         // Create basic locations for everyone
         constexpr unsigned agentsPerLoc = 100;
-        constexpr unsigned numLocations = numAgents/agentsPerLoc;
-        for (int i = 0; i < numLocations; i++)
-            s.addLocation(i, 0);
+        constexpr unsigned numLocations = numAgents / agentsPerLoc;
+        for (int i = 0; i < numLocations; i++) s.addLocation(i, 0);
 
         // Populate agent list
         for (int i = 0; i < numAgents; i++) {
             s.addAgent(PPStateSIRextended(
                            dis(gen) < initial_infected_ratio ? states::SIRD::I : states::SIRD::S),
                 false,
-                i/agentsPerLoc);
+                i / agentsPerLoc);
         }
     }
 
