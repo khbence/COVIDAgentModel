@@ -1,6 +1,6 @@
 #pragma once
 #include <array>
-#include <optional>
+#include "optional.h"
 #include <vector>
 #include <string>
 #include "progressionMatrixFormat.h"
@@ -12,7 +12,7 @@ template<unsigned N>
 class SingleBadTransitionMatrix {
     class NextStates {
         // pair<index of new state,  raw chance to get there>
-        std::optional<std::pair<unsigned, float>> bad;
+        stc::optional<std::pair<unsigned, float>> bad;
         std::vector<std::pair<unsigned, float>> neutral;
 
     public:

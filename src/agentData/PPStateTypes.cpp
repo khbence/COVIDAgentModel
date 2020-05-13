@@ -28,6 +28,8 @@ void PPStateSIRAbstract::gotInfected() { this->state = states::SIRD::I; }
 // TODO
 
 // Extended
+// PPStateSIRextended::SingleBadTransitionMatrix<PPStateSIRextended::numberOfStates> transition;
+
 void PPStateSIRextended::applyNewIdx() {
     state = states::SIRD::S;
     for (int i = 0; i < 4; i++) {
@@ -66,7 +68,9 @@ void PPStateSIRextended::update(float scalingSymptons) {
     if (daysBeforeNextState == -2) { daysBeforeNextState = transition.calculateJustDays(idx); }
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }
     if (daysBeforeNextState == 0) {
-        auto [stateIdx, days] = transition.calculateNextState(idx, scalingSymptons);
+        auto tmp = transition.calculateNextState(idx, scalingSymptons);
+        auto stateIdx = tmp.first;
+        auto days = tmp.second;
         daysBeforeNextState = days;
         idx = stateIdx;
         applyNewIdx();

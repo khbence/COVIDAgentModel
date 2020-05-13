@@ -43,7 +43,7 @@ private:
         7,
         10,
         11 };// to convert from idx to state
-    static inline SingleBadTransitionMatrix<numberOfStates> transition;
+    static SingleBadTransitionMatrix<numberOfStates> transition;
 
     void applyNewIdx();
 
