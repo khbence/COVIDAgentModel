@@ -3,7 +3,7 @@
 #include <string>
 #include "smallTools.h"
 
-struct InputParameters {
+struct ProgramParameters {
     BEGIN_PARAMETER_DECLARATION();
 
     ADD_PARAMETER_DEFAULT_VALUE_H(a,

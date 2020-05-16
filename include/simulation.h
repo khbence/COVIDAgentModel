@@ -8,6 +8,7 @@
 #include "statistics.h"
 #include "timing.h"
 #include "util.h"
+#include "programParameters.h"
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -42,7 +43,8 @@ public:
 private:
     AgentListType* agents = AgentListType::getInstance();
     LocationType* locs = LocationType::getInstance();
-    unsigned timeStep = 10;
+    unsigned timeStep;
+    unsigned lengthOfSimulationWeeks;
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -70,6 +72,13 @@ private:
     }
 
 public:
+    explicit Simulation(const ProgramParameters& parameters)
+        : timeStep(parameters.timeStep), lengthOfSimulationWeeks(parameters.weeks) {
+        try {
+            PPState_t::initTransitionMatrix(parameters.progression);
+        } catch (TransitionInputError& e) { std::cerr << e.what(); }
+    }
+
     void addLocation(PositionType p, TypeOfLocation t) { locs->addLocation(p, t); }
     void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
         unsigned idx = agents->addAgent(state, isDiagnosed, locationID);
@@ -79,19 +88,12 @@ public:
     bool initialization() {
         PROFILE_FUNCTION();
         locs->initialize();
-        try {
-            PPState_t::initTransitionMatrix("../inputFiles/transition.json");
-        } catch (TransitionInputError& e) {
-            std::cerr << e.what();
-            return false;
-        }
         return true;
     }
 
-    void runSimulation(unsigned timeStep_p, unsigned lengthOfSimulationWeeks) {
+    void runSimulation() {
         PROFILE_FUNCTION();
         auto& agentList = agents->getAgentsList();
-        timeStep = timeStep_p;
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
         PPState_t::printHeader();
