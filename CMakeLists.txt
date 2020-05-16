@@ -14,7 +14,8 @@ include_directories(include
                     rapidjson/include
                     thrust/
                     include/IO
-                    include/IO/inputFormats)
+                    include/IO/inputFormats
+                    parameterParser/include)
 file (GLOB SOURCES
       "src/*.cpp"
       "src/agentData/*.cpp"

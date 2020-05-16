@@ -4,6 +4,7 @@
 #include "infectionPolicies.h"
 #include "agentMeta.h"
 #include "PPStateTypes.h"
+#include "programParameters.h"
 // for testing
 #include <inputJSON.h>
 #include <random>
