@@ -6,28 +6,19 @@
 template<class SimulationType>
 class BasicInfection {
     double virulency = 0.0;
-
-    template<typename LocationType>
-    double getInfectionRatio(LocationType& loc, unsigned timeStep) {
-
-        auto& agents = loc.getAgents();
-        auto realThis = static_cast<SimulationType*>(this);
-        auto& ppstates = realThis->agents->PPValues;
-        unsigned numInfectedAgentsPresent =
-            thrust::count_if(make_permutation_iterator(ppstates.begin(), agents.begin()),
-                make_permutation_iterator(ppstates.begin(), agents.end()),
-                [](auto ppstate) { return ppstate.getSIRD() == states::SIRD::I; });
-        unsigned total = agents.size();
-        if (numInfectedAgentsPresent == 0) return 0;
-        double densityOfInfected = double(numInfectedAgentsPresent) / (agents.size() * 1.2);
-        double p = 0.35 - virulency;
-        double k = p / 5.0;
-        double y = 1.0 / (1.0 + exp((p - densityOfInfected) / k));
-        unsigned timeStepCopy = static_cast<SimulationType*>(this)->timeStep;
-        return y / (60.0 * 24.0 / (double)timeStep);
+    double virulencyNorm = 5.0;
+public:
+    BasicInfection(cxxopts::Options &options) {
+        options.add_options()
+            ("virulency", "BasicInfection: virulency parameter", cxxopts::value<double>()->default_value("0.0"))
+            ("virulencyNorm", "BasicInfection: k=p/virulencyNorm", cxxopts::value<double>()->default_value("5.0"));
     }
 
 protected:
+    void initialize_args(cxxopts::ParseResult &result) {
+        virulency = result["virulency"].as<double>();
+        virulencyNorm = result["virulencyNorm"].as<double>();
+    }
     void infectionsAtLocations(unsigned timeStep) {
         PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
@@ -50,7 +41,7 @@ protected:
                               if (numInfectedAgentsPresent == 0) return 0.0;
                               double densityOfInfected = double(numInfectedAgentsPresent) / (num_agents * 1.2);
                               double p = 0.35 - virulency;
-                              double k = p / 5.0;
+                              double k = p / virulencyNorm;
                               double y = 1.0 / (1.0 + exp((p - densityOfInfected) / k));
                               return y / (60.0 * 24.0 / (double)timeStep);
                           });

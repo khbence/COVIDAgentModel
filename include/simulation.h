@@ -8,6 +8,7 @@
 #include "statistics.h"
 #include "timing.h"
 #include "util.h"
+#include <cxxopts.hpp>
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -70,6 +71,23 @@ private:
     }
 
 public:
+    Simulation(cxxopts::Options &options) : InfectionPolicy<Simulation<PositionType,
+          TypeOfLocation,
+          PPState,
+          AgentMeta,
+          MovementPolicy,
+          InfectionPolicy>>(options) {
+
+    }
+    void initialize_args(cxxopts::ParseResult &result) {
+        InfectionPolicy<Simulation<PositionType,
+          TypeOfLocation,
+          PPState,
+          AgentMeta,
+          MovementPolicy,
+          InfectionPolicy>>::initialize_args(result);
+    }
+
     void addLocation(PositionType p, TypeOfLocation t) { locs->addLocation(p, t); }
     void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
         unsigned idx = agents->addAgent(state, isDiagnosed, locationID);

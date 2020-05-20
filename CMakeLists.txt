@@ -13,6 +13,7 @@ include_directories(include
                     include/policies
                     rapidjson/include
                     thrust/
+                    cxxopts/include
                     include/IO
                     include/IO/inputFormats)
 file (GLOB SOURCES
