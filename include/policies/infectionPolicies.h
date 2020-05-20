@@ -22,6 +22,8 @@ protected:
         virulencyNorm = result["virulencyNorm"].as<double>();
         distance = result["distance"].as<double>();
     }
+
+public:
     void infectionsAtLocations(unsigned timeStep) {
         PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
@@ -37,7 +39,7 @@ protected:
                                     });
         thrust::transform(thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.begin(),locationListOffsets.begin(), locationListOffsets.begin()+1)),
                           thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.end(),  locationListOffsets.end()-1, locationListOffsets.end())),
-                          infectionRatios.begin(),[=](auto tuple) {
+                          infectionRatios.begin(),[=] HD (thrust::tuple<unsigned &, unsigned &, unsigned &> tuple) {
                               unsigned numInfectedAgentsPresent = thrust::get<0>(tuple);
                               unsigned offset0 = thrust::get<1>(tuple);
                               unsigned offset1 = thrust::get<2>(tuple);

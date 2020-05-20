@@ -40,7 +40,7 @@ public:
             thrust::make_permutation_iterator(ppstates.begin(), locationAgentList.begin()+agents.first),
             thrust::make_permutation_iterator(ppstates.begin(), locationAgentList.begin()+agents.second),
             idxs.begin(),
-            [](auto& ppstate) { return ppstate.getStateIdx(); });
+            [] HD (PPStateType& ppstate) { return ppstate.getStateIdx(); });
         // Sort them
         thrust::sort(idxs.begin(), idxs.end());
         thrust::host_vector<int> h_idxs(idxs);

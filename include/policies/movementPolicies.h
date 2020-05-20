@@ -13,7 +13,7 @@ template<typename SimulationType>
 class DummyMovement {
     thrust::device_vector<unsigned> stepsUntilMove;
     
-protected:
+public:
     void planLocations() {
         auto realThis = static_cast<SimulationType*>(this);
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
@@ -36,7 +36,7 @@ protected:
 
         thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(agentLocations.begin(),stepsUntilMove.begin())),
                          thrust::make_zip_iterator(thrust::make_tuple(agentLocations.end(),stepsUntilMove.end())),
-                         [numberOfLocations](auto tuple){
+                         [numberOfLocations] HD (thrust::tuple<unsigned &, unsigned &> tuple){
                              auto &location = thrust::get<0>(tuple);
                              auto &stepsUntilMove = thrust::get<1>(tuple);
                              if (stepsUntilMove==0) {

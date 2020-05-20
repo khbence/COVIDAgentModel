@@ -11,12 +11,12 @@ public:
 
     static void initTransitionMatrix(const std::string& inputFile) {}
 
-    explicit PPStateSIRAbstract(states::SIRD s);
-    virtual void update(float scalingSymptons) = 0;
-    virtual void gotInfected();
-    [[nodiscard]] states::SIRD getSIRD() const;
-    [[nodiscard]] states::WBStates getWBState() const;
-    virtual char getStateIdx() const = 0;
+    HD explicit PPStateSIRAbstract(states::SIRD s);
+    virtual HD void update(float scalingSymptons) = 0;
+    virtual HD void gotInfected();
+    [[nodiscard]] HD states::SIRD getSIRD() const;
+    [[nodiscard]] HD states::WBStates getWBState() const;
+    virtual HD char getStateIdx() const = 0;
 };
 
 class PPStateSIRBasic : public PPStateSIRAbstract {
@@ -24,7 +24,7 @@ public:
     static unsigned getNumberOfStates() {return 4;};
     PPStateSIRBasic();
     explicit PPStateSIRBasic(states::SIRD s);
-    void update(float scalingSymptons) override;
+    void HD update(float scalingSymptons) override;
 };
 
 class PPStateSIRextended : public PPStateSIRAbstract {
@@ -38,18 +38,19 @@ class PPStateSIRextended : public PPStateSIRAbstract {
 private:
     SingleBadTransitionMatrix& getTransition();
 
-    void applyNewIdx();
+    HD void applyNewIdx();
 
 public:
     static void printHeader();
 
     static unsigned getNumberOfStates();
-    PPStateSIRextended();
-    explicit PPStateSIRextended(states::SIRD s);
-    explicit PPStateSIRextended(char idx_p);
-    void gotInfected() override;
-    [[nodiscard]] char getSubState() { return subState; }
+    HD PPStateSIRextended();
+    explicit HD PPStateSIRextended(states::SIRD s);
+    explicit HD PPStateSIRextended(char idx_p);
+    void HD gotInfected() override;
+    [[nodiscard]] char HD getSubState() { return subState; }
     static void initTransitionMatrix(const std::string& inputFile);
-    void update(float scalingSymptons) override;
-    [[nodiscard]] char getStateIdx() const override;
+    void HD update(float scalingSymptons) override;
+    [[nodiscard]] char HD getStateIdx() const override;
+
 };
