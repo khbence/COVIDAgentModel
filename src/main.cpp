@@ -19,7 +19,7 @@ using TypeOfLocation = int;
 
 int main(int argc, char ** argv) {
     BEGIN_PROFILING("main");
-    cxxopts::Options options("COVID Agent Model", "An agent-based epidemic simulator");
+    cxxopts::Options options("covid", "An agent-based epidemic simulator");
     options.add_options()
         ("l,length", "Length of simulation in weeks", cxxopts::value<unsigned>()->default_value("12"))
         ("t,deltat", "Length of timestep in minutes", cxxopts::value<unsigned>()->default_value("10"))

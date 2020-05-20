@@ -86,6 +86,12 @@ public:
           AgentMeta,
           MovementPolicy,
           InfectionPolicy>>::initialize_args(result);
+          try {
+            PPState_t::initTransitionMatrix("../inputFiles/transition.json");
+        } catch (TransitionInputError& e) {
+            std::cerr << e.what();
+            //return false;
+        }
     }
 
     void addLocation(PositionType p, TypeOfLocation t) { locs->addLocation(p, t); }
@@ -97,12 +103,6 @@ public:
     bool initialization() {
         PROFILE_FUNCTION();
         locs->initialize();
-        try {
-            PPState_t::initTransitionMatrix("../inputFiles/transition.json");
-        } catch (TransitionInputError& e) {
-            std::cerr << e.what();
-            return false;
-        }
         return true;
     }
 

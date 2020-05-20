@@ -28,8 +28,9 @@ protected:
 
         thrust::device_vector<double> infectionRatios(locationListOffsets.size()-1,0.0);
         thrust::device_vector<unsigned> fullInfectedCounts(locationListOffsets.size()-1,0);
+        //Cout up infectious people - those who are Infected, and Infected state is >1
         reduce_by_location(locationListOffsets, fullInfectedCounts, ppstates, [](auto ppstate){
-                                        return (unsigned)(ppstate.getSIRD() == states::SIRD::I);
+                                        return (unsigned)((ppstate.getSIRD() == states::SIRD::I) && (ppstate.getSubState() > 0));
                                     });
         thrust::transform(thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.begin(),locationListOffsets.begin(), locationListOffsets.begin()+1)),
                           thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.end(),  locationListOffsets.end()-1, locationListOffsets.end())),
