@@ -7,7 +7,7 @@ protected:
     states::SIRD state;
 
 public:
-    static constexpr unsigned numberOfStates = 0;
+    static unsigned getNumberOfStates() {return 0;};
 
     static void initTransitionMatrix(const std::string& inputFile) {}
 
@@ -21,7 +21,7 @@ public:
 
 class PPStateSIRBasic : public PPStateSIRAbstract {
 public:
-    static constexpr unsigned numberOfStates = 4;
+    static unsigned getNumberOfStates() {return 4;};
     PPStateSIRBasic();
     explicit PPStateSIRBasic(states::SIRD s);
     void update(float scalingSymptons) override;
@@ -35,29 +35,21 @@ class PPStateSIRextended : public PPStateSIRAbstract {
     // -2 has to be calculated during update
     int daysBeforeNextState = -1;
 
-public:
-    static constexpr unsigned numberOfStates = 1 + 6 + 3 + 1;// S + I + R + D
 private:
-    static constexpr std::array<unsigned, 5> startingIdx{ 0,
-        1,
-        7,
-        10,
-        11 };// to convert from idx to state
-    static SingleBadTransitionMatrix<numberOfStates> transition;
+    SingleBadTransitionMatrix& getTransition();
 
     void applyNewIdx();
 
 public:
     static void printHeader();
 
+    static unsigned getNumberOfStates();
     PPStateSIRextended();
     explicit PPStateSIRextended(states::SIRD s);
     explicit PPStateSIRextended(char idx_p);
     void gotInfected() override;
     [[nodiscard]] char getSubState() { return subState; }
-    static void initTransitionMatrix(const std::string& inputFile) {
-        transition = decltype(transition)(inputFile);
-    }
+    static void initTransitionMatrix(const std::string& inputFile);
     void update(float scalingSymptons) override;
     [[nodiscard]] char getStateIdx() const override;
 };

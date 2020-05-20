@@ -1,7 +1,17 @@
 #include "PPStateTypes.h"
 
-SingleBadTransitionMatrix<PPStateSIRextended::numberOfStates> PPStateSIRextended::transition;
-constexpr std::array<unsigned, 5> PPStateSIRextended::startingIdx;
+//static stuff
+namespace detail {
+    namespace PPStateSIRextended {
+        unsigned numberOfStates = 1 + 6 + 3 + 1;// S + I + R + D
+        std::array<unsigned, 5> startingIdx{ 0,
+        1,
+        7,
+        10,
+        11 };// to convert from idx to state
+        SingleBadTransitionMatrix *transition;
+    }
+}
 
 // Abstract
 PPStateSIRAbstract::PPStateSIRAbstract(states::SIRD s) : state(s) {}
@@ -36,12 +46,14 @@ void PPStateSIRAbstract::gotInfected() { this->state = states::SIRD::I; }
 void PPStateSIRextended::applyNewIdx() {
     state = states::SIRD::S;
     for (int i = 0; i < 4; i++) {
-        if (idx >= startingIdx[i] && idx < startingIdx[i + 1]) {
+        if (idx >= detail::PPStateSIRextended::startingIdx[i] && idx < detail::PPStateSIRextended::startingIdx[i + 1]) {
             state = (states::SIRD)i;
-            subState = idx - startingIdx[i];
+            subState = idx - detail::PPStateSIRextended::startingIdx[i];
         }
     }
 }
+
+SingleBadTransitionMatrix& PPStateSIRextended::getTransition() {return *detail::PPStateSIRextended::transition;};
 
 void PPStateSIRextended::printHeader() {
     // I was lazy to do it properly
@@ -51,12 +63,12 @@ void PPStateSIRextended::printHeader() {
 PPStateSIRextended::PPStateSIRextended() : PPStateSIRAbstract(states::SIRD::S) {}
 PPStateSIRextended::PPStateSIRextended(states::SIRD s) : PPStateSIRAbstract(s) {
     idx = static_cast<char>(state);
-    daysBeforeNextState = transition.calculateJustDays(idx);
+    daysBeforeNextState = getTransition().calculateJustDays(idx);
 }
 PPStateSIRextended::PPStateSIRextended(char idx_p)
     : PPStateSIRAbstract(states::SIRD::S), idx(idx_p) {
     applyNewIdx();
-    daysBeforeNextState = transition.calculateJustDays(idx);
+    daysBeforeNextState = getTransition().calculateJustDays(idx);
 }
 
 void PPStateSIRextended::gotInfected() {
@@ -68,10 +80,10 @@ void PPStateSIRextended::gotInfected() {
 
 void PPStateSIRextended::update(float scalingSymptons) {
     // the order of the first two if is intentional
-    if (daysBeforeNextState == -2) { daysBeforeNextState = transition.calculateJustDays(idx); }
+    if (daysBeforeNextState == -2) { daysBeforeNextState = getTransition().calculateJustDays(idx); }
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }
     if (daysBeforeNextState == 0) {
-        auto tmp = transition.calculateNextState(idx, scalingSymptons);
+        auto tmp = getTransition().calculateNextState(idx, scalingSymptons);
         auto stateIdx = tmp.first;
         auto days = tmp.second;
         daysBeforeNextState = days;
@@ -81,3 +93,11 @@ void PPStateSIRextended::update(float scalingSymptons) {
 }
 
 char PPStateSIRextended::getStateIdx() const { return idx; }
+
+void PPStateSIRextended::initTransitionMatrix(const std::string& inputFile) {
+        detail::PPStateSIRextended::transition = new SingleBadTransitionMatrix(inputFile);
+}
+
+unsigned PPStateSIRextended::getNumberOfStates() {
+    return detail::PPStateSIRextended::numberOfStates;
+}

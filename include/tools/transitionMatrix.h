@@ -7,8 +7,7 @@
 #include "customExceptions.h"
 #include <algorithm>
 #include "randomGenerator.h"
-
-template<unsigned N>
+#define NSTATES 11
 class SingleBadTransitionMatrix {
     class NextStates {
         // pair<index of new state,  raw chance to get there>
@@ -80,17 +79,17 @@ class SingleBadTransitionMatrix {
         }
     };
 
-    std::array<NextStates, N> transitions;
-    std::array<LengthOfState, N> lengths;
+    std::vector<NextStates> transitions;
+    std::vector<LengthOfState> lengths;
 
 
 public:
     SingleBadTransitionMatrix() = default;
     explicit SingleBadTransitionMatrix(const std::string& fileName) {
         const auto inputData = DECODE_JSON_FILE(fileName);
-        if (inputData.states.size() != N) {
-            throw(WrongNumberOfStates(N, inputData.states.size()));
-        }
+        transitions.resize(inputData.states.size());
+        lengths.resize(inputData.states.size());
+        
         auto getStateIndex = [&inputData](const std::string& name) {
             unsigned idx = 0;
             while (inputData.states[idx].stateName != name && idx < inputData.states.size()) {
