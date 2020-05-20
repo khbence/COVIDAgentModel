@@ -33,6 +33,19 @@ public:
 
     [[nodiscard]] bool checkConsistency() const;// if all vector are of the same lengths
 
+    void initializeWithNumAgents(unsigned numAgents) {
+        PPValues.resize(numAgents);
+        diagnosed.resize(numAgents);
+        location.resize(numAgents);
+        agentMetaData.resize(numAgents);
+        agents.resize(numAgents);
+    }
+    void setAgent(unsigned index, PPState state, bool isDiagnosed, unsigned agentLocation) {
+        PPValues[index] = state;
+        diagnosed[index] = isDiagnosed;
+        location[index] = agentLocation;
+        agents[index] = Agent<AgentList>(index);
+    }
     unsigned addAgent(PPState state, bool isDiagnosed, unsigned agentLocation) {
         // Or should we just trust push_back? I would trust it, or probably best would be if we
         // should write the numbers in the input file

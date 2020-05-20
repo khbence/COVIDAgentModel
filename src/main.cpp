@@ -49,10 +49,19 @@ int main(int argc, char ** argv) {
     unsigned lengthInWeeks = result["length"].as<unsigned>();
     unsigned timeStep = result["deltat"].as<unsigned>();
 
+    BEGIN_PROFILING("Adding locs & agents");
     // setup for test
     {
         unsigned numAgents = result["numagents"].as<unsigned>();
         double initial_infected_ratio = result["infected"].as<double>();
+        using AgentListType = Simulation<PositionType,
+        TypeOfLocation,
+        PPStateSIRextended,
+        BasicAgentMeta,
+        DummyMovement,
+        BasicInfection>::AgentListType;
+        AgentListType *agentList = AgentListType::getInstance();
+        agentList->initializeWithNumAgents(numAgents);
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<> dis(0.0, 1.0);
@@ -65,12 +74,13 @@ int main(int argc, char ** argv) {
 
         // Populate agent list
         for (int i = 0; i < numAgents; i++) {
-            s.addAgent(PPStateSIRextended(
+            agentList->setAgent(i,PPStateSIRextended(
                            dis(gen) < initial_infected_ratio ? states::SIRD::I : states::SIRD::S),
                 false,
                 i / agentsPerLoc);
         }
     }
+    END_PROFILING("Adding locs & agents");
 
     s.initialization();
     s.runSimulation(timeStep, lengthInWeeks);

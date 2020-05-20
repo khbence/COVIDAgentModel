@@ -39,6 +39,10 @@ public:
     }
 
     void addLocation(PositionType p, TypeOfLocation l) {
+        if (position.size() == position.capacity()) {
+            locType.reserve(locType.size() * 1.5 + 10);
+            position.reserve(position.size() * 1.5 + 10);
+        }
         position.push_back(p);
         locType.push_back(l);
     }
