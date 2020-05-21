@@ -2,6 +2,7 @@
 #include "customExceptions.h"
 #include "JSONDecoder.h"
 #include <limits>
+#include <algorithm>
 
 BasicAgentMeta::AgeInterval::AgeInterval(parser::Parameters::Age in)
     : symptons(in.symptoms), transmission(in.transmission) {
@@ -30,15 +31,39 @@ void BasicAgentMeta::initData(const std::string& inputFile) {
         sexScaling[i] = std::make_pair(input.sex[i].name[0], input.sex[i].symptoms);
     }
     if (sexScaling[0].first == sexScaling[1].first) { throw IOParameters::WrongGenderName(); }
+    if (sexScaling[0].first == 'M') { std::swap(sexScaling[0], sexScaling[1]); }
 
     // init the scalings based on age
     ageScaling.reserve(input.age.size());
     for (auto ageInter : input.age) { ageScaling.emplace_back(ageInter); }
+    // TODO check intervals
 
     // init the scaling that coming from pre-conditions
     for (const auto& cond : input.preCondition) {
         preConditionScaling.emplace(std::make_pair(cond.ID, cond.symptoms));
     }
+}
+
+BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, unsigned preCondition) {
+    // modify based on gender
+    if (gender == 'F') {
+        scalingSymptoms *= sexScaling[0].second;
+    } else if (gender == 'M') {
+        scalingSymptoms *= sexScaling[1].second;
+    } else {
+        throw IOAgents::InvalidGender(std::to_string(gender));
+    }
+
+    // modify based on age
+    auto it = std::find(ageScaling.begin(), ageScaling.end(), age);
+    if (it == ageScaling.end()) { throw IOAgents::NotDefinedAge(age); }
+    scalingSymptoms *= it->symptons;
+    scalingTransmission *= it->transmission;
+
+    // modify based on pre-condition
+    auto itMap = preConditionScaling.find(preCondition);
+    if (itMap == preConditionScaling.end()) { throw IOAgents::NotDefinedCondition(preCondition); }
+    scalingSymptoms *= itMap->second;
 }
 
 float BasicAgentMeta::getScalingSymptoms() const { return scalingSymptoms; }

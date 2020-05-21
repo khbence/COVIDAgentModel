@@ -57,17 +57,45 @@ namespace IOParameters {
 
     class NotBinary : public ParametersInputError {
     public:
-        NotBinary() : ParametersInputError("There are two genders!!!") {}
+        NotBinary() : ParametersInputError("There are two genders!!!\n") {}
     };
 
     class WrongGenderName : public ParametersInputError {
     public:
-        WrongGenderName() : ParametersInputError("Define an F and an M genders.") {}
+        WrongGenderName() : ParametersInputError("Define an F and an M genders.\n") {}
     };
 
     class NegativeFrom : public ParametersInputError {
     public:
         NegativeFrom()
-            : ParametersInputError("From value in the age scaling should be positive value!") {}
+            : ParametersInputError("From value in the age scaling should be positive value!\n") {}
     };
 }// namespace IOParameters
+
+namespace IOAgents {
+    class AgentsInputError : public CustomErrors {
+    protected:
+        explicit AgentsInputError(std::string&& error_p)
+            : CustomErrors("Agents input file error: " + error_p) {}
+    };
+
+    class InvalidGender : public AgentsInputError {
+    public:
+        explicit InvalidGender(const std::string& genderName)
+            : AgentsInputError("Wronf gender name (" + genderName + ").\n") {}
+    };
+
+    class NotDefinedAge : public AgentsInputError {
+    public:
+        explicit NotDefinedAge(unsigned age)
+            : AgentsInputError(
+                "Age " + std::to_string(age) + " was not defined in the parameter input file!\n") {}
+    };
+
+    class NotDefinedCondition : public AgentsInputError {
+    public:
+        explicit NotDefinedCondition(unsigned conditionID)
+            : AgentsInputError("Condition with ID " + std::to_string(conditionID)
+                               + " was not defined in the parameter input file!\n") {}
+    };
+}// namespace IOAgents

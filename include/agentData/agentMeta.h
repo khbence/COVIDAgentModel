@@ -14,6 +14,7 @@ class BasicAgentMeta {
         float transmission;
 
         explicit AgeInterval(parser::Parameters::Age in);
+        bool operator==(unsigned age) { return (from < age) && (age < to); }
     };
 
     float scalingSymptoms = 1.0;
