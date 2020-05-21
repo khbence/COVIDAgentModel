@@ -7,15 +7,46 @@
 #include "customExceptions.h"
 #include <algorithm>
 #include "randomGenerator.h"
-#define NSTATES 11
+
 class SingleBadTransitionMatrix {
     class NextStates {
+        bool hasBad;
+        thrust::pair<unsigned, float> bad;
+        unsigned neutralCount;
+
+        public:
+        thrust::pair<unsigned, float> *neutral;
+        NextStates(bool _hasBad, thrust::pair<unsigned, float> _bad, 
+                    thrust::pair<unsigned, float>* _neutral, unsigned _neutralCount) :
+            hasBad(_hasBad), bad(_bad), neutral(_neutral), neutralCount(_neutralCount) {}
+        
+        
+        [[nodiscard]] unsigned selectNext(float scalingSypmtons) const {
+            double random = RandomGenerator::randomUnit();
+            double iterator = 0.0;
+            double remainders = 0.0;
+            if (hasBad) {
+                iterator = bad.second * scalingSypmtons;
+                if (random < iterator) { return bad.first; }
+                remainders = (bad.second - iterator) / neutralCount;
+            }
+            unsigned idx = 0;
+            do {
+                iterator += neutral[idx].second + remainders;
+                ++idx;
+            } while (iterator < random);
+            idx--;
+            return neutral[idx].first;
+        }
+    };
+    class NextStatesInit {
+        public:
         // pair<index of new state,  raw chance to get there>
         stc::optional<std::pair<unsigned, float>> bad;
         std::vector<std::pair<unsigned, float>> neutral;
 
-    public:
-        NextStates() = default;
+    
+        NextStatesInit() = default;
 
         void addBad(std::pair<unsigned, float> bad_p) {
             if (bad) { throw(TooMuchBad(bad_p.first)); }
@@ -33,24 +64,6 @@ class SingleBadTransitionMatrix {
                     neutral.emplace_back(ownIndex, 1.0F);
                 }
             }
-        }
-
-        [[nodiscard]] unsigned selectNext(float scalingSypmtons) const {
-            double random = RandomGenerator::randomUnit();
-            double iterator = 0.0;
-            double remainders = 0.0;
-            if (bad) {
-                iterator = bad.value().second * scalingSypmtons;
-                if (random < iterator) { return bad.value().first; }
-                remainders = (bad.value().second - iterator) / neutral.size();
-            }
-            unsigned idx = 0;
-            do {
-                iterator += neutral[idx].second + remainders;
-                ++idx;
-            } while (iterator < random);
-            idx--;
-            return neutral[idx].first;
         }
     };
 
@@ -79,16 +92,19 @@ class SingleBadTransitionMatrix {
         }
     };
 
-    std::vector<NextStates> transitions;
-    std::vector<LengthOfState> lengths;
+    NextStates *transitions;
+    LengthOfState *lengths;
+    unsigned numStates;
 
 
 public:
     SingleBadTransitionMatrix() = default;
     explicit SingleBadTransitionMatrix(const std::string& fileName) {
         const auto inputData = DECODE_JSON_FILE(fileName);
-        transitions.resize(inputData.states.size());
-        lengths.resize(inputData.states.size());
+        std::vector<NextStatesInit> initTransitions(inputData.states.size());
+        numStates = inputData.states.size();
+        lengths = (LengthOfState*)malloc(sizeof(LengthOfState)*inputData.states.size());
+        transitions = (NextStates*)malloc(sizeof(NextStates)*inputData.states.size());
         
         auto getStateIndex = [&inputData](const std::string& name) {
             unsigned idx = 0;
@@ -107,22 +123,35 @@ public:
                 auto idx = getStateIndex(t.name);
                 sumChance += t.chance;
                 if (t.isBadProgression) {
-                    transitions[i].addBad(std::make_pair(idx, t.chance));
+                    initTransitions[i].addBad(std::make_pair(idx, t.chance));
                 } else {
-                    transitions[i].addNeutral(std::make_pair(idx, t.chance));
+                    initTransitions[i].addNeutral(std::make_pair(idx, t.chance));
                 }
             }
-            transitions[i].cleanUp(i);
+            initTransitions[i].cleanUp(i);
             if (sumChance != 1.0 && !s.progressions.empty()) { throw(BadChances(s.stateName)); }
+            thrust::pair<unsigned, float> badVal = initTransitions[i].bad ? initTransitions[i].bad.value() : thrust::pair<unsigned, float>(0,0.0f);
+            thrust::pair<unsigned, float> *neutrals = (thrust::pair<unsigned, float> *)malloc(initTransitions[i].neutral.size()*sizeof(thrust::pair<unsigned, float>));
+            for (int j = 0; j < initTransitions[i].neutral.size(); j++)
+                neutrals[j] = initTransitions[i].neutral[j];
+            transitions[i] = NextStates(initTransitions[i].bad?true:false, badVal, neutrals,initTransitions[i].neutral.size());
             ++i;
         }
     }
 
-    [[nodiscard]] std::pair<unsigned, int> calculateNextState(unsigned currentState,
+    ~SingleBadTransitionMatrix() {
+        for (unsigned i = 0; i < numStates; i++) {
+            free(transitions[i].neutral);
+        }
+        free(transitions);
+        free(lengths);
+    }
+
+    [[nodiscard]] thrust::pair<unsigned, int> calculateNextState(unsigned currentState,
         float scalingSymptons) const {
         unsigned nextState = transitions[currentState].selectNext(scalingSymptons);
         int days = lengths[nextState].calculateDays();
-        return std::make_pair(nextState, days);
+        return thrust::make_pair(nextState, days);
     }
 
     [[nodiscard]] int calculateJustDays(unsigned state) const {
