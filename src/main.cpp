@@ -28,6 +28,7 @@ int main(int argc, char const* argv[]) {
         BasicInfection>
         s(PARSE_PARAMETERS(argc, argv, ProgramParameters));
 
+
     s.initialization();
     s.runSimulation();
     END_PROFILING("main");

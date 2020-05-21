@@ -1,11 +1,34 @@
 #pragma once
+#include <map>
+#include <array>
+#include <utility>
+#include <vector>
+#include <string>
+#include "parametersFormat.h"
 
 class BasicAgentMeta {
+    struct AgeInterval {
+        unsigned from;
+        unsigned to;
+        float symptons;
+        float transmission;
+
+        explicit AgeInterval(parser::Parameters::Age in);
+    };
+
     float scalingSymptoms = 1.0;
     float scalingTransmission = 1.0;
 
-    // TODO constructor which calculates this from the input data
+    // As a good christian I hardcoded that there are only two genders
+    static std::array<std::pair<char, float>, 2> sexScaling;
+    static std::vector<AgeInterval> ageScaling;
+    static std::map<unsigned, float> preConditionScaling;
+
 public:
-    [[nodiscard]] float getScalingSymptoms() const { return scalingSymptoms; }
-    [[nodiscard]] float getScalingTransmission() const { return scalingTransmission; }
+    static void initData(const std::string& inputFile);
+
+    BasicAgentMeta(char gender, unsigned age, unsigned preCondition);
+
+    [[nodiscard]] float getScalingSymptoms() const;
+    [[nodiscard]] float getScalingTransmission() const;
 };

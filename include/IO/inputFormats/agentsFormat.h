@@ -7,13 +7,13 @@ namespace parser {
     struct Agents : public jsond::JSONDecodable<Agents> {
         struct Person : public jsond::JSONDecodable<Person> {
             struct Location : public jsond::JSONDecodable<Location> {
-                BEGIN_MEMBER_DECLARATION();
+                BEGIN_MEMBER_DECLARATIONS();
                 DECODABLE_MEMBER(int, typeID);
                 DECODABLE_MEMBER(int, locID);
                 END_MEMBER_DECLARATIONS();
             };
 
-            BEGIN_MEMBER_DECLARATION();
+            BEGIN_MEMBER_DECLARATIONS();
             DECODABLE_MEMBER(int, age);
             DECODABLE_MEMBER(std::string, sex);
             DECODABLE_MEMBER(int, preCond);

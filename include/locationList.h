@@ -21,7 +21,7 @@ class LocationsList {
 
     Statistic<typename SimulationType::PPState_t, AgentType> globalStats;
 
-    LocationsList() {}
+    LocationsList() = default;
 
 public:
     thrust::device_vector<PositionType> position;
@@ -86,7 +86,7 @@ public:
                 }
             });
         // DEBUG unsigned count2 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto
-        // &ppstate) {return ppstate.getSIRD() == states::SIRD::I;}); DEBUG std::cout << count1 <<  "
+        // &ppstate) {return ppstate.getSIRD() == states::SIRD::I;}); DEBUG std::cout << count1 << "
         // " << count2 << std::endl;
     }
 

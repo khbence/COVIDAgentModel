@@ -1,7 +1,7 @@
 #pragma once
 #include "datatypes.h"
 #include "agentsList.h"
-#include "location.h"
+#include "locationList.h"
 #include "timeHandler.h"
 #include "customExceptions.h"
 #include "globalStates.h"
@@ -45,6 +45,7 @@ private:
     LocationType* locs = LocationType::getInstance();
     unsigned timeStep;
     unsigned lengthOfSimulationWeeks;
+    bool succesfullyInitialized = true;
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -76,10 +77,21 @@ public:
         : timeStep(parameters.timeStep), lengthOfSimulationWeeks(parameters.weeks) {
         try {
             PPState_t::initTransitionMatrix(parameters.progression);
-        } catch (TransitionInputError& e) { std::cerr << e.what(); }
+        } catch (IOProgression::TransitionInputError& e) {
+            std::cerr << e.what();
+            succesfullyInitialized = false;
+        }
+
+        try {
+            agents->init(parameters);
+        } catch (const CustomErrors& e) {
+            std::cerr << e.what();
+            succesfullyInitialized = false;
+        }
     }
 
     void addLocation(PositionType p, TypeOfLocation t) { locs->addLocation(p, t); }
+
     void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
         unsigned idx = agents->addAgent(state, isDiagnosed, locationID);
     }
@@ -92,6 +104,7 @@ public:
     }
 
     void runSimulation() {
+        if (!succesfullyInitialized) { return; }
         PROFILE_FUNCTION();
         auto& agentList = agents->getAgentsList();
         Timehandler simTime(timeStep);

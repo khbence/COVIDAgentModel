@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "datatypes.h"
+#include "programParameters.h"
 /*
 template<typename T>
 concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
@@ -12,6 +13,8 @@ class Agent;
 
 template<typename PPState, typename AgentMeta, typename Location>
 class AgentList {
+    AgentList() = default;
+
 public:
     thrust::device_vector<PPState> PPValues;
     thrust::device_vector<AgentMeta> agentMetaData;
@@ -20,11 +23,11 @@ public:
 
     using PPState_t = PPState;
 
-    AgentList() = default;
     friend class Agent<AgentList>;
 
     thrust::device_vector<Agent<AgentList>> agents;
 
+    void init(const ProgramParameters& parameters) { AgentMeta::initData(parameters.parameters); }
 
     [[nodiscard]] static AgentList* getInstance() {
         static AgentList instance;

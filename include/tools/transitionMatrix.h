@@ -19,7 +19,7 @@ class SingleBadTransitionMatrix {
         NextStates() = default;
 
         void addBad(std::pair<unsigned, float> bad_p) {
-            if (bad) { throw(TooMuchBad(bad_p.first)); }
+            if (bad) { throw(IOProgression::TooMuchBad(bad_p.first)); }
             bad = bad_p;
         }
 
@@ -87,16 +87,16 @@ class SingleBadTransitionMatrix {
 public:
     SingleBadTransitionMatrix() = default;
     explicit SingleBadTransitionMatrix(const std::string& fileName) {
-        const auto inputData = DECODE_JSON_FILE(fileName);
+        const auto inputData = DECODE_JSON_FILE(fileName, parser::TransitionFormat);
         if (inputData.states.size() != N) {
-            throw(WrongNumberOfStates(N, inputData.states.size()));
+            throw(IOProgression::WrongNumberOfStates(N, inputData.states.size()));
         }
         auto getStateIndex = [&inputData](const std::string& name) {
             unsigned idx = 0;
             while (inputData.states[idx].stateName != name && idx < inputData.states.size()) {
                 ++idx;
             }
-            if (idx == inputData.states.size()) { throw(WrongStateName(name)); }
+            if (idx == inputData.states.size()) { throw(IOProgression::WrongStateName(name)); }
             return idx;
         };
 
@@ -114,7 +114,9 @@ public:
                 }
             }
             transitions[i].cleanUp(i);
-            if (sumChance != 1.0 && !s.progressions.empty()) { throw(BadChances(s.stateName)); }
+            if (sumChance != 1.0 && !s.progressions.empty()) {
+                throw(IOProgression::BadChances(s.stateName));
+            }
             ++i;
         }
     }
