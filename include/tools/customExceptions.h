@@ -65,6 +65,14 @@ namespace IOParameters {
         WrongGenderName() : ParametersInputError("Define an F and an M genders.\n") {}
     };
 
+    class NegativeInterval : public ParametersInputError {
+    public:
+        NegativeInterval(unsigned from, unsigned to)
+            : ParametersInputError(
+                "In age intervals, the from values should be smaller than to values ("
+                + std::to_string(from) + ", " + std::to_string(to) + ").\n") {}
+    };
+
     class NegativeFrom : public ParametersInputError {
     public:
         NegativeFrom()

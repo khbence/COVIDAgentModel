@@ -10,6 +10,10 @@
 #include "datatypes.h"
 #include "timing.h"
 #include "util.h"
+#include "programParameters.h"
+#include <string>
+#include "locationTypesFormat.h"
+#include <map>
 
 // concept
 template<typename SimulationType>
@@ -23,24 +27,35 @@ class LocationsList {
 
     LocationsList() = default;
 
+    void reserve(std::size_t s) {
+        position.reserve(s);
+        locType.reserve(s);
+    }
+
 public:
     thrust::device_vector<PositionType> position;
     thrust::device_vector<TypeOfLocation> locType;
-    thrust::device_vector<unsigned>
-        locationAgentList;// indices of agents sorted by location, and sorted by agent index
-    thrust::device_vector<unsigned> locationIdsOfAgents;// indices of locations of the agents sorted
-                                                        // by location, and sorted by agent index
-    thrust::device_vector<unsigned> locationListOffsets;// into locationAgentList
+    // indices of agents sorted by location, and sorted by agent index
+    thrust::device_vector<unsigned> locationAgentList;
+    // indices of locations of the agents sorted
+    // by location, and sorted by agent index
+    thrust::device_vector<unsigned> locationIdsOfAgents;
+    // into locationAgentList
+    thrust::device_vector<unsigned> locationListOffsets;
 
+    std::map<unsigned, std::string> generalLocationTypes;
 
     [[nodiscard]] static LocationsList* getInstance() {
         static LocationsList instance;
         return &instance;
     }
 
-    void addLocation(PositionType p, TypeOfLocation l) {
-        position.push_back(p);
-        locType.push_back(l);
+    void initLocationTypes(const std::string& locationTypeFile) {
+        auto input = DECODE_JSON_FILE(locationTypeFile, parser::LocationTypes);
+        locType.reserve(input.types.size());
+        for (auto& type : input.types) {
+            generalLocationTypes.emplace(std::make_pair(type.ID, std::move(type.name)));
+        }
     }
 
     void initialize() {

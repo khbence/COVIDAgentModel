@@ -5,7 +5,7 @@
 #include <algorithm>
 
 BasicAgentMeta::AgeInterval::AgeInterval(parser::Parameters::Age in)
-    : symptons(in.symptoms), transmission(in.transmission) {
+    : symptoms(static_cast<float>(in.symptoms)), transmission(static_cast<float>(in.transmission)) {
     if (in.from < 0) { throw IOParameters::NegativeFrom(); }
     from = in.from;
     if (in.to < 0) {
@@ -13,7 +13,12 @@ BasicAgentMeta::AgeInterval::AgeInterval(parser::Parameters::Age in)
     } else {
         to = in.to;
     }
+    if (to < from) { throw IOParameters::NegativeInterval(from, to); }
 }
+
+float BasicAgentMeta::AgeInterval::getSymptoms() const { return symptoms; }
+
+float BasicAgentMeta::AgeInterval::getTransmission() const { return transmission; }
 
 std::array<std::pair<char, float>, 2> BasicAgentMeta::sexScaling;
 std::vector<BasicAgentMeta::AgeInterval> BasicAgentMeta::ageScaling;
@@ -57,8 +62,8 @@ BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, unsigned preCondition)
     // modify based on age
     auto it = std::find(ageScaling.begin(), ageScaling.end(), age);
     if (it == ageScaling.end()) { throw IOAgents::NotDefinedAge(age); }
-    scalingSymptoms *= it->symptons;
-    scalingTransmission *= it->transmission;
+    scalingSymptoms *= it->getSymptoms();
+    scalingTransmission *= it->getTransmission();
 
     // modify based on pre-condition
     auto itMap = preConditionScaling.find(preCondition);

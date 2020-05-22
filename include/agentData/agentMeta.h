@@ -7,14 +7,17 @@
 #include "parametersFormat.h"
 
 class BasicAgentMeta {
-    struct AgeInterval {
+    class AgeInterval {
         unsigned from;
         unsigned to;
-        float symptons;
+        float symptoms;
         float transmission;
 
+    public:
         explicit AgeInterval(parser::Parameters::Age in);
-        bool operator==(unsigned age) { return (from < age) && (age < to); }
+        bool operator==(unsigned age) const { return (from < age) && (age < to); }
+        [[nodiscard]] float getSymptoms() const;
+        [[nodiscard]] float getTransmission() const;
     };
 
     float scalingSymptoms = 1.0;

@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "datatypes.h"
-#include "programParameters.h"
+#include <string>
 /*
 template<typename T>
 concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
@@ -27,7 +27,7 @@ public:
 
     thrust::device_vector<Agent<AgentList>> agents;
 
-    void init(const ProgramParameters& parameters) { AgentMeta::initData(parameters.parameters); }
+    void initAgentMeta(const std::string& parametersFile) { AgentMeta::initData(parametersFile); }
 
     [[nodiscard]] static AgentList* getInstance() {
         static AgentList instance;

@@ -13,7 +13,7 @@
 #include "timing.h"
 
 using PositionType = int;
-using TypeOfLocation = int;
+using TypeOfLocation = unsigned;
 
 int main(int argc, char const* argv[]) {
     BEGIN_PROFILING("main");

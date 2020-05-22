@@ -83,7 +83,7 @@ public:
         }
 
         try {
-            agents->init(parameters);
+            agents->initAgentMeta(parameters.parameters);
         } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;
