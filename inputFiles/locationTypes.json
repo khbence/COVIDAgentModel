@@ -1,11 +1,11 @@
 {
     "types": [
         {
-            "id": 0,
+            "ID": 0,
             "name": "Public space"
         },
         {
-            "id": 1,
+            "ID": 1,
             "name": "Residence"
         }
     ]

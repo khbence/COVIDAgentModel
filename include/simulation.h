@@ -84,7 +84,16 @@ public:
 
         try {
             agents->initAgentMeta(parameters.parameters);
-        } catch (const CustomErrors& e) {
+        } catch (const IOParameters::ParametersInputError& e) {
+            std::cerr << e.what();
+            succesfullyInitialized = false;
+        }
+
+        locs->initLocationTypes(parameters.locationTypes);
+
+        try {
+            locs->initLocations(parameters.locations);
+        } catch (const IOLocations::LocationsInputError& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;
         }

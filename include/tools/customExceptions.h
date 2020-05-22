@@ -90,7 +90,7 @@ namespace IOAgents {
     class InvalidGender : public AgentsInputError {
     public:
         explicit InvalidGender(const std::string& genderName)
-            : AgentsInputError("Wronf gender name (" + genderName + ").\n") {}
+            : AgentsInputError("Wrong gender name (" + genderName + ").\n") {}
     };
 
     class NotDefinedAge : public AgentsInputError {
@@ -107,3 +107,17 @@ namespace IOAgents {
                                + " was not defined in the parameter input file!\n") {}
     };
 }// namespace IOAgents
+
+namespace IOLocations {
+    class LocationsInputError : public CustomErrors {
+    protected:
+        explicit LocationsInputError(std::string&& error_p)
+            : CustomErrors("Locations input file error: " + error_p) {}
+    };
+
+    class WrongState : public LocationsInputError {
+    public:
+        explicit WrongState(const std::string& state)
+            : LocationsInputError("Wrong state name (" + state + ").\n") {}
+    };
+}// namespace IOLocations

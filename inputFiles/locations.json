@@ -1,7 +1,7 @@
 {
     "places": [
         {
-            "id": 0,
+            "ID": 0,
             "type": 1,
             "coordinates": [
                 0.8,
@@ -16,7 +16,7 @@
             ]
         },
         {
-            "id": 1,
+            "ID": 1,
             "type": 0,
             "coordinates": [
                 0.0,

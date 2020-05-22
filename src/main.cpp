@@ -12,7 +12,7 @@
 #include <omp.h>
 #include "timing.h"
 
-using PositionType = int;
+using PositionType = std::array<double, 2>;
 using TypeOfLocation = unsigned;
 
 int main(int argc, char const* argv[]) {
@@ -26,7 +26,7 @@ int main(int argc, char const* argv[]) {
         BasicAgentMeta,
         DummyMovement,
         BasicInfection>
-        s(PARSE_PARAMETERS(argc, argv, ProgramParameters));
+        s{ PARSE_PARAMETERS(argc, argv, ProgramParameters) };
 
 
     s.initialization();

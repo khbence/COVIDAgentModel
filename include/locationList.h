@@ -14,6 +14,9 @@
 #include <string>
 #include "locationTypesFormat.h"
 #include <map>
+#include <unordered_map>
+#include "locationsFormat.h"
+#include "customExceptions.h"
 
 // concept
 template<typename SimulationType>
@@ -25,16 +28,29 @@ class LocationsList {
 
     Statistic<typename SimulationType::PPState_t, AgentType> globalStats;
 
+    // For the runtime performance, it would be better, that the IDs of the locations would be the
+    // same as their indexes, but we can ensure it in the input file, so I create this mapping, that
+    // will be used by the agents when I fill them up. Use it only during initialization
+    // ID from files -> index in vectors
+    std::unordered_map<unsigned, unsigned> IDMapping;
+
     LocationsList() = default;
 
     void reserve(std::size_t s) {
         position.reserve(s);
         locType.reserve(s);
+        areas.reserve(s);
+        states.reserve(s);
     }
 
 public:
-    thrust::device_vector<PositionType> position;
+    // the following vectors are the input data for locations in separated vectors
     thrust::device_vector<TypeOfLocation> locType;
+    thrust::device_vector<PositionType> position;
+    thrust::device_vector<unsigned> areas;
+    thrust::device_vector<bool> states;// Closed/open or ON/OFF
+
+
     // indices of agents sorted by location, and sorted by agent index
     thrust::device_vector<unsigned> locationAgentList;
     // indices of locations of the agents sorted
@@ -52,9 +68,29 @@ public:
 
     void initLocationTypes(const std::string& locationTypeFile) {
         auto input = DECODE_JSON_FILE(locationTypeFile, parser::LocationTypes);
-        locType.reserve(input.types.size());
         for (auto& type : input.types) {
             generalLocationTypes.emplace(std::make_pair(type.ID, std::move(type.name)));
+        }
+    }
+
+    void initLocations(const std::string& locationFile) {
+        auto input = DECODE_JSON_FILE(locationFile, parser::Locations);
+        reserve(input.places.size());
+        unsigned idx = 0;
+        for (const auto& loc : input.places) {
+            IDMapping.emplace(loc.ID, idx++);
+            locType.push_back(loc.type);
+            position.push_back(PositionType{ loc.coordinates[0], loc.coordinates[1] });
+            areas.push_back(loc.area);
+            std::string tmp = loc.state;
+            std::for_each(tmp.begin(), tmp.end(), [](char c) { return std::toupper(c); });
+            if (tmp == "ON" || tmp == "OPEN") {
+                states.push_back(true);
+            } else if (tmp == "OFF" || tmp == "CLOSED") {
+                states.push_back(false);
+            } else {
+                throw IOLocations::WrongState(loc.state);
+            }
         }
     }
 

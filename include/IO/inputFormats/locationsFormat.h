@@ -4,8 +4,8 @@
 #include <string>
 
 namespace parser {
-    struct Locations : public jsond::JSONDecoder<Locations> {
-        struct Place : public jsond::JSONDecoder<Place> {
+    struct Locations : public jsond::JSONDecodable<Locations> {
+        struct Place : public jsond::JSONDecodable<Place> {
             BEGIN_MEMBER_DECLARATIONS();
             DECODABLE_MEMBER(int, ID);
             DECODABLE_MEMBER(int, type);
