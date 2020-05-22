@@ -14,7 +14,7 @@ class RandomGenerator {
     static std::vector<std::mt19937_64> generators;
 
 public:
-    static void init(unsigned threads);
+    static void init(unsigned agents);
 
     [[nodiscard]] static __host__ thrust::host_vector<float> fillUnitf(unsigned size) {
         Timing::startTimer("RandomGenerator::fillUnitf");

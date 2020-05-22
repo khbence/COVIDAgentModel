@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
     // setup for test
     {
         unsigned numAgents = result["numagents"].as<unsigned>();
+        RandomGenerator::init(numAgents);
         double initial_infected_ratio = result["infected"].as<double>();
         double initial_infected2_ratio = result["infected2"].as<double>();
         using AgentListType = Simulation<PositionType,

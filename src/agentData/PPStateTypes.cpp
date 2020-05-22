@@ -117,7 +117,7 @@ void PPStateSIRextended::initTransitionMatrix(const std::string& inputFile) {
         detail::PPStateSIRextended::transition = new SingleBadTransitionMatrix(inputFile);
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
         SingleBadTransitionMatrix *tmp = detail::PPStateSIRextended::transition->upload();
-        cudaMemcpyToSymbol(detail::PPStateSIRextended::transition_gpu, tmp, sizeof(SingleBadTransitionMatrix *));
+        cudaMemcpyToSymbol(detail::PPStateSIRextended::transition_gpu, &tmp, sizeof(SingleBadTransitionMatrix *));
 #endif
 }
 

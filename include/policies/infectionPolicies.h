@@ -34,9 +34,12 @@ public:
         thrust::device_vector<double> infectionRatios(locationListOffsets.size()-1,0.0);
         thrust::device_vector<unsigned> fullInfectedCounts(locationListOffsets.size()-1,0);
         //Cout up infectious people - those who are Infected, and Infected state is >1
-        reduce_by_location(locationListOffsets, fullInfectedCounts, ppstates, [](auto ppstate){
+        reduce_by_location(locationListOffsets, fullInfectedCounts, ppstates, [] HD (typename SimulationType::PPState_t& ppstate){
                                         return (unsigned)((ppstate.getSIRD() == states::SIRD::I) && (ppstate.getSubState() > 0));
                                     });
+        double virulency2 = virulency;
+        double virulencyNorm2 = virulencyNorm;
+        double distance2 = distance;
         thrust::transform(thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.begin(),locationListOffsets.begin(), locationListOffsets.begin()+1)),
                           thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.end(),  locationListOffsets.end()-1, locationListOffsets.end())),
                           infectionRatios.begin(),[=] HD (thrust::tuple<unsigned &, unsigned &, unsigned &> tuple) {
@@ -45,9 +48,9 @@ public:
                               unsigned offset1 = thrust::get<2>(tuple);
                               unsigned num_agents = offset1-offset0;
                               if (numInfectedAgentsPresent == 0) return 0.0;
-                              double densityOfInfected = double(numInfectedAgentsPresent) / (num_agents * distance);
-                              double p = 0.35 - virulency;
-                              double k = p / virulencyNorm;
+                              double densityOfInfected = double(numInfectedAgentsPresent) / (num_agents * distance2);
+                              double p = 0.35 - virulency2;
+                              double k = p / virulencyNorm2;
                               double y = 1.0 / (1.0 + exp((p - densityOfInfected) / k));
                               return y / (60.0 * 24.0 / (double)timeStep);
                           });
