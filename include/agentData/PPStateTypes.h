@@ -7,7 +7,7 @@ protected:
     states::SIRD state;
 
 public:
-    static unsigned getNumberOfStates() {return 0;};
+    static HD unsigned getNumberOfStates() {return 0;};
 
     static void initTransitionMatrix(const std::string& inputFile) {}
 
@@ -21,7 +21,7 @@ public:
 
 class PPStateSIRBasic : public PPStateSIRAbstract {
 public:
-    static unsigned getNumberOfStates() {return 4;};
+    static HD unsigned getNumberOfStates() {return 4;};
     PPStateSIRBasic();
     explicit PPStateSIRBasic(states::SIRD s);
     void HD update(float scalingSymptons) override;
@@ -36,14 +36,16 @@ class PPStateSIRextended : public PPStateSIRAbstract {
     int daysBeforeNextState = -1;
 
 private:
-    SingleBadTransitionMatrix& getTransition();
+
+    HD SingleBadTransitionMatrix& getTransition();
+    HD unsigned* getStartingIdx();
 
     HD void applyNewIdx();
 
 public:
     static void printHeader();
 
-    static unsigned getNumberOfStates();
+    static HD unsigned getNumberOfStates();
     HD PPStateSIRextended();
     explicit HD PPStateSIRextended(states::SIRD s);
     explicit HD PPStateSIRextended(char idx_p);

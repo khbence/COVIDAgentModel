@@ -3,7 +3,7 @@
 #define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_CUDA
 #endif
 
-#define HD __device__
+#define HD __device__ __host__
 
 #if THRUST_DEVICE_SYSTEM==THRUST_DEVICE_SYSTEM_OMP
 //#define HD

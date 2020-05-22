@@ -1,8 +1,8 @@
 #include "util.h"
 #include "timing.h"
 
-#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
 void extractOffsets(unsigned *locOfAgents, unsigned *locationListOffsets, unsigned length, unsigned nLocs) {
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
     locationListOffsets[0] = 0;
     #pragma omp parallel for
     for (unsigned i = 1; i < length; i++) {
@@ -13,8 +13,8 @@ void extractOffsets(unsigned *locOfAgents, unsigned *locationListOffsets, unsign
         }
     }
     locationListOffsets[nLocs] = length;
-}
 #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+}
 //Need a kernel here
 #endif
 void Util::updatePerLocationAgentLists(const thrust::device_vector<unsigned> &locationOfAgents,

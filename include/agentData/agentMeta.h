@@ -6,6 +6,6 @@ class BasicAgentMeta {
 
     // TODO constructor which calculates this from the input data
 public:
-    [[nodiscard]] float getScalingSymptoms() const { return scalingSymptoms; }
-    [[nodiscard]] float getScalingTransmission() const { return scalingTransmission; }
+    [[nodiscard]] HD float getScalingSymptoms() const { return scalingSymptoms; }
+    [[nodiscard]] HD float getScalingTransmission() const { return scalingTransmission; }
 };
