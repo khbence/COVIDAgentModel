@@ -4,6 +4,7 @@
 #include <omp.h>
 #include "datatypes.h"
 #include "timing.h"
+#include <limits.h>
 
 #if THRUST_DEVICE_SYSTEM==THRUST_DEVICE_SYSTEM_CUDA
 #include <cuda.h>
@@ -75,8 +76,19 @@ public:
 
     [[nodiscard]] static __host__ __device__ int geometric(double p) {
         #ifdef __CUDA_ARCH__
+        double _M_p = p;
+        double _M_log_1_p = log(1.0 - _M_p);
+        const double __naf =
+	        (1 - __DBL_EPSILON__) / 2;
+	    const double __thr =
+	        __INT_MAX__ + __naf;
         //TODO: need geometric here!!!
-        return curand_uniform_double(&dstates[threadIdx.x+blockIdx.x*blockDim.x]);
+        //return curand_uniform_double(&dstates[threadIdx.x+blockIdx.x*blockDim.x]);
+        double __cand;
+        do
+        __cand = floor(log(1.0 - curand_uniform_double(&dstates[threadIdx.x+blockIdx.x*blockDim.x])) / _M_log_1_p);
+        while (__cand >= __thr);
+        return int(__cand + __naf);
         #else
         std::geometric_distribution<> dis(p);
         return dis(generators[omp_get_thread_num()]);
