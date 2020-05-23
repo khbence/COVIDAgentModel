@@ -78,6 +78,9 @@ int main(int argc, char** argv) {
 
         for (int i = 0; i < numLocations; i++) { s.addLocation(i, 0); }
 
+        std::vector<PPStateSIRextended> states(numAgents);
+        std::vector<bool> diagnosed(numAgents,false);
+        std::vector<unsigned> locations(numAgents);
         // Populate agent list
         for (int i = 0; i < numAgents; i++) {
             double r = dis(gen);
@@ -87,8 +90,10 @@ int main(int argc, char** argv) {
             } else if (r < initial_infected_ratio + initial_infected2_ratio) {
                 stateIdx = 2;
             }
-            agentList->setAgent(i, PPStateSIRextended(stateIdx), false, i / agentsPerLoc);
+            states[i] = PPStateSIRextended(stateIdx);
+            locations[i] = i/agentsPerLoc;
         }
+        agentList->setAgents(states, diagnosed, locations);
     }
     END_PROFILING("Adding locs & agents");
 

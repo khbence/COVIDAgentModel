@@ -107,7 +107,6 @@ public:
 
     void runSimulation(unsigned timeStep_p, unsigned lengthOfSimulationWeeks) {
         PROFILE_FUNCTION();
-        auto& agentList = agents->getAgentsList();
         timeStep = timeStep_p;
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);

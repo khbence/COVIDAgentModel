@@ -4,10 +4,10 @@
 
 template<typename AgentListType>
 class Agent {
-    unsigned id;
     static AgentListType* agentList;
 
 public:
+    unsigned id;
     using AgentListType_t = AgentListType;
     explicit HD Agent() : id(0) {}
     explicit HD Agent(unsigned id_p) : id(id_p) {}
