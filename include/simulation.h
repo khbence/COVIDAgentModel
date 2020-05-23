@@ -56,7 +56,7 @@ public:
         thrust::for_each(
             thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin())),
             thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end())),
-            [] __host__ __device__ (thrust::tuple<PPState &, AgentMeta &> tup) {
+            [] HD (thrust::tuple<PPState &, AgentMeta &> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
                 ppstate.update(meta.getScalingSymptoms());

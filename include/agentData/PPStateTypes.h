@@ -54,5 +54,4 @@ public:
     static void initTransitionMatrix(const std::string& inputFile);
     void HD update(float scalingSymptons) override;
     [[nodiscard]] char HD getStateIdx() const override;
-
 };

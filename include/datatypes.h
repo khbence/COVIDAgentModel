@@ -3,11 +3,8 @@
 #define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_OMP
 #endif
 
-#if THRUST_DEVICE_SYSTEM==THRUST_DEVICE_SYSTEM_OMP
-#define HD
-#elif THRUST_DEVICE_SYSTEM==THRUST_DEVICE_SYSTEM_CUDA
 #define HD __host__ __device__
-#endif
+
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/count.h>
