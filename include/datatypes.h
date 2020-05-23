@@ -1,12 +1,10 @@
 #pragma once
 #ifndef THRUST_DEVICE_SYSTEM
-#define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_CUDA
+#define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_OMP
 #endif
 
-#define HD __device__ __host__
-
 #if THRUST_DEVICE_SYSTEM==THRUST_DEVICE_SYSTEM_OMP
-//#define HD
+#define HD
 #elif THRUST_DEVICE_SYSTEM==THRUST_DEVICE_SYSTEM_CUDA
 #define HD __host__ __device__
 #endif
