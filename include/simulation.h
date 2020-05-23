@@ -71,26 +71,25 @@ private:
     }
 
 public:
-    Simulation(cxxopts::Options &options) : InfectionPolicy<Simulation<PositionType,
-          TypeOfLocation,
-          PPState,
-          AgentMeta,
-          MovementPolicy,
-          InfectionPolicy>>(options) {
-
-    }
-    void initialize_args(cxxopts::ParseResult &result) {
+    Simulation(cxxopts::Options& options)
+        : InfectionPolicy<Simulation<PositionType,
+            TypeOfLocation,
+            PPState,
+            AgentMeta,
+            MovementPolicy,
+            InfectionPolicy>>(options) {}
+    void initialize_args(cxxopts::ParseResult& result) {
         InfectionPolicy<Simulation<PositionType,
-          TypeOfLocation,
-          PPState,
-          AgentMeta,
-          MovementPolicy,
-          InfectionPolicy>>::initialize_args(result);
-          try {
+            TypeOfLocation,
+            PPState,
+            AgentMeta,
+            MovementPolicy,
+            InfectionPolicy>>::initialize_args(result);
+        try {
             PPState_t::initTransitionMatrix("../inputFiles/transition.json");
         } catch (TransitionInputError& e) {
             std::cerr << e.what();
-            //return false;
+            // return false;
         }
     }
 
@@ -108,6 +107,7 @@ public:
 
     void runSimulation(unsigned timeStep_p, unsigned lengthOfSimulationWeeks) {
         PROFILE_FUNCTION();
+        refreshAndPrintStatistics();
         auto& agentList = agents->getAgentsList();
         timeStep = timeStep_p;
         Timehandler simTime(timeStep);
