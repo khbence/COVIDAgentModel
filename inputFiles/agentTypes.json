@@ -1,7 +1,7 @@
 {
     "commonSchedules": [
         {
-            "id": 0,
+            "ID": 0,
             "schedule": [
                 {
                     "type": 2,

@@ -2,18 +2,28 @@
 #include <vector>
 #include "datatypes.h"
 #include <string>
+#include "agentType.h"
+#include <map>
+#include "agentTypesFormat.h"
 /*
 template<typename T>
 concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
 */
 
-// singleton
 template<typename T>
 class Agent;
 
 template<typename PPState, typename AgentMeta, typename Location>
 class AgentList {
     AgentList() = default;
+
+    thrust::device_vector<AgentType> agentTypes;
+
+    // For the runtime performance, it would be better, that the IDs of the agent types would be the
+    // same as their indexes, but we can not ensure it in the input file, so I create this mapping,
+    // that will be used by the agents when I fill them up. Use it only during initialization ID
+    // from files -> index in vectors
+    std::map<unsigned, unsigned> agentTypeIDMapping;
 
 public:
     thrust::device_vector<PPState> PPValues;
@@ -28,6 +38,10 @@ public:
     thrust::device_vector<Agent<AgentList>> agents;
 
     void initAgentMeta(const std::string& parametersFile) { AgentMeta::initData(parametersFile); }
+
+    void initAgentTypes(const std::string& agentTypesFile) {
+        auto input = DECODE_JSON_FILE(agentTypesFile, parser::AgentTypes);
+    }
 
     [[nodiscard]] static AgentList* getInstance() {
         static AgentList instance;

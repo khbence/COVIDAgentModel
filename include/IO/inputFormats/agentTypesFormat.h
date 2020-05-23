@@ -16,7 +16,8 @@ namespace parser {
             };
 
             BEGIN_MEMBER_DECLARATIONS();
-            DECODABLE_MEMBER(std::vector<Event>, types);
+            DECODABLE_MEMBER(unsigned, ID);
+            DECODABLE_MEMBER(std::vector<Event>, schedule);
             END_MEMBER_DECLARATIONS();
         };
 
@@ -52,7 +53,13 @@ namespace parser {
             DECODABLE_MEMBER(std::string, name);
             DECODABLE_MEMBER(int, ID);
             DECODABLE_MEMBER(std::vector<ScheduleUnique>, schedulesUnique);
+            DECODABLE_MEMBER(std::vector<ScheduleTypic>, schedulesTypic);
             END_MEMBER_DECLARATIONS();
         };
+
+        BEGIN_MEMBER_DECLARATIONS();
+        DECODABLE_MEMBER(std::vector<Schedule>, commonSchedules);
+        DECODABLE_MEMBER(std::vector<Type>, types);
+        END_MEMBER_DECLARATIONS();
     };
 }// namespace parser

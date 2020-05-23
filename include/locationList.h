@@ -29,9 +29,9 @@ class LocationsList {
     Statistic<typename SimulationType::PPState_t, AgentType> globalStats;
 
     // For the runtime performance, it would be better, that the IDs of the locations would be the
-    // same as their indexes, but we can ensure it in the input file, so I create this mapping, that
-    // will be used by the agents when I fill them up. Use it only during initialization
-    // ID from files -> index in vectors
+    // same as their indexes, but we can not ensure it in the input file, so I create this mapping,
+    // that will be used by the agents when I fill them up. Use it only during initialization ID
+    // from files -> index in vectors
     std::unordered_map<unsigned, unsigned> IDMapping;
 
     LocationsList() = default;
@@ -82,6 +82,7 @@ public:
             locType.push_back(loc.type);
             position.push_back(PositionType{ loc.coordinates[0], loc.coordinates[1] });
             areas.push_back(loc.area);
+            // Transform to upper case, to make it case insensitive
             std::string tmp = loc.state;
             std::for_each(tmp.begin(), tmp.end(), [](char c) { return std::toupper(c); });
             if (tmp == "ON" || tmp == "OPEN") {
