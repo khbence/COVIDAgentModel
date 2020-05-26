@@ -4,6 +4,8 @@
 #include <iomanip>
 #include <cassert>
 
+enum class Days { MONDAY = 0, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY };
+
 // TODO update after C++20
 class Timehandler {
     std::chrono::system_clock::time_point current = std::chrono::system_clock::now();
@@ -45,13 +47,15 @@ public:
 
     [[nodiscard]] bool isMidnight() const { return (counter % stepsPerDay) == 0; }
 
-    [[nodiscard]] unsigned getStepsPerDay() const {return stepsPerDay;}
+    [[nodiscard]] unsigned getStepsPerDay() const { return stepsPerDay; }
 
     friend std::ostream& operator<<(std::ostream& out, const Timehandler& t) {
         auto t_c = std::chrono::system_clock::to_time_t(t.current);
         out << std::put_time(std::localtime(&t_c), "%F %T");
         return out;
     }
+
+    Days getDay() const;// TODO calculate day "type"
 
     void printDay() const {
         auto t_c = std::chrono::system_clock::to_time_t(current);

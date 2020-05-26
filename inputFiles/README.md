@@ -15,3 +15,7 @@ ID is unique for the given instance if it's not specified here.
 * typeId: reference to the agentTypes's id
 * locations/typeID: reference to agentTypes.json/schedule/id
 * locations/locID: reference to location.json/id
+
+## Side notes
+We will not expect the locations and agentType IDs to run from 0 to n in a monoton way without any gap. We will map it during initialization.
+We will only expect it for the schedules of the AgentTypes to make continously through typic and common schedules

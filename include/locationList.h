@@ -28,12 +28,6 @@ class LocationsList {
 
     Statistic<typename SimulationType::PPState_t, AgentType> globalStats;
 
-    // For the runtime performance, it would be better, that the IDs of the locations would be the
-    // same as their indexes, but we can not ensure it in the input file, so I create this mapping,
-    // that will be used by the agents when I fill them up. Use it only during initialization ID
-    // from files -> index in vectors
-    std::unordered_map<unsigned, unsigned> IDMapping;
-
     LocationsList() = default;
 
     void reserve(std::size_t s) {
@@ -73,8 +67,16 @@ public:
         }
     }
 
-    void initLocations(const std::string& locationFile) {
+    [[nodiscard]] std::unordered_map<unsigned, unsigned> initLocations(
+        const std::string& locationFile) {
         auto input = DECODE_JSON_FILE(locationFile, parser::Locations);
+
+        // For the runtime performance, it would be better, that the IDs of the locations would be
+        // the same as their indexes, but we can not ensure it in the input file, so I create this
+        // mapping, that will be used by the agents when I fill them up. Use it only during
+        // initialization ID from files -> index in vectors
+        std::unordered_map<unsigned, unsigned> IDMapping;
+
         reserve(input.places.size());
         unsigned idx = 0;
         for (const auto& loc : input.places) {
@@ -93,6 +95,7 @@ public:
                 throw IOLocations::WrongState(loc.state);
             }
         }
+        return IDMapping;
     }
 
     void initialize() {
@@ -103,16 +106,6 @@ public:
         Util::updatePerLocationAgentLists(
             agents->location, locationIdsOfAgents, locationAgentList, locationListOffsets);
     }
-
-    /*    std::pair<unsigned,unsigned>& getAgents() { return agents; }
-
-        void addAgent(unsigned a) {
-            stat.refreshStatisticNewAgent(a);
-        }
-
-        void removeAgent(unsigned idx) {
-            stat.refreshStatisticRemoveAgent(idx);
-        }*/
 
     // TODO optimise randoms for performance
     static void infectAgents(thrust::device_vector<double>& infectionRatioAtLocations,

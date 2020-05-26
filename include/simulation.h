@@ -91,9 +91,18 @@ public:
 
         locs->initLocationTypes(parameters.locationTypes);
 
+        decltype(locs->initLocations(parameters.locations)) locationMapping;
         try {
-            locs->initLocations(parameters.locations);
+            locationMapping = locs->initLocations(parameters.locations);
         } catch (const IOLocations::LocationsInputError& e) {
+            std::cerr << e.what();
+            succesfullyInitialized = false;
+        }
+
+        decltype(agents->initAgentTypes(parameters.agentsTypes)) agentTypeMapping;
+        try {
+            agentTypeMapping = agents->initAgentTypes(parameters.agentsTypes);
+        } catch (const IOAgentTypes::AgentTypesInputError& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;
         }

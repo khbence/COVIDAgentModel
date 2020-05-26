@@ -121,3 +121,30 @@ namespace IOLocations {
             : LocationsInputError("Wrong state name (" + state + ").\n") {}
     };
 }// namespace IOLocations
+
+namespace IOAgentTypes {
+    class AgentTypesInputError : public CustomErrors {
+    protected:
+        explicit AgentTypesInputError(std::string&& error_p)
+            : CustomErrors("Locations input file error: " + error_p) {}
+    };
+
+    class BadIDCommonSchedules : AgentTypesInputError {
+    public:
+        explicit BadIDCommonSchedules(unsigned ID)
+            : AgentTypesInputError("Common schedule with the ID of " + std::to_string(ID)
+                                   + " is not the next step.\n") {}
+    };
+
+    class InvalidWBStateInSchedule : AgentTypesInputError {
+    public:
+        explicit InvalidWBStateInSchedule(const std::string& wb)
+            : AgentTypesInputError(wb + " is not a valid well-being state.\n") {}
+    };
+
+    class InvalidDayInSchedule : AgentTypesInputError {
+    public:
+        explicit InvalidDayInSchedule(const std::string& day)
+            : AgentTypesInputError(day + " is not a valid day.\n") {}
+    };
+}// namespace IOAgentTypes
