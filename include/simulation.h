@@ -112,6 +112,7 @@ public:
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
         PPState_t::printHeader();
+        refreshAndPrintStatistics();
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
