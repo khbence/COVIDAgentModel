@@ -9,6 +9,7 @@
 #include "globalStates.h"
 #include "timeHandler.h"
 #include <iterator>
+#include "agentsFormat.h"
 /*
 template<typename T>
 concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
@@ -22,6 +23,13 @@ class AgentList {
     AgentList() = default;
 
     thrust::device_vector<AgentType> agentTypes;
+
+    void reserve(std::size_t s) {
+        PPValues.reserve(s);
+        agentMetaData.reserve(s);
+        diagnosed.reserve(s);
+        location.reserve(s);
+    }
 
 public:
     thrust::device_vector<PPState> PPValues;
@@ -69,11 +77,6 @@ public:
                 auto wb = states::parseWBState(sch.WB);
                 auto days = parseDays(sch.dayType);
 
-                // sort by ID
-                // std::sort(rawEvents.begin(), rawEvents.end(), [](const auto& lhs, const auto&
-                // rhs) {
-                //    return lhs.ID < rhs.ID;
-                //});
                 std::vector<AgentType::Event> events;
                 events.reserve(sch.schedule.size());
                 for (const auto& e : sch.schedule) { events.emplace_back(e); }
@@ -97,7 +100,9 @@ public:
         return agentTypeIDMapping;
     }
 
-    void initAgents(const std::string& agentsFile) {}
+    void initAgents(const std::string& agentsFile) {
+        auto input = DECODE_JSON_FILE(agentsFile, parser::Agents);
+    }
 
     [[nodiscard]] static AgentList* getInstance() {
         static AgentList instance;
