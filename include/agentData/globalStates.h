@@ -1,7 +1,11 @@
 #pragma once
+#include <string>
+#include "customExceptions.h"
 
 namespace states {
     enum class SIRD { S = 0, I, R, D };
     SIRD& operator++(SIRD& e);
     enum class WBStates { W = 0, N, M, S, D };
+
+    [[nodiscard]] states::WBStates parseWBState(const std::string& rawState);
 }// namespace states

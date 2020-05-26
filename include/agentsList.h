@@ -23,69 +23,6 @@ class AgentList {
 
     thrust::device_vector<AgentType> agentTypes;
 
-    [[nodiscard]] states::WBStates parseWBState(const std::string& rawState) const {
-        if (rawState.length() != 1) { throw IOAgentTypes::InvalidWBStateInSchedule(rawState); }
-        char s = static_cast<char>(std::toupper(rawState.front()));
-        switch (s) {
-        case 'W':
-            return states::WBStates::W;
-        case 'N':
-            return states::WBStates::N;
-        case 'M':
-            return states::WBStates::M;
-        case 'S':
-            return states::WBStates::S;
-        case 'D':
-            return states::WBStates::D;
-        default:
-            throw IOAgentTypes::InvalidWBStateInSchedule(rawState);
-        }
-    }
-
-    [[nodiscard]] std::vector<Days> parseDays(const std::string& rawDays) {
-        std::string day;
-        std::vector<Days> result;
-        std::transform(rawDays.begin(), rawDays.end(), std::back_inserter(day), [](char c) {
-            return std::toupper(c);
-        });
-        if (day == "ALL") {
-            result = decltype(result){ Days::MONDAY,
-                Days::TUESDAY,
-                Days::WEDNESDAY,
-                Days::THURSDAY,
-                Days::FRIDAY,
-                Days::SATURDAY,
-                Days::SUNDAY };
-        } else if (day == "WEEKDAYS") {
-            result = decltype(result){
-                Days::MONDAY,
-                Days::TUESDAY,
-                Days::WEDNESDAY,
-                Days::THURSDAY,
-                Days::FRIDAY,
-            };
-        } else if (day == "WEEKENDS") {
-            result = decltype(result){ Days::SATURDAY, Days::SUNDAY };
-        } else if (day == "MONDAY") {
-            result.push_back(Days::MONDAY);
-        } else if (day == "TUESDAY") {
-            result.push_back(Days::TUESDAY);
-        } else if (day == "WEDNESDAY") {
-            result.push_back(Days::WEDNESDAY);
-        } else if (day == "THURSDAY") {
-            result.push_back(Days::THURSDAY);
-        } else if (day == "FRIDAY") {
-            result.push_back(Days::FRIDAY);
-        } else if (day == "SATURDAY") {
-            result.push_back(Days::SATURDAY);
-        } else if (day == "SUNDAY") {
-            result.push_back(Days::SUNDAY);
-        } else {
-            throw IOAgentTypes::InvalidDayInSchedule(rawDays);
-        }
-        return result;
-    }
-
 public:
     thrust::device_vector<PPState> PPValues;
     thrust::device_vector<AgentMeta> agentMetaData;
@@ -129,7 +66,7 @@ public:
             agentTypeIDMapping.emplace(type.ID, idx++);
             AgentType currentAgentType{ std::move(type.name) };
             for (const auto& sch : type.schedulesUnique) {
-                auto wb = parseWBState(sch.WB);
+                auto wb = states::parseWBState(sch.WB);
                 auto days = parseDays(sch.dayType);
 
                 // sort by ID
@@ -146,7 +83,7 @@ public:
             }
 
             for (const auto& sch : type.schedulesTypic) {
-                auto wb = parseWBState(sch.WB);
+                auto wb = states::parseWBState(sch.WB);
                 auto days = parseDays(sch.dayType);
                 for (auto day : days) {
                     currentAgentType.addSchedule(
@@ -160,12 +97,12 @@ public:
         return agentTypeIDMapping;
     }
 
+    void initAgents(const std::string& agentsFile) {}
+
     [[nodiscard]] static AgentList* getInstance() {
         static AgentList instance;
         return &instance;
     }
-
-    [[nodiscard]] bool checkConsistency() const;// if all vector are of the same lengths
 
     thrust::device_vector<Agent<AgentList>>& getAgentsList() { return agents; }
 

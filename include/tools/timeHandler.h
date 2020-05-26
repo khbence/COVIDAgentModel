@@ -3,8 +3,14 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+#include <vector>
+#include <algorithm>
+#include <string>
+#include "customExceptions.h"
 
 enum class Days { MONDAY = 0, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY };
+
+[[nodiscard]] std::vector<Days> parseDays(const std::string& rawDays);
 
 // TODO update after C++20
 class Timehandler {
@@ -30,12 +36,7 @@ class Timehandler {
     }
 
 public:
-    explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0)
-        : timeStep(std::chrono::minutes(timeStep_p)),
-          current(nextMidnight() + std::chrono::hours(hoursPerWeek * weeksInTheFuture)),
-          stepsPerDay(minsPerDay / timeStep_p) {
-        assert(minsPerDay % timeStep_p == 0);
-    }
+    explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0);
 
     bool operator<(const Timehandler& rhs) { return current < rhs.current; }
 

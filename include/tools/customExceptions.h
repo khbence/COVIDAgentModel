@@ -148,3 +148,18 @@ namespace IOAgentTypes {
             : AgentTypesInputError(day + " is not a valid day.\n") {}
     };
 }// namespace IOAgentTypes
+
+namespace init {
+    class ProgramInit : public CustomErrors {
+    protected:
+        explicit ProgramInit(std::string&& error_p)
+            : CustomErrors("Error during program initialization: " + error_p) {}
+    };
+
+    class BadTimeStep : public ProgramInit {
+        explicit BadTimeStep(unsigned timeStep)
+            : ProgramInit(
+                "Time step of " + std::to_string(timeStep)
+                + "min is not good, because 24 hours (1440 min) is not divisible by it.\n") {}
+    };
+}// namespace init
