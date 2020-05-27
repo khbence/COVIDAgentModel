@@ -40,7 +40,7 @@ public:
     using TypeOfLocation_t = TypeOfLocation;
     using AgentListType = AgentList<PPState_t, AgentMeta_t, LocationType>;
 
-private:
+//private:
     AgentListType* agents = AgentListType::getInstance();
     LocationType* locs = LocationType::getInstance();
     unsigned timeStep = 10;
@@ -56,7 +56,7 @@ private:
         thrust::for_each(
             thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin())),
             thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end())),
-            [](auto tup) {
+            [] HD (thrust::tuple<PPState &, AgentMeta &> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
                 ppstate.update(meta.getScalingSymptoms());
@@ -107,7 +107,6 @@ public:
 
     void runSimulation(unsigned timeStep_p, unsigned lengthOfSimulationWeeks) {
         PROFILE_FUNCTION();
-        auto& agentList = agents->getAgentsList();
         timeStep = timeStep_p;
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);

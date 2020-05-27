@@ -1,8 +1,22 @@
 #include "util.h"
 #include "timing.h"
 
-#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+__global__ void extractOffsets_kernel(unsigned *locOfAgents, unsigned *locationListOffsets, unsigned length, unsigned nLocs) {
+    unsigned i = threadIdx.x + blockIdx.x*blockDim.x;
+    if (i==0) locationListOffsets[0] = 0;
+    else if (i < length) {
+        if (locOfAgents[i-1] != locOfAgents[i]) {
+            for (unsigned j = locOfAgents[i-1]+1; j <= locOfAgents[i]; j++) {
+                locationListOffsets[j] = i;
+            }
+        }
+        if (i==length-1) locationListOffsets[nLocs] = length;
+    }
+}
+#endif
 void extractOffsets(unsigned *locOfAgents, unsigned *locationListOffsets, unsigned length, unsigned nLocs) {
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
     locationListOffsets[0] = 0;
     #pragma omp parallel for
     for (unsigned i = 1; i < length; i++) {
@@ -13,10 +27,11 @@ void extractOffsets(unsigned *locOfAgents, unsigned *locationListOffsets, unsign
         }
     }
     locationListOffsets[nLocs] = length;
-}
 #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-//Need a kernel here
+    extractOffsets_kernel<<<(length-1)/256+1,256>>>(locOfAgents, locationListOffsets, length, nLocs);
+    cudaDeviceSynchronize();
 #endif
+}
 void Util::updatePerLocationAgentLists(const thrust::device_vector<unsigned> &locationOfAgents,
                                                   thrust::device_vector<unsigned> &locationIdsOfAgents,
                                                   thrust::device_vector<unsigned> &locationAgentList,

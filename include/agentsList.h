@@ -23,9 +23,6 @@ public:
     AgentList() = default;
     friend class Agent<AgentList>;
 
-    thrust::device_vector<Agent<AgentList>> agents;
-
-
     [[nodiscard]] static AgentList* getInstance() {
         static AgentList instance;
         return &instance;
@@ -38,13 +35,19 @@ public:
         diagnosed.resize(numAgents);
         location.resize(numAgents);
         agentMetaData.resize(numAgents);
-        agents.resize(numAgents);
     }
     void setAgent(unsigned index, PPState state, bool isDiagnosed, unsigned agentLocation) {
         PPValues[index] = state;
         diagnosed[index] = isDiagnosed;
         location[index] = agentLocation;
-        agents[index] = Agent<AgentList>(index);
+    }
+    void setAgents(std::vector<PPState> &_states, std::vector<bool> &_diagnosed, std::vector<unsigned> &_location) {
+        PPValues = _states;
+        diagnosed = _diagnosed;
+        location = _location;
+        /*thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(agents.begin(),thrust::counting_iterator<int>(0))),
+                         thrust::make_zip_iterator(thrust::make_tuple(agents.end(),thrust::counting_iterator<int>(agents.size()))),
+                        ,[]HD(thrust::tuple<Agent<AgentList>&, int&> tup){thrust::get<0>(tup).id = thrust::get<1>(tup);});*/
     }
     unsigned addAgent(PPState state, bool isDiagnosed, unsigned agentLocation) {
         // Or should we just trust push_back? I would trust it, or probably best would be if we
@@ -53,7 +56,6 @@ public:
             diagnosed.reserve(PPValues.size() * 1.5 + 10);
             location.reserve(PPValues.size() * 1.5 + 10);
             agentMetaData.reserve(PPValues.size() * 1.5 + 10);
-            agents.reserve(PPValues.size() * 1.5 + 10);
 
             // This has to be the last one!
             PPValues.reserve(PPValues.size() * 1.5 + 10);
@@ -61,13 +63,10 @@ public:
         PPValues.push_back(state);
         diagnosed.push_back(isDiagnosed);
         location.push_back(agentLocation);
-        agents.push_back(Agent<AgentList>(PPValues.size() - 1));
         agentMetaData.push_back(AgentMeta());
         // Add this agent to the location provided
         return PPValues.size() - 1;
     }
-
-    thrust::device_vector<Agent<AgentList>>& getAgentsList() { return agents; }
 
     PPState& getPPState(unsigned i) { return PPValues[i]; }
 };

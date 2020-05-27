@@ -81,7 +81,7 @@ public:
             thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(),
                 thrust::make_permutation_iterator(
                     infectionRatioAtLocations.begin(), agentLocations.end()))),
-            [](auto tuple) {
+            [] HD (thrust::tuple<typename SimulationType::PPState_t &,double &> tuple) {
                 auto& ppstate = thrust::get<0>(tuple);
                 double& infectionRatio = thrust::get<1>(tuple);
                 if (ppstate.getSIRD() == states::SIRD::S
