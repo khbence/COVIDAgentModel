@@ -7,17 +7,20 @@ template<class SimulationType>
 class BasicInfection {
     double virulency = 0.0;
     double virulencyNorm = 5.0;
+    double distance = 1.2;
 public:
     BasicInfection(cxxopts::Options &options) {
         options.add_options()
             ("virulency", "BasicInfection: virulency parameter", cxxopts::value<double>()->default_value("0.0"))
-            ("virulencyNorm", "BasicInfection: k=p/virulencyNorm", cxxopts::value<double>()->default_value("5.0"));
+            ("virulencyNorm", "BasicInfection: k=p/virulencyNorm", cxxopts::value<double>()->default_value("5.0"))
+            ("distance", "BasicInfection: used for densityOfInfected", cxxopts::value<double>()->default_value("1.2"));
     }
 
 protected:
     void initialize_args(cxxopts::ParseResult &result) {
         virulency = result["virulency"].as<double>();
         virulencyNorm = result["virulencyNorm"].as<double>();
+        distance = result["distance"].as<double>();
     }
     void infectionsAtLocations(unsigned timeStep) {
         PROFILE_FUNCTION();
@@ -40,7 +43,7 @@ protected:
                               unsigned offset1 = thrust::get<2>(tuple);
                               unsigned num_agents = offset1-offset0;
                               if (numInfectedAgentsPresent == 0) return 0.0;
-                              double densityOfInfected = double(numInfectedAgentsPresent) / (num_agents * 1.2);
+                              double densityOfInfected = double(numInfectedAgentsPresent) / (num_agents * distance);
                               double p = 0.35 - virulency;
                               double k = p / virulencyNorm;
                               double y = 1.0 / (1.0 + exp((p - densityOfInfected) / k));
