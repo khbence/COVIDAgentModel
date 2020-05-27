@@ -1,6 +1,8 @@
 #pragma once
 #include "globalStates.h"
 #include "transitionMatrix.h"
+#include <string>
+
 
 class PPStateSIRAbstract {
 protected:
@@ -11,6 +13,7 @@ public:
 
     static void initTransitionMatrix(const std::string& inputFile) {}
 
+    static states::SIRD parseState(const std::string& input);
     explicit PPStateSIRAbstract(states::SIRD s);
     virtual void update(float scalingSymptons) = 0;
     virtual void gotInfected();

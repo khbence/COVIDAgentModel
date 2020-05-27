@@ -106,6 +106,26 @@ namespace IOAgents {
             : AgentsInputError("Condition with ID " + std::to_string(conditionID)
                                + " was not defined in the parameter input file!\n") {}
     };
+
+    class InvalidPPState : public AgentsInputError {
+    public:
+        explicit InvalidPPState(const std::string& PP)
+            : AgentsInputError(PP + " is not a valid PP state.\n") {}
+    };
+
+    class InvalidAgentType : public AgentsInputError {
+    public:
+        explicit InvalidAgentType(unsigned ID)
+            : AgentsInputError("Agent type ID " + std::to_string(ID)
+                               + " does not exists in AgentTypes input file.\n") {}
+    };
+
+    class InvalidLocationID : public AgentsInputError {
+    public:
+        explicit InvalidLocationID(unsigned ID)
+            : AgentsInputError("Location ID " + std::to_string(ID)
+                               + " does not exists in Locations input file.\n") {}
+    };
 }// namespace IOAgents
 
 namespace IOLocations {
@@ -157,6 +177,7 @@ namespace init {
     };
 
     class BadTimeStep : public ProgramInit {
+    public:
         explicit BadTimeStep(unsigned timeStep)
             : ProgramInit(
                 "Time step of " + std::to_string(timeStep)

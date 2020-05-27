@@ -1,10 +1,28 @@
 #include "PPStateTypes.h"
+#include "customExceptions.h"
 
 SingleBadTransitionMatrix<PPStateSIRextended::numberOfStates> PPStateSIRextended::transition;
 constexpr std::array<unsigned, 5> PPStateSIRextended::startingIdx;
 
 // Abstract
 PPStateSIRAbstract::PPStateSIRAbstract(states::SIRD s) : state(s) {}
+
+states::SIRD PPStateSIRAbstract::parseState(const std::string& input) {
+    if (input.length() != 1) { throw IOAgents::InvalidPPState(input); }
+    char s = static_cast<char>(std::toupper(input.front()));
+    switch (s) {
+    case 'S':
+        return states::SIRD::S;
+    case 'I':
+        return states::SIRD::I;
+    case 'R':
+        return states::SIRD::R;
+    case 'D':
+        return states::SIRD::D;
+    default:
+        throw IOAgents::InvalidPPState(input);
+    }
+}
 
 void PPStateSIRAbstract::gotInfected() { this->state = states::SIRD::I; }
 
