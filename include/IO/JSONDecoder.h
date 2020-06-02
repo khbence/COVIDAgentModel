@@ -394,7 +394,9 @@ namespace jsond {
         struct __decode_member<::jsond::impl::JSONDecodableMemberArray<T, V, ID>> {
             static void decode(const rapidjson::Value::Object& obj) {
                 typedef ::jsond::impl::JSONDecodableMemberArray<T, V, ID> member_t;
-                auto it = obj.FindMember(member_t::member_name.c_str());
+                std::string tmp = member_t::member_name;
+                auto it = obj.FindMember(tmp.c_str());
+                // auto it = obj.FindMember(member_t::member_name.c_str());
                 assert(it != obj.end());
                 assert(it->value.IsArray());
                 *member_t::member_ptr = __array_decoder<member_t>::get(it->value.GetArray());
@@ -458,6 +460,10 @@ namespace jsond {
 
         static Derived DecodeFromFile(const std::string& fileName) {
             std::ifstream t(fileName.c_str());
+            if (t.is_open()) {
+                std::cout << "Opened";
+                std::cout << '\n';
+            }
             std::string str;
 
             t.seekg(0, std::ios::end);

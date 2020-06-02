@@ -58,19 +58,6 @@ public:
         // initialization ID from files -> index in vectors
         std::map<unsigned, unsigned> agentTypeIDMapping;
 
-        // common schedules
-        std::vector<std::vector<AgentType::Event>> commonSchedules;
-        commonSchedules.reserve(input.commonSchedules.size());
-        for (const auto& sch : input.commonSchedules) {
-            if (sch.ID != commonSchedules.size()) {
-                throw IOAgentTypes::BadIDCommonSchedules(sch.ID);
-            }
-            std::vector<AgentType::Event> current;
-            current.reserve(sch.schedule.size());
-            for (const auto& e : sch.schedule) { current.emplace_back(e); }
-            commonSchedules.emplace_back(std::move(current));
-        }
-
         // agent types
         agentTypes.reserve(input.types.size());
         unsigned idx = 0;
@@ -86,15 +73,6 @@ public:
                 for (const auto& e : sch.schedule) { events.emplace_back(e); }
                 for (auto day : days) {
                     currentAgentType.addSchedule(std::make_pair(wb, day), events);
-                }
-            }
-
-            for (const auto& sch : type.schedulesTypic) {
-                auto wb = states::parseWBState(sch.WB);
-                auto days = parseDays(sch.dayType);
-                for (auto day : days) {
-                    currentAgentType.addSchedule(
-                        std::make_pair(wb, day), commonSchedules[sch.scheduleID]);
                 }
             }
 
