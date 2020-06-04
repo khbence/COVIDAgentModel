@@ -183,4 +183,10 @@ namespace init {
                 "Time step of " + std::to_string(timeStep)
                 + "min is not good, because 24 hours (1440 min) is not divisible by it.\n") {}
     };
+
+    class BadInputFile : public ProgramInit {
+    public:
+        explicit BadInputFile(const std::string& fileName)
+            : ProgramInit(fileName + " does not exists or cannot be opened.\n") {}
+    };
 }// namespace init

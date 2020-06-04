@@ -14,7 +14,6 @@
 #include <string>
 #include "locationTypesFormat.h"
 #include <map>
-#include <unordered_map>
 #include "locationsFormat.h"
 #include "customExceptions.h"
 
@@ -67,15 +66,14 @@ public:
         }
     }
 
-    [[nodiscard]] std::unordered_map<unsigned, unsigned> initLocations(
-        const std::string& locationFile) {
+    [[nodiscard]] std::map<unsigned, unsigned> initLocations(const std::string& locationFile) {
         auto input = DECODE_JSON_FILE(locationFile, parser::Locations);
 
         // For the runtime performance, it would be better, that the IDs of the locations would be
         // the same as their indexes, but we can not ensure it in the input file, so I create this
         // mapping, that will be used by the agents when I fill them up. Use it only during
         // initialization ID from files -> index in vectors
-        std::unordered_map<unsigned, unsigned> IDMapping;
+        std::map<unsigned, unsigned> IDMapping{};
 
         reserve(input.places.size());
         unsigned idx = 0;

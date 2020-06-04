@@ -77,32 +77,12 @@ public:
         : timeStep(parameters.timeStep), lengthOfSimulationWeeks(parameters.weeks) {
         try {
             PPState_t::initTransitionMatrix(parameters.progression);
-        } catch (IOProgression::TransitionInputError& e) {
-            std::cerr << e.what();
-            succesfullyInitialized = false;
-        }
-
-        try {
             agents->initAgentMeta(parameters.parameters);
-        } catch (const IOParameters::ParametersInputError& e) {
-            std::cerr << e.what();
-            succesfullyInitialized = false;
-        }
-
-        locs->initLocationTypes(parameters.locationTypes);
-
-        decltype(locs->initLocations(parameters.locations)) locationMapping;
-        try {
-            locationMapping = locs->initLocations(parameters.locations);
-        } catch (const IOLocations::LocationsInputError& e) {
-            std::cerr << e.what();
-            succesfullyInitialized = false;
-        }
-
-        decltype(agents->initAgentTypes(parameters.agentsTypes)) agentTypeMapping;
-        try {
-            agentTypeMapping = agents->initAgentTypes(parameters.agentsTypes);
-        } catch (const IOAgentTypes::AgentTypesInputError& e) {
+            locs->initLocationTypes(parameters.locationTypes);
+            auto locationMapping = locs->initLocations(parameters.locations);
+            auto agentTypeMapping = agents->initAgentTypes(parameters.agentsTypes);
+            agents->initAgents(parameters.agents, locationMapping, agentTypeMapping);
+        } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;
         }

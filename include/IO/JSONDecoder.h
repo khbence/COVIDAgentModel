@@ -13,6 +13,7 @@
 #include <sstream>
 #include <algorithm>
 #include <fstream>
+#include <customExceptions.h>
 
 #include "rapidjson/rapidjson.h"
 #pragma GCC diagnostic push
@@ -460,10 +461,7 @@ namespace jsond {
 
         static Derived DecodeFromFile(const std::string& fileName) {
             std::ifstream t(fileName.c_str());
-            if (t.is_open()) {
-                std::cout << "Opened";
-                std::cout << '\n';
-            }
+            if (!t.is_open()) { throw init::BadInputFile(fileName); }
             std::string str;
 
             t.seekg(0, std::ios::end);
