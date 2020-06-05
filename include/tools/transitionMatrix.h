@@ -13,14 +13,16 @@ class SingleBadTransitionMatrix {
         bool hasBad;
         thrust::pair<unsigned, float> bad;
 
-        public:
+    public:
         unsigned neutralCount;
-        thrust::pair<unsigned, float> *neutral;
-        NextStates(bool _hasBad, thrust::pair<unsigned, float> _bad, 
-                    thrust::pair<unsigned, float>* _neutral, unsigned _neutralCount) :
-            hasBad(_hasBad), bad(_bad), neutral(_neutral), neutralCount(_neutralCount) {}
-        
-        
+        thrust::pair<unsigned, float>* neutral;
+        NextStates(bool _hasBad,
+            thrust::pair<unsigned, float> _bad,
+            thrust::pair<unsigned, float>* _neutral,
+            unsigned _neutralCount)
+            : hasBad(_hasBad), bad(_bad), neutral(_neutral), neutralCount(_neutralCount) {}
+
+
         [[nodiscard]] HD unsigned selectNext(float scalingSypmtons) const {
             double random = RandomGenerator::randomUnit();
             double iterator = 0.0;
@@ -39,13 +41,14 @@ class SingleBadTransitionMatrix {
             return neutral[idx].first;
         }
     };
+
     class NextStatesInit {
-        public:
+    public:
         // pair<index of new state,  raw chance to get there>
         stc::optional<std::pair<unsigned, float>> bad;
         std::vector<std::pair<unsigned, float>> neutral;
 
-    
+
         NextStatesInit() = default;
 
         void addBad(std::pair<unsigned, float> bad_p) {
@@ -91,21 +94,21 @@ class SingleBadTransitionMatrix {
             return days;
         }
     };
-public:
-    NextStates *transitions;
-    LengthOfState *lengths;
-    unsigned numStates;
 
+public:
+    NextStates* transitions;
+    LengthOfState* lengths;
+    unsigned numStates;
 
 public:
     SingleBadTransitionMatrix() = default;
-    explicit SingleBadTransitionMatrix(const std::string& fileName) {
-        const auto inputData = DECODE_JSON_FILE(fileName);
+
+    explicit SingleBadTransitionMatrix(const parser::TransitionFormat& inputData) {
         std::vector<NextStatesInit> initTransitions(inputData.states.size());
         numStates = inputData.states.size();
-        lengths = (LengthOfState*)malloc(sizeof(LengthOfState)*inputData.states.size());
-        transitions = (NextStates*)malloc(sizeof(NextStates)*inputData.states.size());
-        
+        lengths = (LengthOfState*)malloc(sizeof(LengthOfState) * inputData.states.size());
+        transitions = (NextStates*)malloc(sizeof(NextStates) * inputData.states.size());
+
         auto getStateIndex = [&inputData](const std::string& name) {
             unsigned idx = 0;
             while (inputData.states[idx].stateName != name && idx < inputData.states.size()) {
@@ -130,39 +133,52 @@ public:
             }
             initTransitions[i].cleanUp(i);
             if (sumChance != 1.0 && !s.progressions.empty()) { throw(BadChances(s.stateName)); }
-            thrust::pair<unsigned, float> badVal = initTransitions[i].bad ? initTransitions[i].bad.value() : thrust::pair<unsigned, float>(0,0.0f);
-            thrust::pair<unsigned, float> *neutrals = (thrust::pair<unsigned, float> *)malloc(initTransitions[i].neutral.size()*sizeof(thrust::pair<unsigned, float>));
+            thrust::pair<unsigned, float> badVal = initTransitions[i].bad
+                                                       ? initTransitions[i].bad.value()
+                                                       : thrust::pair<unsigned, float>(0, 0.0f);
+            thrust::pair<unsigned, float>* neutrals = (thrust::pair<unsigned, float>*)malloc(
+                initTransitions[i].neutral.size() * sizeof(thrust::pair<unsigned, float>));
             for (int j = 0; j < initTransitions[i].neutral.size(); j++)
                 neutrals[j] = initTransitions[i].neutral[j];
-            transitions[i] = NextStates(initTransitions[i].bad?true:false, badVal, neutrals,initTransitions[i].neutral.size());
+            transitions[i] = NextStates(initTransitions[i].bad ? true : false,
+                badVal,
+                neutrals,
+                initTransitions[i].neutral.size());
             ++i;
         }
     }
 
+    explicit SingleBadTransitionMatrix(const std::string& fileName)
+        : SingleBadTransitionMatrix(DECODE_JSON_FILE(fileName)) {}
+
     ~SingleBadTransitionMatrix() {
-        for (unsigned i = 0; i < numStates; i++) {
-            free(transitions[i].neutral);
-        }
+        for (unsigned i = 0; i < numStates; i++) { free(transitions[i].neutral); }
         free(transitions);
         free(lengths);
     }
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     SingleBadTransitionMatrix* upload() {
-        SingleBadTransitionMatrix *tmp = (SingleBadTransitionMatrix*)malloc(sizeof(SingleBadTransitionMatrix));
+        SingleBadTransitionMatrix* tmp =
+            (SingleBadTransitionMatrix*)malloc(sizeof(SingleBadTransitionMatrix));
         tmp->numStates = numStates;
-        cudaMalloc((void**)&tmp->lengths, numStates*sizeof(LengthOfState));
-        cudaMemcpy(tmp->lengths, lengths, numStates*sizeof(LengthOfState), cudaMemcpyHostToDevice);
-        NextStates *tmp2 = (NextStates*)malloc(numStates*sizeof(NextStates));
-        memcpy(tmp2, transitions, numStates*sizeof(NextStates));
+        cudaMalloc((void**)&tmp->lengths, numStates * sizeof(LengthOfState));
+        cudaMemcpy(
+            tmp->lengths, lengths, numStates * sizeof(LengthOfState), cudaMemcpyHostToDevice);
+        NextStates* tmp2 = (NextStates*)malloc(numStates * sizeof(NextStates));
+        memcpy(tmp2, transitions, numStates * sizeof(NextStates));
         for (unsigned i = 0; i < numStates; i++) {
-            cudaMalloc((void**)&tmp2[i].neutral, transitions[i].neutralCount*sizeof(thrust::pair<unsigned, float>));
-            cudaMemcpy(tmp2[i].neutral, transitions[i].neutral, transitions[i].neutralCount*sizeof(thrust::pair<unsigned, float>),cudaMemcpyHostToDevice);
+            cudaMalloc((void**)&tmp2[i].neutral,
+                transitions[i].neutralCount * sizeof(thrust::pair<unsigned, float>));
+            cudaMemcpy(tmp2[i].neutral,
+                transitions[i].neutral,
+                transitions[i].neutralCount * sizeof(thrust::pair<unsigned, float>),
+                cudaMemcpyHostToDevice);
         }
-        cudaMalloc((void**)&tmp->transitions, numStates*sizeof(NextStates));
-        cudaMemcpy(tmp->transitions, tmp2, numStates*sizeof(NextStates), cudaMemcpyHostToDevice);
+        cudaMalloc((void**)&tmp->transitions, numStates * sizeof(NextStates));
+        cudaMemcpy(tmp->transitions, tmp2, numStates * sizeof(NextStates), cudaMemcpyHostToDevice);
         free(tmp2);
-        SingleBadTransitionMatrix *dev;
+        SingleBadTransitionMatrix* dev;
         cudaMalloc((void**)&dev, sizeof(SingleBadTransitionMatrix));
         cudaMemcpy(dev, tmp, sizeof(SingleBadTransitionMatrix), cudaMemcpyHostToDevice);
         free(tmp);

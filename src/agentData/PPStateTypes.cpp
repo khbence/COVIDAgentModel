@@ -1,26 +1,18 @@
 #include "PPStateTypes.h"
 
-//static stuff
+// static stuff
 namespace detail {
     namespace PPStateSIRextended {
         __device__ unsigned numberOfStates = 1 + 6 + 3 + 1;// S + I + R + D
         unsigned h_numberOfStates = 1 + 6 + 3 + 1;// S + I + R + D
-        __device__ unsigned startingIdx[5] = { 0,
-        1,
-        7,
-        10,
-        11 };// to convert from idx to state
-        __device__ unsigned h_startingIdx[5] = { 0,
-        1,
-        7,
-        10,
-        11 };
-        SingleBadTransitionMatrix *transition;
+        __device__ unsigned startingIdx[5] = { 0, 1, 7, 10, 11 };// to convert from idx to state
+        unsigned h_startingIdx[5] = { 0, 1, 7, 10, 11 };
+        SingleBadTransitionMatrix* transition;
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-        __device__ SingleBadTransitionMatrix *transition_gpu;
+        __device__ SingleBadTransitionMatrix* transition_gpu;
 #endif
-    }
-}
+    }// namespace PPStateSIRextended
+}// namespace detail
 
 // Abstract
 HD PPStateSIRAbstract::PPStateSIRAbstract(states::SIRD s) : state(s) {}
@@ -61,19 +53,19 @@ HD void PPStateSIRextended::applyNewIdx() {
 
 
 HD SingleBadTransitionMatrix& PPStateSIRextended::getTransition() {
-    #ifdef __CUDA_ARCH__
+#ifdef __CUDA_ARCH__
     return *detail::PPStateSIRextended::transition_gpu;
-    #else
+#else
     return *detail::PPStateSIRextended::transition;
-    #endif
+#endif
 };
 
 HD unsigned* PPStateSIRextended::getStartingIdx() {
-    #ifdef __CUDA_ARCH__
+#ifdef __CUDA_ARCH__
     return detail::PPStateSIRextended::startingIdx;
-    #else
+#else
     return detail::PPStateSIRextended::h_startingIdx;
-    #endif 
+#endif
 }
 
 void PPStateSIRextended::printHeader() {
@@ -86,6 +78,7 @@ HD PPStateSIRextended::PPStateSIRextended(states::SIRD s) : PPStateSIRAbstract(s
     idx = static_cast<char>(state);
     daysBeforeNextState = getTransition().calculateJustDays(idx);
 }
+
 HD PPStateSIRextended::PPStateSIRextended(char idx_p)
     : PPStateSIRAbstract(states::SIRD::S), idx(idx_p) {
     applyNewIdx();
@@ -100,7 +93,7 @@ HD void PPStateSIRextended::gotInfected() {
 }
 
 HD void PPStateSIRextended::update(float scalingSymptons) {
-    // the order of the first two if is intentional
+    // the order of the first two is intentional
     if (daysBeforeNextState == -2) { daysBeforeNextState = getTransition().calculateJustDays(idx); }
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }
     if (daysBeforeNextState == 0) {
@@ -114,19 +107,21 @@ HD void PPStateSIRextended::update(float scalingSymptons) {
 }
 
 void PPStateSIRextended::initTransitionMatrix(const std::string& inputFile) {
-        detail::PPStateSIRextended::transition = new SingleBadTransitionMatrix(inputFile);
+    detail::PPStateSIRextended::transition = new SingleBadTransitionMatrix(inputFile);
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-        SingleBadTransitionMatrix *tmp = detail::PPStateSIRextended::transition->upload();
-        cudaMemcpyToSymbol(detail::PPStateSIRextended::transition_gpu, &tmp, sizeof(SingleBadTransitionMatrix *));
+    SingleBadTransitionMatrix* tmp = detail::PPStateSIRextended::transition->upload();
+    cudaMemcpyToSymbol(
+        detail::PPStateSIRextended::transition_gpu, &tmp, sizeof(SingleBadTransitionMatrix*));
 #endif
+    printHeader();
 }
 
 HD unsigned PPStateSIRextended::getNumberOfStates() {
-    #ifdef __CUDA_ARCH__
+#ifdef __CUDA_ARCH__
     return detail::PPStateSIRextended::numberOfStates;
-    #else
+#else
     return detail::PPStateSIRextended::h_numberOfStates;
-    #endif 
+#endif
 }
 
 HD char PPStateSIRextended::getStateIdx() const { return idx; }

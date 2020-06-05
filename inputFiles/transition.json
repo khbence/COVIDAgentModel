@@ -1,15 +1,20 @@
 {
+    "firstInfectedState": "I1",
     "states": [
         {
             "stateName": "S",
             "avgLength": -1,
             "maxlength": -1,
+            "infectious": false,
+            "WB": "W",
             "progressions": []
         },
         {
             "stateName": "I1",
             "avgLength": 3,
             "maxlength": 6,
+            "infectious": false,
+            "WB": "W",
             "progressions": [
                 {
                     "name": "I2",
@@ -22,6 +27,8 @@
             "stateName": "I2",
             "avgLength": 3,
             "maxlength": 6,
+            "infectious": false,
+            "WB": "W",
             "progressions": [
                 {
                     "name": "I3",
@@ -39,6 +46,8 @@
             "stateName": "I3",
             "avgLength": 5,
             "maxlength": 10,
+            "infectious": false,
+            "WB": "W",
             "progressions": [
                 {
                     "name": "I4",
@@ -56,6 +65,8 @@
             "stateName": "I4",
             "avgLength": 7,
             "maxlength": 14,
+            "infectious": false,
+            "WB": "W",
             "progressions": [
                 {
                     "name": "I5",
@@ -73,6 +84,8 @@
             "stateName": "I5",
             "avgLength": 14,
             "maxlength": 18,
+            "infectious": false,
+            "WB": "W",
             "progressions": [
                 {
                     "name": "I6",
@@ -90,6 +103,8 @@
             "stateName": "I6",
             "avgLength": 7,
             "maxlength": 10,
+            "infectious": false,
+            "WB": "W",
             "progressions": [
                 {
                     "name": "D",
@@ -107,6 +122,8 @@
             "stateName": "R1",
             "avgLength": 7,
             "maxlength": 10,
+            "infectious": false,
+            "WB": "W",
             "progressions": [
                 {
                     "name": "R2",
@@ -119,6 +136,8 @@
             "stateName": "R2",
             "avgLength": 90,
             "maxlength": 120,
+            "infectious": false,
+            "WB": "W",
             "progressions": [
                 {
                     "name": "R3",
@@ -131,6 +150,8 @@
             "stateName": "R3",
             "avgLength": 365,
             "maxlength": 730,
+            "infectious": false,
+            "WB": "W",
             "progressions": [
                 {
                     "name": "S",
@@ -143,6 +164,8 @@
             "stateName": "D",
             "avgLength": -1,
             "maxlength": -1,
+            "infectious": false,
+            "WB": "W",
             "progressions": []
         }
     ]

@@ -469,6 +469,6 @@ namespace jsond {
         }
 
 #define DECODE_JSON_FILE(fileName) \
-    jsond::JSONDecodable<parser::TransitionFormat>::DecodeFromFile(fileName);
+    jsond::JSONDecodable<parser::TransitionFormat>::DecodeFromFile(fileName)
     };
 }// namespace jsond

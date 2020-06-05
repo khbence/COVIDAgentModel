@@ -4,6 +4,7 @@
 #include "infectionPolicies.h"
 #include "agentMeta.h"
 #include "PPStateTypes.h"
+#include "dynamicPPState.h"
 // for testing
 #include <inputJSON.h>
 #include <random>
@@ -36,7 +37,7 @@ int main(int argc, char** argv) {
     RandomGenerator::init(omp_get_max_threads());
     Simulation<PositionType,
         TypeOfLocation,
-        PPStateSIRextended,
+        DynamicPPState,
         BasicAgentMeta,
         DummyMovement,
         BasicInfection>
@@ -79,7 +80,7 @@ int main(int argc, char** argv) {
         for (int i = 0; i < numLocations; i++) { s.addLocation(i, 0); }
 
         std::vector<PPStateSIRextended> states(numAgents);
-        std::vector<bool> diagnosed(numAgents,false);
+        std::vector<bool> diagnosed(numAgents, false);
         std::vector<unsigned> locations(numAgents);
         // Populate agent list
         for (int i = 0; i < numAgents; i++) {
@@ -91,7 +92,7 @@ int main(int argc, char** argv) {
                 stateIdx = 2;
             }
             states[i] = PPStateSIRextended(stateIdx);
-            locations[i] = i/agentsPerLoc;
+            locations[i] = i / agentsPerLoc;
         }
         agentList->setAgents(states, diagnosed, locations);
     }
