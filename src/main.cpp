@@ -32,8 +32,11 @@ int main(int argc, char** argv) {
         "Ratio of infected/exposed initially",
         cxxopts::value<double>()->default_value("0.01"))("I,infected2",
         "Ratio of infected 2 initially",
-        cxxopts::value<double>()->default_value("0.0"))(
-        "numlocs", "Number of dummy locations", cxxopts::value<unsigned>()->default_value("1"));
+        cxxopts::value<double>()->default_value("0.0"))("numlocs",
+        "Number of dummy locations",
+        cxxopts::value<unsigned>()->default_value("1"))("p,progression",
+        "Path to the progression matrix JSON file",
+        cxxopts::value<std::string>()->default_value("../inputFiles/transition.json"));
 
     RandomGenerator::init(omp_get_max_threads());
     Simulation<PositionType, TypeOfLocation, PPState, BasicAgentMeta, DummyMovement, BasicInfection>

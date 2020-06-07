@@ -86,7 +86,7 @@ public:
             MovementPolicy,
             InfectionPolicy>>::initialize_args(result);
         try {
-            PPState_t::initTransitionMatrix("../inputFiles/transition.json");
+            PPState_t::initTransitionMatrix(result["progression"].as<std::string>());
         } catch (TransitionInputError& e) {
             std::cerr << e.what();
             // return false;
