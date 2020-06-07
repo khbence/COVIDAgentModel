@@ -30,7 +30,7 @@
             "stateName": "I2",
             "avgLength": 3,
             "maxlength": 6,
-            "infectious": false,
+            "infectious": true,
             "WB": "W",
             "progressions": [
                 {
@@ -49,7 +49,7 @@
             "stateName": "I3",
             "avgLength": 5,
             "maxlength": 10,
-            "infectious": false,
+            "infectious": true,
             "WB": "W",
             "progressions": [
                 {
@@ -68,7 +68,7 @@
             "stateName": "I4",
             "avgLength": 7,
             "maxlength": 14,
-            "infectious": false,
+            "infectious": true,
             "WB": "W",
             "progressions": [
                 {
@@ -87,7 +87,7 @@
             "stateName": "I5",
             "avgLength": 14,
             "maxlength": 18,
-            "infectious": false,
+            "infectious": true,
             "WB": "W",
             "progressions": [
                 {
@@ -106,7 +106,7 @@
             "stateName": "I6",
             "avgLength": 7,
             "maxlength": 10,
-            "infectious": false,
+            "infectious": true,
             "WB": "W",
             "progressions": [
                 {
