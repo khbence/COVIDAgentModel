@@ -134,7 +134,7 @@ HD unsigned DynamicPPState::getNumberOfStates() {
 #endif
 }
 
-HD DynamicPPState::DynamicPPState(const std::string& name)
+DynamicPPState::DynamicPPState(const std::string& name)
     : state(detail::DynamicPPState::nameIndexMap.find(name)->second),
       daysBeforeNextState(getTransition().calculateJustDays(state)) {
     updateMeta();

@@ -18,7 +18,7 @@ public:
     static void initTransitionMatrix(const std::string& inputFile);
     static HD unsigned getNumberOfStates();
 
-    explicit HD DynamicPPState(const std::string& name);
+    explicit DynamicPPState(const std::string& name);
     void HD gotInfected();
     void HD update(float scalingSymptons);
     [[nodiscard]] char HD getStateIdx() const { return state; }
