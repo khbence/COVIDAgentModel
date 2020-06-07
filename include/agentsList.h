@@ -31,7 +31,7 @@ public:
     [[nodiscard]] bool checkConsistency() const;// if all vector are of the same lengths
 
     void initializeWithNumAgents(unsigned numAgents) {
-        PPValues.resize(numAgents);
+        PPValues = decltype(PPValues){ numAgents, PPState{ "S" } };
         diagnosed.resize(numAgents);
         location.resize(numAgents);
         agentMetaData.resize(numAgents);
@@ -41,13 +41,16 @@ public:
         diagnosed[index] = isDiagnosed;
         location[index] = agentLocation;
     }
-    void setAgents(std::vector<PPState> &_states, std::vector<bool> &_diagnosed, std::vector<unsigned> &_location) {
+    void setAgents(std::vector<PPState>& _states,
+        std::vector<bool>& _diagnosed,
+        std::vector<unsigned>& _location) {
         PPValues = _states;
         diagnosed = _diagnosed;
         location = _location;
         /*thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(agents.begin(),thrust::counting_iterator<int>(0))),
                          thrust::make_zip_iterator(thrust::make_tuple(agents.end(),thrust::counting_iterator<int>(agents.size()))),
-                        ,[]HD(thrust::tuple<Agent<AgentList>&, int&> tup){thrust::get<0>(tup).id = thrust::get<1>(tup);});*/
+                        ,[]HD(thrust::tuple<Agent<AgentList>&, int&> tup){thrust::get<0>(tup).id =
+           thrust::get<1>(tup);});*/
     }
     unsigned addAgent(PPState state, bool isDiagnosed, unsigned agentLocation) {
         // Or should we just trust push_back? I would trust it, or probably best would be if we

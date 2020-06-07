@@ -81,16 +81,15 @@ public:
             thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(),
                 thrust::make_permutation_iterator(
                     infectionRatioAtLocations.begin(), agentLocations.end()))),
-            [] HD (thrust::tuple<typename SimulationType::PPState_t &,double &> tuple) {
+            [] HD(thrust::tuple<typename SimulationType::PPState_t&, double&> tuple) {
                 auto& ppstate = thrust::get<0>(tuple);
                 double& infectionRatio = thrust::get<1>(tuple);
-                if (ppstate.getSIRD() == states::SIRD::S
-                    && RandomGenerator::randomUnit() < infectionRatio) {
+                if (ppstate.isSusceptible() && RandomGenerator::randomUnit() < infectionRatio) {
                     ppstate.gotInfected();
                 }
             });
         // DEBUG unsigned count2 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto
-        // &ppstate) {return ppstate.getSIRD() == states::SIRD::I;}); DEBUG std::cout << count1 <<  "
+        // &ppstate) {return ppstate.getSIRD() == states::SIRD::I;}); DEBUG std::cout << count1 << "
         // " << count2 << std::endl;
     }
 

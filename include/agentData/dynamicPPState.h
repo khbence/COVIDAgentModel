@@ -4,18 +4,24 @@
 #include "transitionMatrix.h"
 
 class DynamicPPState {
-    char state;// a number
+    char state = 0;// a number
+    bool infectious = false;
+    bool susceptible = true;
 
-    // we can save the infectious and WB state here to not look it up in the global scope
+    short daysBeforeNextState = -1;
 
-    short daysBeforeNextState;
+    static HD SingleBadTransitionMatrix& getTransition();
+
+    void HD updateMeta();
 
 public:
     static void initTransitionMatrix(const std::string& inputFile);
     static HD unsigned getNumberOfStates();
 
-    explicit HD DynamicPPState(const std::string& state);
+    explicit HD DynamicPPState(const std::string& name);
     void HD gotInfected();
     void HD update(float scalingSymptons);
-    [[nodiscard]] char HD getStateIdx() const;
+    [[nodiscard]] char HD getStateIdx() const { return state; }
+    [[nodiscard]] bool HD isInfectious() const { return infectious; }
+    [[nodiscard]] bool HD isSusceptible() const { return susceptible; }
 };

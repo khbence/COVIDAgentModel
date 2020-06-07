@@ -1,5 +1,8 @@
 {
     "firstInfectedState": "I1",
+    "susceptibleStates": [
+        "S"
+    ],
     "states": [
         {
             "stateName": "S",

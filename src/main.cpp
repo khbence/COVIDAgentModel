@@ -17,6 +17,7 @@
 
 using PositionType = int;
 using TypeOfLocation = int;
+using PPState = DynamicPPState;
 
 int main(int argc, char** argv) {
     BEGIN_PROFILING("main");
@@ -35,12 +36,7 @@ int main(int argc, char** argv) {
         "numlocs", "Number of dummy locations", cxxopts::value<unsigned>()->default_value("1"));
 
     RandomGenerator::init(omp_get_max_threads());
-    Simulation<PositionType,
-        TypeOfLocation,
-        DynamicPPState,
-        BasicAgentMeta,
-        DummyMovement,
-        BasicInfection>
+    Simulation<PositionType, TypeOfLocation, PPState, BasicAgentMeta, DummyMovement, BasicInfection>
         s(options);
 
     options.add_options()("h,help", "Print usage");
@@ -63,7 +59,7 @@ int main(int argc, char** argv) {
         double initial_infected2_ratio = result["infected2"].as<double>();
         using AgentListType = Simulation<PositionType,
             TypeOfLocation,
-            PPStateSIRextended,
+            PPState,
             BasicAgentMeta,
             DummyMovement,
             BasicInfection>::AgentListType;
@@ -79,19 +75,19 @@ int main(int argc, char** argv) {
 
         for (int i = 0; i < numLocations; i++) { s.addLocation(i, 0); }
 
-        std::vector<PPStateSIRextended> states(numAgents);
+        std::vector<PPState> states(numAgents, PPState{ "S" });
         std::vector<bool> diagnosed(numAgents, false);
         std::vector<unsigned> locations(numAgents);
         // Populate agent list
         for (int i = 0; i < numAgents; i++) {
             double r = dis(gen);
-            char stateIdx = 0;
+            std::string stateIdx = "S";
             if (r < initial_infected_ratio) {
-                stateIdx = 1;
+                stateIdx = "I1";
             } else if (r < initial_infected_ratio + initial_infected2_ratio) {
-                stateIdx = 2;
+                stateIdx = "I2";
             }
-            states[i] = PPStateSIRextended(stateIdx);
+            states[i] = PPState(stateIdx);
             locations[i] = i / agentsPerLoc;
         }
         agentList->setAgents(states, diagnosed, locations);

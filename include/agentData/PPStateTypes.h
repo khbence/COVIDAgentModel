@@ -17,6 +17,8 @@ public:
     [[nodiscard]] HD states::SIRD getSIRD() const;
     [[nodiscard]] HD states::WBStates getWBState() const;
     virtual HD char getStateIdx() const = 0;
+    [[nodiscard]] virtual bool HD isInfectious() const { return state == states::SIRD::I; }
+    [[nodiscard]] virtual bool HD isSusceptible() const { return state == states::SIRD::S; }
 };
 
 class PPStateSIRBasic : public PPStateSIRAbstract {
@@ -53,4 +55,7 @@ public:
     static void initTransitionMatrix(const std::string& inputFile);
     void HD update(float scalingSymptons) override;
     [[nodiscard]] char HD getStateIdx() const override;
+    [[nodiscard]] bool HD isInfectious() const override {
+        return (state == states::SIRD::S) && (subState > 0);
+    }
 };
