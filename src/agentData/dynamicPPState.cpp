@@ -119,7 +119,6 @@ void DynamicPPState::initTransitionMatrix(const std::string& inputFile) {
         detail::DynamicPPState::h_numberOfStates * sizeof(bool),
         cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::infectious, &infTMP, sizeof(bool*));
-    delete[] infTMP;
 
     states::SIRD* wbTMP;
     cudaMalloc((void**)&wbTMP, detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD));
@@ -128,7 +127,6 @@ void DynamicPPState::initTransitionMatrix(const std::string& inputFile) {
         detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD),
         cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::WB, &wbTMP, sizeof(states::SIRD*));
-    delete[] wbTMP;
 
 
     bool* susTMP;
@@ -138,7 +136,6 @@ void DynamicPPState::initTransitionMatrix(const std::string& inputFile) {
         detail::DynamicPPState::h_numberOfStates * sizeof(bool),
         cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::susceptible, &susTMP, sizeof(bool*));
-    delete[] susTMP;
 
     cudaMemcpyToSymbol(detail::DynamicPPState::firstInfectedState,
         &detail::DynamicPPState::h_firstInfectedState,
