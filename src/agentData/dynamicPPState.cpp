@@ -112,8 +112,6 @@ void DynamicPPState::initTransitionMatrix(const std::string& inputFile) {
         detail::DynamicPPState::transition_gpu, &tmp, sizeof(SingleBadTransitionMatrix*));
 
     // do I have to make a fancy copy or it's automatic
-    detail::DynamicPPState::numberOfStates = detail::DynamicPPState::h_numberOfStates;
-    detail::DynamicPPState::firstInfectedState = detail::DynamicPPState::h_firstInfectedState;
     bool* infTMP;
     cudaMalloc((void**)&infTMP, detail::DynamicPPState::h_numberOfStates * sizeof(bool));
     cudaMemcpy(infTMP,
