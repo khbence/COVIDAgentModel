@@ -44,6 +44,7 @@ else(CUDA_FOUND)
     	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif(CUDA_FOUND)
 
+find_package(Threads)
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
@@ -101,6 +102,8 @@ add_executable (${PROJECT_NAME} ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 if(CUDA_FOUND)
-	target_link_libraries(${PROJECT_NAME} PUBLIC ${CUDA_LIBRARIES} OpenMP::OpenMP_CXX)
+	target_link_libraries(${PROJECT_NAME} PUBLIC ${CUDA_LIBRARIES} OpenMP::OpenMP_CXX ${CMAKE_THREAD_LIBS_INIT})
+else(CUDA_FOUND)
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 endif(CUDA_FOUND)
 
