@@ -24,7 +24,7 @@ public:
 
 protected:
     void initialize_args(cxxopts::ParseResult& result) {
-        par.m = result["Imax"].as<double>();
+        par.m = result["Imax"].as<double>() / 2;
         par.v = result["Iasymmetry"].as<double>();
         par.h = result["Ihorizontal"].as<double>();
         par.s = result["Ishape"].as<double>();
@@ -58,6 +58,7 @@ public:
                 if (numInfectedAgentsPresent == 0) { return 0.0; }
                 double densityOfInfected = static_cast<double>(numInfectedAgentsPresent) / num_agents;
                 double y = 1.0 / (1.0 + parTMP.v * std::exp(-parTMP.s * 2 * (densityOfInfected - parTMP.h - 0.5)));
+                y = (y + 1) * parTMP.m;
                 return y / (60.0 * 24.0 / static_cast<double>(timeStep));
             });
 
