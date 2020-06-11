@@ -6,7 +6,8 @@
 template<class SimulationType>
 class BasicInfection {
     struct Parameters {
-        double m, v, h, s;
+        double v, h, s;
+        double a, b;
 
         Parameters() = default;
     };
@@ -24,10 +25,15 @@ public:
 
 protected:
     void initialize_args(cxxopts::ParseResult& result) {
-        par.m = result["Imax"].as<double>() / 2;
+        auto m = result["Imax"].as<double>() / 2;
         par.v = result["Iasymmetry"].as<double>();
         par.h = result["Ihorizontal"].as<double>();
         par.s = result["Ishape"].as<double>();
+        double min = 1.0 / (1.0 + par.v * std::exp(-par.s * 2 * (0.0 - par.h - 0.5)));
+        double max = 1.0 / (1.0 + par.v * std::exp(-par.s * 2 * (1.0 - par.h - 0.5)));
+
+        par.a = m / (max - min);
+        par.b = -m * min / (max - min);
     }
 
 public:
@@ -58,7 +64,9 @@ public:
                 if (numInfectedAgentsPresent == 0) { return 0.0; }
                 double densityOfInfected = static_cast<double>(numInfectedAgentsPresent) / num_agents;
                 double y = 1.0 / (1.0 + parTMP.v * std::exp(-parTMP.s * 2 * (densityOfInfected - parTMP.h - 0.5)));
-                y = (y + 1) * parTMP.m;
+                // std::cout << y;
+                y = parTMP.a * y + parTMP.b;
+                // std::cout << ", " << y << '\n';
                 return y / (60.0 * 24.0 / static_cast<double>(timeStep));
             });
 
