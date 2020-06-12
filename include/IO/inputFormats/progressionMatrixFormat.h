@@ -21,6 +21,8 @@ namespace parser {
             DECODABLE_MEMBER(std::string, stateName);
             DECODABLE_MEMBER(int, avgLength);
             DECODABLE_MEMBER(int, maxlength);
+            DECODABLE_MEMBER(bool, infectious);
+            DECODABLE_MEMBER(std::string, WB);
             DECODABLE_MEMBER(std::vector<Progression>, progressions);
 
             END_MEMBER_DECLARATIONS();
@@ -28,6 +30,8 @@ namespace parser {
 
         BEGIN_MEMBER_DECLARATIONS();
 
+        DECODABLE_MEMBER(std::string, firstInfectedState);
+        DECODABLE_MEMBER(std::vector<std::string>, susceptibleStates);
         DECODABLE_MEMBER(std::vector<::parser::TransitionFormat::SingleState>, states);
 
         END_MEMBER_DECLARATIONS();

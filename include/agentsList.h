@@ -71,9 +71,7 @@ public:
                 std::vector<AgentType::Event> events;
                 events.reserve(sch.schedule.size());
                 for (const auto& e : sch.schedule) { events.emplace_back(e); }
-                for (auto day : days) {
-                    currentAgentType.addSchedule(std::make_pair(wb, day), events);
-                }
+                for (auto day : days) { currentAgentType.addSchedule(std::make_pair(wb, day), events); }
             }
 
             agentTypes.push_back(currentAgentType);
@@ -82,9 +80,7 @@ public:
         return agentTypeIDMapping;
     }
 
-    void initAgents(const std::string& agentsFile,
-        const std::map<unsigned, unsigned>& locMap,
-        const std::map<unsigned, unsigned>& typeMap) {
+    void initAgents(const std::string& agentsFile, const std::map<unsigned, unsigned>& locMap, const std::map<unsigned, unsigned>& typeMap) {
         auto input = DECODE_JSON_FILE(agentsFile, parser::Agents);
         reserve(input.people.size());
         for (const auto& person : input.people) {
@@ -114,8 +110,6 @@ public:
         static AgentList instance;
         return &instance;
     }
-
-    thrust::device_vector<Agent<AgentList>>& getAgentsList() { return agents; }
 
     PPState& getPPState(unsigned i) { return PPValues[i]; }
 };

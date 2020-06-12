@@ -4,7 +4,6 @@
 [submodule "thrust"]
 	path = thrust
 	url = https://github.com/thrust/thrust.git
-[submodule "parameterParser"]
-	path = parameterParser
-	url = https://github.com/khbence/parameterParser.git
-	branch = CXX14
+[submodule "cxxopts"]
+	path = cxxopts
+	url = https://github.com/jarro2783/cxxopts.git

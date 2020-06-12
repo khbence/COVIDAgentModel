@@ -8,7 +8,7 @@
 #include "statistics.h"
 #include "timing.h"
 #include "util.h"
-#include "programParameters.h"
+#include <cxxopts.hpp>
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -19,18 +19,8 @@ template<typename PositionType,
     template<typename>
     typename InfectionPolicy>
 class Simulation
-    : private MovementPolicy<Simulation<PositionType,
-          TypeOfLocation,
-          PPState,
-          AgentMeta,
-          MovementPolicy,
-          InfectionPolicy>>
-    , InfectionPolicy<Simulation<PositionType,
-          TypeOfLocation,
-          PPState,
-          AgentMeta,
-          MovementPolicy,
-          InfectionPolicy>> {
+    : private MovementPolicy<Simulation<PositionType, TypeOfLocation, PPState, AgentMeta, MovementPolicy, InfectionPolicy>>
+    , InfectionPolicy<Simulation<PositionType, TypeOfLocation, PPState, AgentMeta, MovementPolicy, InfectionPolicy>> {
 
 public:
     using PPState_t = PPState;
@@ -40,7 +30,7 @@ public:
     using TypeOfLocation_t = TypeOfLocation;
     using AgentListType = AgentList<PPState_t, AgentMeta_t, LocationType>;
 
-private:
+    // private:
     AgentListType* agents = AgentListType::getInstance();
     LocationType* locs = LocationType::getInstance();
     unsigned timeStep;
@@ -55,10 +45,9 @@ private:
         auto& ppstates = agents->PPValues;
         auto& agentMeta = agents->agentMetaData;
         // Update states
-        thrust::for_each(
-            thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin())),
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin())),
             thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end())),
-            [](auto tup) {
+            [] HD(thrust::tuple<PPState&, AgentMeta&> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
                 ppstate.update(meta.getScalingSymptoms());
@@ -73,8 +62,7 @@ private:
     }
 
 public:
-    explicit Simulation(const ProgramParameters& parameters)
-        : timeStep(parameters.timeStep), lengthOfSimulationWeeks(parameters.weeks) {
+    explicit Simulation(const ProgramParameters& parameters) : timeStep(parameters.timeStep), lengthOfSimulationWeeks(parameters.weeks) {
         try {
             PPState_t::initTransitionMatrix(parameters.progression);
             agents->initAgentMeta(parameters.parameters);
@@ -90,9 +78,7 @@ public:
 
     void addLocation(PositionType p, TypeOfLocation t) { locs->addLocation(p, t); }
 
-    void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) {
-        unsigned idx = agents->addAgent(state, isDiagnosed, locationID);
-    }
+    void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) { unsigned idx = agents->addAgent(state, isDiagnosed, locationID); }
 
     // Must be called after all agents have been added
     bool initialization() {
@@ -107,7 +93,7 @@ public:
         auto& agentList = agents->getAgentsList();
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
-        PPState_t::printHeader();
+        refreshAndPrintStatistics();
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();

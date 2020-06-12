@@ -58,8 +58,7 @@ namespace jsond {
 
         template<typename H, typename... T, typename... U>
         struct StripRecursiveList__<Typelist<RecursiveTypelist<H, RecursiveTypelist<T...>>, U...>> {
-            typedef typename StripRecursiveList__<Typelist<RecursiveTypelist<T...>, H, U...>>::value
-                value;
+            typedef typename StripRecursiveList__<Typelist<RecursiveTypelist<T...>, H, U...>>::value value;
         };
 
         template<typename H, typename... U>
@@ -72,8 +71,7 @@ namespace jsond {
 
         template<typename H, typename... T>
         struct FlattenRecursiveTypelist<RecursiveTypelist<H, RecursiveTypelist<T...>>> {
-            typedef
-                typename StripRecursiveList__<Typelist<RecursiveTypelist<T...>, H>>::value value;
+            typedef typename StripRecursiveList__<Typelist<RecursiveTypelist<T...>, H>>::value value;
         };
 
         template<typename H>
@@ -92,17 +90,15 @@ namespace jsond {
         template<>
         struct Counter<0> {};
 
-#define _START_LIST() \
-    static ::jsond::internal::Void __list_maker_helper(::jsond::internal::Counter<__COUNTER__>)
+#define _START_LIST() static ::jsond::internal::Void __list_maker_helper(::jsond::internal::Counter<__COUNTER__>)
 
-#define _ADD_TO_LIST(type)                                                        \
-    static ::jsond::internal::RecursiveTypelist<type,                             \
-        decltype(__list_maker_helper(::jsond::internal::Counter<__COUNTER__>{}))> \
-        __list_maker_helper(::jsond::internal::Counter<__COUNTER__>)
+#define _ADD_TO_LIST(type)                                                                                                                           \
+    static ::jsond::internal::RecursiveTypelist<type, decltype(__list_maker_helper(::jsond::internal::Counter<__COUNTER__>{}))> __list_maker_helper( \
+        ::jsond::internal::Counter<__COUNTER__>)
 
-#define _END_LIST()                                             \
-    typedef jsond::internal::FlattenRecursiveTypelist<decltype( \
-        __list_maker_helper(::jsond::internal::Counter<__COUNTER__>{}))>::value __member_typelist;
+#define _END_LIST()                                                                                                                    \
+    typedef jsond::internal::FlattenRecursiveTypelist<decltype(__list_maker_helper(::jsond::internal::Counter<__COUNTER__>{}))>::value \
+        __member_typelist;
     }// namespace internal
 
     template<typename Derived>
@@ -142,24 +138,20 @@ namespace jsond {
 
         template<typename T, int ID>
         struct JSONDecodableMemberObject : public JSONDecodableMemberBase<T, ID> {
-            static_assert(__is_JSONDecodable<T>::value,
-                "Decodable object must be subclass of JSONDecodable");
-            JSONDecodableMemberObject(T* ptr, std::string name)
-                : JSONDecodableMemberBase<T, ID>(ptr, name) {}
+            static_assert(__is_JSONDecodable<T>::value, "Decodable object must be subclass of JSONDecodable");
+            JSONDecodableMemberObject(T* ptr, std::string name) : JSONDecodableMemberBase<T, ID>(ptr, name) {}
         };
 
         template<typename T, typename V, int ID>
         struct JSONDecodableMemberArray : public JSONDecodableMemberBase<T, ID> {
             typedef V contained_type;
 
-            JSONDecodableMemberArray(T* ptr, std::string name)
-                : JSONDecodableMemberBase<T, ID>(ptr, name) {}
+            JSONDecodableMemberArray(T* ptr, std::string name) : JSONDecodableMemberBase<T, ID>(ptr, name) {}
         };
 
         template<typename T, int ID>
         struct JSONDecodableMemberPrimitive : public JSONDecodableMemberBase<T, ID> {
-            JSONDecodableMemberPrimitive(T* ptr, std::string name)
-                : JSONDecodableMemberBase<T, ID>(ptr, name) {}
+            JSONDecodableMemberPrimitive(T* ptr, std::string name) : JSONDecodableMemberBase<T, ID>(ptr, name) {}
         };
 
         /*
@@ -207,17 +199,12 @@ namespace jsond {
 
         template<typename T, typename... Args, template<typename, typename...> class C, int ID>
         struct __deduce_impl_type<C<T, Args...>, ID, false> {
-            typedef ::jsond::impl::JSONDecodableMemberArray<C<T, Args...>,
-                typename ::jsond::impl::__deduce_impl_type<T, ID, true>::type,
-                ID>
-                type;
+            typedef ::jsond::impl::JSONDecodableMemberArray<C<T, Args...>, typename ::jsond::impl::__deduce_impl_type<T, ID, true>::type, ID> type;
         };
 
         template<typename T, typename... Args, template<typename, typename...> class C, int ID>
         struct __deduce_impl_type<C<T, Args...>, ID, true> {
-            typedef ::jsond::impl::JSONDecodableArrayValueArray<C<T, Args...>,
-                typename ::jsond::impl::__deduce_impl_type<T, ID, true>::type,
-                ID>
+            typedef ::jsond::impl::JSONDecodableArrayValueArray<C<T, Args...>, typename ::jsond::impl::__deduce_impl_type<T, ID, true>::type, ID>
                 type;
         };
 
@@ -355,8 +342,7 @@ namespace jsond {
                 T container;
 
                 for (auto it = array.begin(); it != array.end(); ++it) {
-                    container.insert(std::end(container),
-                        __array_value_decoder<typename array_t::contained_type>::get(*it));
+                    container.insert(std::end(container), __array_value_decoder<typename array_t::contained_type>::get(*it));
                 }
 
                 return container;
@@ -373,9 +359,7 @@ namespace jsond {
                 typedef ::jsond::impl::JSONDecodableMemberPrimitive<T, ID> member_t;
                 auto it = obj.FindMember(member_t::member_name.c_str());
                 assert(it != obj.end());
-                *member_t::member_ptr =
-                    ::jsond::impl::__primitive_value_decoder<typename member_t::member_type>::get(
-                        it->value);
+                *member_t::member_ptr = ::jsond::impl::__primitive_value_decoder<typename member_t::member_type>::get(it->value);
             }
         };
 
@@ -386,8 +370,7 @@ namespace jsond {
                 auto it = obj.FindMember(member_t::member_name.c_str());
                 assert(it != obj.end());
                 assert(it->value.IsObject());
-                *member_t::member_ptr =
-                    ::jsond::impl::__object_value_decoder<T>::get(it->value.GetObject());
+                *member_t::member_ptr = ::jsond::impl::__object_value_decoder<T>::get(it->value.GetObject());
             }
         };
 
@@ -415,9 +398,7 @@ namespace jsond {
 
         template<typename H>
         struct __decode_member_list<::jsond::internal::Typelist<H>> {
-            static void decode(const rapidjson::Value::Object& obj) {
-                __decode_member<H>::decode(obj);
-            }
+            static void decode(const rapidjson::Value::Object& obj) { __decode_member<H>::decode(obj); }
         };
 
 
@@ -428,12 +409,10 @@ namespace jsond {
  */
 #define BEGIN_MEMBER_DECLARATIONS() _START_LIST()
 
-#define DECODABLE_MEMBER(arg0_type, arg1_name)                                       \
-    arg0_type arg1_name;                                                             \
-    typedef typename ::jsond::impl::__deduce_impl_type<arg0_type, __COUNTER__>::type \
-        __##arg1_name##_decodable_member_type;                                       \
-    __##arg1_name##_decodable_member_type __##arg1_name##_decodable_member =         \
-        __##arg1_name##_decodable_member_type(&arg1_name, #arg1_name);               \
+#define DECODABLE_MEMBER(arg0_type, arg1_name)                                                                                              \
+    arg0_type arg1_name;                                                                                                                    \
+    typedef typename ::jsond::impl::__deduce_impl_type<arg0_type, __COUNTER__>::type __##arg1_name##_decodable_member_type;                 \
+    __##arg1_name##_decodable_member_type __##arg1_name##_decodable_member = __##arg1_name##_decodable_member_type(&arg1_name, #arg1_name); \
     _ADD_TO_LIST(__##arg1_name##_decodable_member_type)
 
 #define END_MEMBER_DECLARATIONS() _END_LIST()
@@ -448,8 +427,7 @@ namespace jsond {
             rapidjson::ParseResult ok = d.Parse(json_str.c_str());
             if (!ok) {
                 std::cerr << "JSON parse error: " << rapidjson::GetParseError_En(ok.Code())
-                          << std::count(json_str.begin(), json_str.begin() + ok.Offset(), '\n')
-                          << '\n';
+                          << std::count(json_str.begin(), json_str.begin() + ok.Offset(), '\n') << '\n';
                 exit(EXIT_FAILURE);
             }
 
@@ -472,7 +450,6 @@ namespace jsond {
             return Decode(std::move(str));
         }
 
-#define DECODE_JSON_FILE(fileName, formatClass) \
-    jsond::JSONDecodable<formatClass>::DecodeFromFile(fileName);
+#define DECODE_JSON_FILE(fileName, formatClass) jsond::JSONDecodable<formatClass>::DecodeFromFile(fileName);
     };
 }// namespace jsond

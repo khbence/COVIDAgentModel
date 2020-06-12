@@ -61,9 +61,7 @@ public:
 
     void initLocationTypes(const std::string& locationTypeFile) {
         auto input = DECODE_JSON_FILE(locationTypeFile, parser::LocationTypes);
-        for (auto& type : input.types) {
-            generalLocationTypes.emplace(std::make_pair(type.ID, std::move(type.name)));
-        }
+        for (auto& type : input.types) { generalLocationTypes.emplace(std::make_pair(type.ID, std::move(type.name))); }
     }
 
     [[nodiscard]] std::map<unsigned, unsigned> initLocations(const std::string& locationFile) {
@@ -101,32 +99,25 @@ public:
         locationAgentList.resize(agents->location.size());
         locationIdsOfAgents.resize(agents->location.size());
         locationListOffsets.resize(position.size() + 1);
-        Util::updatePerLocationAgentLists(
-            agents->location, locationIdsOfAgents, locationAgentList, locationListOffsets);
+        Util::updatePerLocationAgentLists(agents->location, locationIdsOfAgents, locationAgentList, locationListOffsets);
     }
 
     // TODO optimise randoms for performance
-    static void infectAgents(thrust::device_vector<double>& infectionRatioAtLocations,
-        thrust::device_vector<unsigned>& agentLocations) {
+    static void infectAgents(thrust::device_vector<double>& infectionRatioAtLocations, thrust::device_vector<unsigned>& agentLocations) {
         PROFILE_FUNCTION();
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
         // DEBUG unsigned count1 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto
         // &ppstate) {return ppstate.getSIRD() == states::SIRD::I;}); DESC: for (int i = 0; i <
         // number_of_agents; i++) {ppstate = ppstates[i]; infectionRatio =
         // infectionRatioAtLocations[agentLocations[i]];...}
-        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(),
-                             thrust::make_permutation_iterator(
-                                 infectionRatioAtLocations.begin(), agentLocations.begin()))),
-            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(),
-                thrust::make_permutation_iterator(
-                    infectionRatioAtLocations.begin(), agentLocations.end()))),
-            [](auto tuple) {
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(
+                             ppstates.begin(), thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.begin()))),
+            thrust::make_zip_iterator(
+                thrust::make_tuple(ppstates.end(), thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.end()))),
+            [] HD(thrust::tuple<typename SimulationType::PPState_t&, double&> tuple) {
                 auto& ppstate = thrust::get<0>(tuple);
                 double& infectionRatio = thrust::get<1>(tuple);
-                if (ppstate.getSIRD() == states::SIRD::S
-                    && RandomGenerator::randomUnit() < infectionRatio) {
-                    ppstate.gotInfected();
-                }
+                if (ppstate.isSusceptible() && RandomGenerator::randomUnit() < infectionRatio) { ppstate.gotInfected(); }
             });
         // DEBUG unsigned count2 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto
         // &ppstate) {return ppstate.getSIRD() == states::SIRD::I;}); DEBUG std::cout << count1 << "
