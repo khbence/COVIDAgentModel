@@ -15,7 +15,7 @@ class BasicInfection {
     Parameters par;
 
 public:
-    BasicInfection(cxxopts::Options& options) {
+    static void addProgramParameters(cxxopts::Options& options) {
         options.add_options()("m,Imax", "Infection: [0 1] :max value ", cxxopts::value<double>()->default_value("1.0"))("v,Iasymmetry",
             "Infection: 1< :longer small phase [0 1] :longer high phase",
             cxxopts::value<double>()->default_value("1.0"))("H,Ihorizontal",
@@ -24,7 +24,7 @@ public:
     }
 
 protected:
-    void initialize_args(cxxopts::ParseResult& result) {
+    void initializeArgs(const cxxopts::ParseResult& result) {
         auto m = result["Imax"].as<double>() / 2;
         par.v = result["Iasymmetry"].as<double>();
         par.h = result["Ihorizontal"].as<double>();
@@ -64,9 +64,7 @@ public:
                 if (numInfectedAgentsPresent == 0) { return 0.0; }
                 double densityOfInfected = static_cast<double>(numInfectedAgentsPresent) / num_agents;
                 double y = 1.0 / (1.0 + parTMP.v * std::exp(-parTMP.s * 2 * (densityOfInfected - parTMP.h - 0.5)));
-                // std::cout << y;
                 y = parTMP.a * y + parTMP.b;
-                // std::cout << ", " << y << '\n';
                 return y / (60.0 * 24.0 / static_cast<double>(timeStep));
             });
 

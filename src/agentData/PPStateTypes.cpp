@@ -37,10 +37,10 @@ states::SIRD PPStateSIRAbstract::parseState(const std::string& input) {
 
 void PPStateSIRAbstract::gotInfected() { this->state = states::SIRD::I; }
 
-[[nodiscard]] HD states::SIRD PPStateSIRAbstract::getSIRD() const { return this->state; }
+[[nodiscard]] HD states::SIRD PPStateSIRAbstract::getSIRD() const { return state; }
 
 [[nodiscard]] HD states::WBStates PPStateSIRAbstract::getWBState() const {
-    switch (this->state) {
+    switch (state) {
     case states::SIRD::R:
     case states::SIRD::S:
         return states::WBStates::W;

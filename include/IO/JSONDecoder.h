@@ -450,6 +450,6 @@ namespace jsond {
             return Decode(std::move(str));
         }
 
-#define DECODE_JSON_FILE(fileName, formatClass) jsond::JSONDecodable<formatClass>::DecodeFromFile(fileName);
+#define DECODE_JSON_FILE(fileName, formatClass) jsond::JSONDecodable<formatClass>::DecodeFromFile(fileName)
     };
 }// namespace jsond

@@ -40,6 +40,11 @@ public:
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
 
+    static void addProgramParameters(cxxopts::Options& options) {
+        InfectionPolicy<Simulation>::addProgramParameters(options);
+        MovementPolicy<Simulation>::addProgramParameters(options);
+    }
+
     void updateAgents() {
         PROFILE_FUNCTION();
         auto& ppstates = agents->PPValues;
@@ -62,23 +67,22 @@ public:
     }
 
 public:
-    explicit Simulation(const ProgramParameters& parameters) : timeStep(parameters.timeStep), lengthOfSimulationWeeks(parameters.weeks) {
+    explicit Simulation(const cxxopts::ParseResult& result)
+        : timeStep(result["deltat"].as<decltype(timeStep)>()), lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
+        InfectionPolicy<Simulation>::initializeArgs(result);
+        MovementPolicy<Simulation>::initializeArgs(result);
         try {
-            PPState_t::initTransitionMatrix(parameters.progression);
-            agents->initAgentMeta(parameters.parameters);
-            locs->initLocationTypes(parameters.locationTypes);
-            auto locationMapping = locs->initLocations(parameters.locations);
-            auto agentTypeMapping = agents->initAgentTypes(parameters.agentsTypes);
-            agents->initAgents(parameters.agents, locationMapping, agentTypeMapping);
+            PPState_t::initTransitionMatrix(result["progression"].as<std::string>());
+            agents->initAgentMeta(result["parameters"].as<std::string>());
+            locs->initLocationTypes(result["locationTypes"].as<std::string>());
+            auto locationMapping = locs->initLocations(result["locations"].as<std::string>());
+            auto agentTypeMapping = agents->initAgentTypes(result["agentsTypes"].as<std::string>());
+            agents->initAgents(result["agents"].as<std::string>(), locationMapping, agentTypeMapping);
         } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;
         }
     }
-
-    void addLocation(PositionType p, TypeOfLocation t) { locs->addLocation(p, t); }
-
-    void addAgent(PPState_t state, bool isDiagnosed, unsigned locationID) { unsigned idx = agents->addAgent(state, isDiagnosed, locationID); }
 
     // Must be called after all agents have been added
     bool initialization() {
@@ -90,7 +94,6 @@ public:
     void runSimulation() {
         if (!succesfullyInitialized) { return; }
         PROFILE_FUNCTION();
-        auto& agentList = agents->getAgentsList();
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
         refreshAndPrintStatistics();

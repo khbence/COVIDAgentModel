@@ -13,24 +13,50 @@
 #include "timing.h"
 #include <cxxopts.hpp>
 
+cxxopts::Options defineProgramParameters() {
+    cxxopts::Options options("covid", "An agent-based epidemic simulator");
+    options.add_options()("w,weeks", "Length of simulation in weeks", cxxopts::value<unsigned>()->default_value("12"))("t,deltat",
+        "Length of timestep in minutes",
+        cxxopts::value<unsigned>()->default_value("10"))("n,numagents", "Number of agents", cxxopts::value<unsigned>()->default_value("100000"))(
+        "i,infected", "Ratio of infected/exposed initially", cxxopts::value<double>()->default_value("0.01"))(
+        "I,infected2", "Ratio of infected 2 initially", cxxopts::value<double>()->default_value("0.0"))(
+        "numlocs", "Number of dummy locations", cxxopts::value<unsigned>()->default_value("1"))("P,progression",
+        "Path to the progression matrix JSON file",
+        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "progression.json"))("a,agents",
+        "Agents file, for all human being in the experiment.",
+        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "agents.json"))("A,agentsTypes",
+        "List and schedule of all type fo agents.",
+        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "agentTypes.json"))("l,locations",
+        "List of all locations in the simulation.",
+        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "locations.json"))("L,locationTypes",
+        "List of all type of locations",
+        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "locationTypes.json"))("p,parameters",
+        "List of all general parameters for the simulation except the progression data",
+        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "parameters.json"));
+
+    return options;
+}
+
 using PositionType = std::array<double, 2>;
 using TypeOfLocation = unsigned;
 using PPState = DynamicPPState;
+using Simulation_t = Simulation<PositionType, TypeOfLocation, PPState, BasicAgentMeta, DummyMovement, BasicInfection>;
 
 int main(int argc, char** argv) {
     BEGIN_PROFILING("main");
-    cxxopts::Options options("covid", "An agent-based epidemic simulator");
-    options.add_options()("l,length", "Length of simulation in weeks", cxxopts::value<unsigned>()->default_value("12"))("t,deltat",
-        "Length of timestep in minutes",
-        cxxopts::value<unsigned>()->default_value("10"))("n,numagents", "Number of agents", cxxopts::value<unsigned>()->default_value("100000"))(
-        "i,infected", "Ratio of infected/exposed initially", cxxopts::value<double>()->default_value("0.01"))("I,infected2",
-        "Ratio of infected 2 initially",
-        cxxopts::value<double>()->default_value("0.0"))("numlocs", "Number of dummy locations", cxxopts::value<unsigned>()->default_value("1"))(
-        "p,progression", "Path to the progression matrix JSON file", cxxopts::value<std::string>()->default_value("../inputFiles/transition.json"));
+
+    auto options = defineProgramParameters();
+    Simulation_t::addProgramParameters(options);
+
+    options.add_options()("h,help", "Print usage");
+    cxxopts::ParseResult result = options.parse(argc, argv);
+    if (result.count("help") != 0) {
+        std::cout << options.help() << std::endl;
+        exit(0);
+    }
 
     RandomGenerator::init(omp_get_max_threads());
-    Simulation<PositionType, TypeOfLocation, PPStateSIRextended, BasicAgentMeta, DummyMovement, BasicInfection> s{ PARSE_PARAMETERS(
-        argc, argv, ProgramParameters) };
+    Simulation_t s{ result };
 
 
     s.initialization();

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "customExceptions.h"
+#include "datatypes.h"
 
 namespace states {
     enum class SIRD { S = 0, I, R, D };

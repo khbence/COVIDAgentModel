@@ -84,7 +84,7 @@ public:
         auto input = DECODE_JSON_FILE(agentsFile, parser::Agents);
         reserve(input.people.size());
         for (const auto& person : input.people) {
-            PPValues.push_back(PPState{ PPState::parseState(person.SIRD) });
+            PPValues.push_back(PPState{ person.SIRD });
             if (person.sex.size() != 1) { throw IOAgents::InvalidGender(person.sex); }
             agentMetaData.push_back(BasicAgentMeta(person.sex.front(), person.age, person.preCond));
             // I don't know if we should put any data about it in the input

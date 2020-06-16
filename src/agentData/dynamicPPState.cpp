@@ -45,7 +45,7 @@ void HD DynamicPPState::updateMeta() {
 }
 
 void DynamicPPState::initTransitionMatrix(const std::string& inputFile) {
-    auto inputData = DECODE_JSON_FILE(inputFile);
+    auto inputData = DECODE_JSON_FILE(inputFile, parser::TransitionFormat);
 
     // init global parameters that are used to be static
     detail::DynamicPPState::h_numberOfStates = inputData.states.size();
@@ -57,9 +57,7 @@ void DynamicPPState::initTransitionMatrix(const std::string& inputFile) {
     std::vector<std::pair<char, char>> mainStates{};
     for (const auto& s : inputData.states) {
         char sChar = s.stateName.front();
-        auto it = std::find_if(mainStates.begin(), mainStates.end(), [sChar](const auto& current) {
-            return current.first == sChar;
-        });
+        auto it = std::find_if(mainStates.begin(), mainStates.end(), [sChar](const auto& current) { return current.first == sChar; });
         if (it == mainStates.end()) {
             mainStates.emplace_back(std::make_pair(sChar, 1));
         } else {
@@ -75,21 +73,16 @@ void DynamicPPState::initTransitionMatrix(const std::string& inputFile) {
             std::string stateName;
             stateName.push_back(s.first);
             if (s.second > 1) { stateName += std::to_string(i); }
-            auto currentIt = std::find_if(it, inputData.states.end(), [stateName](const auto& s) {
-                return s.stateName == stateName;
-            });
-            if (currentIt == inputData.states.end()) { throw MissingStateName(stateName); }
+            auto currentIt = std::find_if(it, inputData.states.end(), [stateName](const auto& s) { return s.stateName == stateName; });
+            if (currentIt == inputData.states.end()) { throw IOProgression::MissingStateName(stateName); }
             std::iter_swap(it, currentIt);
         }
     }
 
     std::string stateName = inputData.firstInfectedState;
-    auto currentIt = std::find_if(inputData.states.begin(),
-        inputData.states.end(),
-        [&stateName](const auto& s) { return s.stateName == stateName; });
-    if (currentIt == inputData.states.end()) { throw MissingStateName(stateName); }
-    detail::DynamicPPState::h_firstInfectedState =
-        std::distance(inputData.states.begin(), currentIt);
+    auto currentIt = std::find_if(inputData.states.begin(), inputData.states.end(), [&stateName](const auto& s) { return s.stateName == stateName; });
+    if (currentIt == inputData.states.end()) { throw IOProgression::MissingStateName(stateName); }
+    detail::DynamicPPState::h_firstInfectedState = std::distance(inputData.states.begin(), currentIt);
 
     // setup name index mapping for the constructor
     char idx = 0;
@@ -97,10 +90,8 @@ void DynamicPPState::initTransitionMatrix(const std::string& inputFile) {
         detail::DynamicPPState::h_infectious[idx] = s.infectious;
         detail::DynamicPPState::h_WB[idx] = states::parseWBState(s.WB);
         detail::DynamicPPState::nameIndexMap.emplace(std::make_pair(s.stateName, idx));
-        detail::DynamicPPState::h_susceptible[idx] = (std::find(inputData.susceptibleStates.begin(),
-                                                          inputData.susceptibleStates.end(),
-                                                          s.stateName)
-                                                      != inputData.susceptibleStates.end());
+        detail::DynamicPPState::h_susceptible[idx] =
+            (std::find(inputData.susceptibleStates.begin(), inputData.susceptibleStates.end(), s.stateName) != inputData.susceptibleStates.end());
         ++idx;
     }
 
@@ -108,33 +99,23 @@ void DynamicPPState::initTransitionMatrix(const std::string& inputFile) {
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     SingleBadTransitionMatrix* tmp = detail::DynamicPPState::transition->upload();
-    cudaMemcpyToSymbol(
-        detail::DynamicPPState::transition_gpu, &tmp, sizeof(SingleBadTransitionMatrix*));
+    cudaMemcpyToSymbol(detail::DynamicPPState::transition_gpu, &tmp, sizeof(SingleBadTransitionMatrix*));
 
     // do I have to make a fancy copy or it's automatic
     bool* infTMP;
     cudaMalloc((void**)&infTMP, detail::DynamicPPState::h_numberOfStates * sizeof(bool));
-    cudaMemcpy(infTMP,
-        detail::DynamicPPState::h_infectious,
-        detail::DynamicPPState::h_numberOfStates * sizeof(bool),
-        cudaMemcpyHostToDevice);
+    cudaMemcpy(infTMP, detail::DynamicPPState::h_infectious, detail::DynamicPPState::h_numberOfStates * sizeof(bool), cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::infectious, &infTMP, sizeof(bool*));
 
     states::SIRD* wbTMP;
     cudaMalloc((void**)&wbTMP, detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD));
-    cudaMemcpy(wbTMP,
-        detail::DynamicPPState::h_WB,
-        detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD),
-        cudaMemcpyHostToDevice);
+    cudaMemcpy(wbTMP, detail::DynamicPPState::h_WB, detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD), cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::WB, &wbTMP, sizeof(states::SIRD*));
 
 
     bool* susTMP;
     cudaMalloc((void**)&susTMP, detail::DynamicPPState::h_numberOfStates * sizeof(bool));
-    cudaMemcpy(susTMP,
-        detail::DynamicPPState::h_susceptible,
-        detail::DynamicPPState::h_numberOfStates * sizeof(bool),
-        cudaMemcpyHostToDevice);
+    cudaMemcpy(susTMP, detail::DynamicPPState::h_susceptible, detail::DynamicPPState::h_numberOfStates * sizeof(bool), cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::susceptible, &susTMP, sizeof(bool*));
 
     cudaMemcpyToSymbol(detail::DynamicPPState::firstInfectedState,
@@ -155,8 +136,7 @@ HD unsigned DynamicPPState::getNumberOfStates() {
 }
 
 DynamicPPState::DynamicPPState(const std::string& name)
-    : state(detail::DynamicPPState::nameIndexMap.find(name)->second),
-      daysBeforeNextState(getTransition().calculateJustDays(state)) {
+    : state(detail::DynamicPPState::nameIndexMap.find(name)->second), daysBeforeNextState(getTransition().calculateJustDays(state)) {
     updateMeta();
 }
 
@@ -171,9 +151,7 @@ void HD DynamicPPState::gotInfected() {
 }
 
 void HD DynamicPPState::update(float scalingSymptons) {
-    if (daysBeforeNextState == -2) {
-        daysBeforeNextState = getTransition().calculateJustDays(state);
-    }
+    if (daysBeforeNextState == -2) { daysBeforeNextState = getTransition().calculateJustDays(state); }
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }
     if (daysBeforeNextState == 0) {
         auto tmp = getTransition().calculateNextState(state, scalingSymptons);

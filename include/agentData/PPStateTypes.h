@@ -14,6 +14,7 @@ public:
     static void initTransitionMatrix(const std::string& inputFile) {}
 
     HD explicit PPStateSIRAbstract(states::SIRD s);
+    states::SIRD parseState(const std::string& input);
     virtual HD void update(float scalingSymptons) = 0;
     virtual HD void gotInfected();
     [[nodiscard]] HD states::SIRD getSIRD() const;

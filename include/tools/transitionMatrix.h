@@ -124,7 +124,7 @@ public:
                 }
             }
             initTransitions[i].cleanUp(i);
-            if (sumChance != 1.0 && !s.progressions.empty()) { throw(BadChances(s.stateName)); }
+            if (sumChance != 1.0 && !s.progressions.empty()) { throw(IOProgression::BadChances(s.stateName)); }
             thrust::pair<unsigned, float> badVal = initTransitions[i].bad ? initTransitions[i].bad.value() : thrust::pair<unsigned, float>(0, 0.0f);
             thrust::pair<unsigned, float>* neutrals =
                 (thrust::pair<unsigned, float>*)malloc(initTransitions[i].neutral.size() * sizeof(thrust::pair<unsigned, float>));
@@ -134,7 +134,8 @@ public:
         }
     }
 
-    explicit SingleBadTransitionMatrix(const std::string& fileName) : SingleBadTransitionMatrix(DECODE_JSON_FILE(fileName)) {}
+    explicit SingleBadTransitionMatrix(const std::string& fileName)
+        : SingleBadTransitionMatrix(DECODE_JSON_FILE(fileName, parser::TransitionFormat)) {}
 
     ~SingleBadTransitionMatrix() {
         for (unsigned i = 0; i < numStates; i++) { free(transitions[i].neutral); }

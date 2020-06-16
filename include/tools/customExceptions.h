@@ -39,6 +39,12 @@ namespace IOProgression {
     public:
         explicit BadChances(const std::string& state) : TransitionInputError("Sum of transition chances of state " + state + " is not 1.\n") {}
     };
+
+    class MissingStateName : public TransitionInputError {
+    public:
+        explicit MissingStateName(const std::string& name)
+            : TransitionInputError("State called " + name + " is missing from the file, but it should be there according to the logic.\n") {}
+    };
 }// namespace IOProgression
 
 namespace IOParameters {
