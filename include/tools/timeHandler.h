@@ -10,8 +10,6 @@
 
 enum class Days { MONDAY = 0, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY };
 
-[[nodiscard]] std::vector<Days> parseDays(const std::string& rawDays);
-
 // TODO update after C++20
 class Timehandler {
     std::chrono::system_clock::time_point current = std::chrono::system_clock::now();
@@ -36,6 +34,8 @@ class Timehandler {
     }
 
 public:
+    [[nodiscard]] static std::vector<Days> parseDays(const std::string& rawDays);
+
     explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0);
 
     bool operator<(const Timehandler& rhs) { return current < rhs.current; }

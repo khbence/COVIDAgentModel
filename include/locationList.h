@@ -59,23 +59,20 @@ public:
         return &instance;
     }
 
-    void initLocationTypes(const std::string& locationTypeFile) {
-        auto input = DECODE_JSON_FILE(locationTypeFile, parser::LocationTypes);
-        for (auto& type : input.types) { generalLocationTypes.emplace(std::make_pair(type.ID, std::move(type.name))); }
+    void initLocationTypes(const parser::LocationTypes& inputData) {
+        for (auto& type : inputData.types) { generalLocationTypes.emplace(std::make_pair(type.ID, std::move(type.name))); }
     }
 
-    [[nodiscard]] std::map<unsigned, unsigned> initLocations(const std::string& locationFile) {
-        auto input = DECODE_JSON_FILE(locationFile, parser::Locations);
-
+    [[nodiscard]] std::map<unsigned, unsigned> initLocations(const parser::Locations& inputData) {
         // For the runtime performance, it would be better, that the IDs of the locations would be
         // the same as their indexes, but we can not ensure it in the input file, so I create this
         // mapping, that will be used by the agents when I fill them up. Use it only during
         // initialization ID from files -> index in vectors
         std::map<unsigned, unsigned> IDMapping{};
 
-        reserve(input.places.size());
+        reserve(inputData.places.size());
         unsigned idx = 0;
-        for (const auto& loc : input.places) {
+        for (const auto& loc : inputData.places) {
             IDMapping.emplace(loc.ID, idx++);
             locType.push_back(loc.type);
             position.push_back(PositionType{ loc.coordinates[0], loc.coordinates[1] });

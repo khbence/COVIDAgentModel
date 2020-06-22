@@ -1,19 +1,11 @@
 #include "timeHandler.h"
 
-[[nodiscard]] std::vector<Days> parseDays(const std::string& rawDays) {
+[[nodiscard]] std::vector<Days> Timehandler::parseDays(const std::string& rawDays) {
     std::string day;
     std::vector<Days> result;
-    std::transform(rawDays.begin(), rawDays.end(), std::back_inserter(day), [](char c) {
-        return std::toupper(c);
-    });
+    std::transform(rawDays.begin(), rawDays.end(), std::back_inserter(day), [](char c) { return std::toupper(c); });
     if (day == "ALL") {
-        result = decltype(result){ Days::MONDAY,
-            Days::TUESDAY,
-            Days::WEDNESDAY,
-            Days::THURSDAY,
-            Days::FRIDAY,
-            Days::SATURDAY,
-            Days::SUNDAY };
+        result = decltype(result){ Days::MONDAY, Days::TUESDAY, Days::WEDNESDAY, Days::THURSDAY, Days::FRIDAY, Days::SATURDAY, Days::SUNDAY };
     } else if (day == "WEEKDAYS") {
         result = decltype(result){
             Days::MONDAY,

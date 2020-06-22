@@ -2,6 +2,7 @@
 #include "globalStates.h"
 #include <string>
 #include "transitionMatrix.h"
+#include "progressionMatrixFormat.h"
 
 class DynamicPPState {
     char state = 0;// a number
@@ -15,7 +16,7 @@ class DynamicPPState {
     void HD updateMeta();
 
 public:
-    static void initTransitionMatrix(const std::string& inputFile);
+    static void initTransitionMatrix(parser::TransitionFormat& inputData);
     static HD unsigned getNumberOfStates();
 
     explicit DynamicPPState(const std::string& name);

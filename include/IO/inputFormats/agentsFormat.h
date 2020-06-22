@@ -17,7 +17,7 @@ namespace parser {
             DECODABLE_MEMBER(int, age);
             DECODABLE_MEMBER(std::string, sex);
             DECODABLE_MEMBER(int, preCond);
-            DECODABLE_MEMBER(std::string, SIRD);
+            DECODABLE_MEMBER(std::string, state);
             DECODABLE_MEMBER(int, typeID);
             DECODABLE_MEMBER(std::vector<Location>, locations);
             END_MEMBER_DECLARATIONS();

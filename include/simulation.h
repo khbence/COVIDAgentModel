@@ -9,6 +9,7 @@
 #include "timing.h"
 #include "util.h"
 #include <cxxopts.hpp>
+#include "dataProvider.h"
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -71,13 +72,14 @@ public:
         : timeStep(result["deltat"].as<decltype(timeStep)>()), lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
         InfectionPolicy<Simulation>::initializeArgs(result);
         MovementPolicy<Simulation>::initializeArgs(result);
+        DataProvider data{ result };
         try {
-            PPState_t::initTransitionMatrix(result["progression"].as<std::string>());
-            agents->initAgentMeta(result["parameters"].as<std::string>());
-            locs->initLocationTypes(result["locationTypes"].as<std::string>());
-            auto locationMapping = locs->initLocations(result["locations"].as<std::string>());
-            auto agentTypeMapping = agents->initAgentTypes(result["agentsTypes"].as<std::string>());
-            agents->initAgents(result["agents"].as<std::string>(), locationMapping, agentTypeMapping);
+            PPState_t::initTransitionMatrix(data.acquireProgressionMatrix());
+            agents->initAgentMeta(data.acquireParameters());
+            locs->initLocationTypes(data.acquireLocationTypes());
+            auto locationMapping = locs->initLocations(data.acquireLocations());
+            auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
+            agents->initAgents(data.acquireAgents(), locationMapping, agentTypeMapping);
         } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;

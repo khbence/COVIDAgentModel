@@ -44,9 +44,7 @@ void HD DynamicPPState::updateMeta() {
 #endif
 }
 
-void DynamicPPState::initTransitionMatrix(const std::string& inputFile) {
-    auto inputData = DECODE_JSON_FILE(inputFile, parser::TransitionFormat);
-
+void DynamicPPState::initTransitionMatrix(parser::TransitionFormat& inputData) {
     // init global parameters that are used to be static
     detail::DynamicPPState::h_numberOfStates = inputData.states.size();
     detail::DynamicPPState::h_infectious = new bool[detail::DynamicPPState::h_numberOfStates];

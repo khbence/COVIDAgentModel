@@ -4,6 +4,7 @@
 #include <string>
 #include "agentType.h"
 #include <map>
+#include "parametersFormat.h"
 #include "agentTypesFormat.h"
 #include "customExceptions.h"
 #include "globalStates.h"
@@ -47,11 +48,9 @@ public:
 
     thrust::device_vector<Agent<AgentList>> agents;
 
-    void initAgentMeta(const std::string& parametersFile) { AgentMeta::initData(parametersFile); }
+    void initAgentMeta(const parser::Parameters& data) { AgentMeta::initData(data); }
 
-    [[nodiscard]] std::map<unsigned, unsigned> initAgentTypes(const std::string& agentTypesFile) {
-        auto input = DECODE_JSON_FILE(agentTypesFile, parser::AgentTypes);
-
+    [[nodiscard]] std::map<unsigned, unsigned> initAgentTypes(const parser::AgentTypes& inputData) {
         // For the runtime performance, it would be better, that the IDs of the agent types would be
         // the same as their indexes, but we can not ensure it in the input file, so I create this
         // mapping, that will be used by the agents when I fill them up. Use it only during
@@ -59,14 +58,14 @@ public:
         std::map<unsigned, unsigned> agentTypeIDMapping;
 
         // agent types
-        agentTypes.reserve(input.types.size());
+        agentTypes.reserve(inputData.types.size());
         unsigned idx = 0;
-        for (auto& type : input.types) {
+        for (auto& type : inputData.types) {
             agentTypeIDMapping.emplace(type.ID, idx++);
-            AgentType currentAgentType{ std::move(type.name) };
+            AgentType currentAgentType{ type.name };
             for (const auto& sch : type.schedulesUnique) {
                 auto wb = states::parseWBState(sch.WB);
-                auto days = parseDays(sch.dayType);
+                auto days = Timehandler::parseDays(sch.dayType);
 
                 std::vector<AgentType::Event> events;
                 events.reserve(sch.schedule.size());
@@ -80,11 +79,10 @@ public:
         return agentTypeIDMapping;
     }
 
-    void initAgents(const std::string& agentsFile, const std::map<unsigned, unsigned>& locMap, const std::map<unsigned, unsigned>& typeMap) {
-        auto input = DECODE_JSON_FILE(agentsFile, parser::Agents);
-        reserve(input.people.size());
-        for (const auto& person : input.people) {
-            PPValues.push_back(PPState{ person.SIRD });
+    void initAgents(const parser::Agents& inputData, const std::map<unsigned, unsigned>& locMap, const std::map<unsigned, unsigned>& typeMap) {
+        reserve(inputData.people.size());
+        for (const auto& person : inputData.people) {
+            PPValues.push_back(PPState{ person.state });
             if (person.sex.size() != 1) { throw IOAgents::InvalidGender(person.sex); }
             agentMetaData.push_back(BasicAgentMeta(person.sex.front(), person.age, person.preCond));
             // I don't know if we should put any data about it in the input

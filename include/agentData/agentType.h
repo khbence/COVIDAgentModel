@@ -12,8 +12,7 @@ namespace std {
     class hash<std::pair<states::WBStates, Days>> {
     public:
         std::size_t operator()(std::pair<states::WBStates, Days> p) const {
-            return std::hash<unsigned>()(static_cast<unsigned>(p.first))
-                   ^ std::hash<unsigned>()(static_cast<unsigned>(p.second));
+            return std::hash<unsigned>()(static_cast<unsigned>(p.first)) ^ std::hash<unsigned>()(static_cast<unsigned>(p.second));
         }
     };
 }// namespace std
@@ -32,10 +31,7 @@ public:
         // used fields
         template<typename EventType>
         explicit Event(const EventType& in)
-            : locationType(in.type),
-              chance(static_cast<float>(in.chance)),
-              start(static_cast<float>(in.start)),
-              end(static_cast<float>(in.end)) {}
+            : locationType(in.type), chance(static_cast<float>(in.chance)), start(static_cast<float>(in.start)), end(static_cast<float>(in.end)) {}
     };
 
 private:
@@ -44,6 +40,6 @@ private:
     std::unordered_map<std::pair<states::WBStates, Days>, std::vector<Event>> schedules;
 
 public:
-    explicit AgentType(std::string&& name_p);
+    explicit AgentType(const std::string& name_p);
     void addSchedule(std::pair<states::WBStates, Days> state, const std::vector<Event>& schedule);
 };

@@ -13,11 +13,13 @@ include_directories(include
                     cxxopts/include
                     include/IO
                     include/IO/inputFormats
+                    include/IO/dataProviders
                     parameterParser/include)
 file (GLOB SOURCES
       "src/*.cpp"
       "src/agentData/*.cpp"
-      "src/tools/*.cpp")
+      "src/tools/*.cpp"
+      "src/IO/dataProviders/*.cpp")
 
 find_package(OpenMP)
 if(OPENMP_FOUND)

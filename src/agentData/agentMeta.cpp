@@ -25,28 +25,23 @@ std::vector<BasicAgentMeta::AgeInterval> BasicAgentMeta::ageScaling;
 std::map<unsigned, float> BasicAgentMeta::preConditionScaling;
 
 // init the three static variable with the data that coming from parameters json file
-void BasicAgentMeta::initData(const std::string& inputFile) {
-    auto input = DECODE_JSON_FILE(inputFile, parser::Parameters);
+void BasicAgentMeta::initData(const parser::Parameters& inputData) {
     // init the scaling based in sex
-    if (input.sex.size() != 2) { throw IOParameters::NotBinary(); }
+    if (inputData.sex.size() != 2) { throw IOParameters::NotBinary(); }
     for (unsigned i = 0; i < sexScaling.size(); ++i) {
-        if (!(input.sex[0].name == "F" || input.sex[0].name == "M")) {
-            throw IOParameters::WrongGenderName();
-        }
-        sexScaling[i] = std::make_pair(input.sex[i].name[0], input.sex[i].symptoms);
+        if (!(inputData.sex[0].name == "F" || inputData.sex[0].name == "M")) { throw IOParameters::WrongGenderName(); }
+        sexScaling[i] = std::make_pair(inputData.sex[i].name[0], inputData.sex[i].symptoms);
     }
     if (sexScaling[0].first == sexScaling[1].first) { throw IOParameters::WrongGenderName(); }
     if (sexScaling[0].first == 'M') { std::swap(sexScaling[0], sexScaling[1]); }
 
     // init the scalings based on age
-    ageScaling.reserve(input.age.size());
-    for (auto ageInter : input.age) { ageScaling.emplace_back(ageInter); }
+    ageScaling.reserve(inputData.age.size());
+    for (auto ageInter : inputData.age) { ageScaling.emplace_back(ageInter); }
     // TODO check intervals
 
     // init the scaling that coming from pre-conditions
-    for (const auto& cond : input.preCondition) {
-        preConditionScaling.emplace(std::make_pair(cond.ID, cond.symptoms));
-    }
+    for (const auto& cond : inputData.preCondition) { preConditionScaling.emplace(std::make_pair(cond.ID, cond.symptoms)); }
 }
 
 BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, unsigned preCondition) {

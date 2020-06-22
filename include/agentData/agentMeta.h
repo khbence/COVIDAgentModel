@@ -15,7 +15,7 @@ class BasicAgentMeta {
 
     public:
         explicit AgeInterval(parser::Parameters::Age in);
-        bool operator==(unsigned age) const { return (from < age) && (age < to); }
+        bool operator==(unsigned age) const { return (from <= age) && (age < to); }
         [[nodiscard]] float getSymptoms() const;
         [[nodiscard]] float getTransmission() const;
     };
@@ -29,7 +29,7 @@ class BasicAgentMeta {
     static std::map<unsigned, float> preConditionScaling;
 
 public:
-    static void initData(const std::string& inputFile);
+    static void initData(const parser::Parameters& inputData);
 
     BasicAgentMeta(char gender, unsigned age, unsigned preCondition);
 
