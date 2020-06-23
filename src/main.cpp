@@ -59,8 +59,6 @@ int main(int argc, char** argv) {
     RandomGenerator::init(omp_get_max_threads());
     Simulation_t s{ result };
 
-
-    s.initialization();
     s.runSimulation();
     END_PROFILING("main");
     Timing::report();

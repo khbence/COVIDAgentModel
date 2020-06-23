@@ -84,13 +84,7 @@ public:
             std::cerr << e.what();
             succesfullyInitialized = false;
         }
-    }
-
-    // Must be called after all agents have been added
-    bool initialization() {
-        PROFILE_FUNCTION();
         locs->initialize();
-        return true;
     }
 
     void runSimulation() {

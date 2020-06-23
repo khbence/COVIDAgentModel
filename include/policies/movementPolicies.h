@@ -44,8 +44,8 @@ public:
                 auto& location = thrust::get<0>(tuple);
                 auto& stepsUntilMove = thrust::get<1>(tuple);
                 if (stepsUntilMove == 0) {
-                    location = RandomGenerator::randomUnsigned(numberOfLocations - 1);
-                    stepsUntilMove = RandomGenerator::randomUnsigned(144 / 4 - 1);// Move 4 times per day on average
+                    location = RandomGenerator::randomUnsigned(numberOfLocations);
+                    stepsUntilMove = RandomGenerator::randomUnsigned(144 / 4);// Move 4 times per day on average
                 }
                 stepsUntilMove--;
             });
