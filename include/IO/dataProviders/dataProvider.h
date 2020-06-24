@@ -10,6 +10,7 @@
 #include "randomGenerator.h"
 #include <map>
 #include <vector>
+#include "timing.h"
 
 class DataProvider {
     parser::Agents agents;

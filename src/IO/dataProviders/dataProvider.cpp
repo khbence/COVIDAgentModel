@@ -72,6 +72,7 @@ void DataProvider::randomAgents(unsigned N) {
 }
 
 DataProvider::DataProvider(const cxxopts::ParseResult& result) {
+    PROFILE_FUNCTION();
     readParameters(result["parameters"].as<std::string>());
     readProgressionMatrix(result["progression"].as<std::string>());
     int numberOfAgents = result["numagents"].as<int>();

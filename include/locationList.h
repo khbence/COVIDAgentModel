@@ -69,24 +69,35 @@ public:
         // initialization ID from files -> index in vectors
         std::map<unsigned, unsigned> IDMapping{};
 
+        thrust::host_vector<TypeOfLocation> locType_h;
+        thrust::host_vector<PositionType> position_h;
+        thrust::host_vector<unsigned> areas_h;
+        thrust::host_vector<bool> states_h;
+
         reserve(inputData.places.size());
         unsigned idx = 0;
         for (const auto& loc : inputData.places) {
             IDMapping.emplace(loc.ID, idx++);
-            locType.push_back(loc.type);
-            position.push_back(PositionType{ loc.coordinates[0], loc.coordinates[1] });
-            areas.push_back(loc.area);
+            locType_h.push_back(loc.type);
+            position_h.push_back(PositionType{ loc.coordinates[0], loc.coordinates[1] });
+            areas_h.push_back(loc.area);
             // Transform to upper case, to make it case insensitive
             std::string tmp = loc.state;
             std::for_each(tmp.begin(), tmp.end(), [](char c) { return std::toupper(c); });
             if (tmp == "ON" || tmp == "OPEN") {
-                states.push_back(true);
+                states_h.push_back(true);
             } else if (tmp == "OFF" || tmp == "CLOSED") {
-                states.push_back(false);
+                states_h.push_back(false);
             } else {
                 throw IOLocations::WrongState(loc.state);
             }
         }
+
+        locType = locType_h;
+        position = position_h;
+        areas = areas_h;
+        states = states_h;
+
         return IDMapping;
     }
 

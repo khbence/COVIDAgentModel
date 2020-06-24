@@ -40,7 +40,11 @@ public:
     thrust::device_vector<bool> diagnosed;
     thrust::device_vector<unsigned> location;
     thrust::device_vector<unsigned> types;
-    thrust::device_vector<std::vector<unsigned>> possibleLocations;
+
+
+    thrust::device_vector<unsigned long> locationOffset;
+    // longer, every agents' every locations, indexed by the offset
+    thrust::device_vector<unsigned> possibleLocations;
 
     using PPState_t = PPState;
 
@@ -80,19 +84,41 @@ public:
     }
 
     void initAgents(const parser::Agents& inputData, const std::map<unsigned, unsigned>& locMap, const std::map<unsigned, unsigned>& typeMap) {
-        reserve(inputData.people.size());
+        auto n = inputData.people.size();
+        reserve(n);
+
+        thrust::host_vector<PPState> PPValues_h;
+        thrust::host_vector<AgentMeta> agentMetaData_h;
+        thrust::host_vector<bool> diagnosed_h;
+        thrust::host_vector<unsigned> location_h;
+        thrust::host_vector<unsigned> types_h;
+        thrust::host_vector<Agent<AgentList>> agents_h;
+
+        thrust::host_vector<unsigned long> locationOffset_h;
+        // longer, every agents' every locations, indexed by the offset
+        thrust::host_vector<unsigned> possibleLocations_h;
+
+        PPValues_h.reserve(n);
+        agentMetaData_h.reserve(n);
+        diagnosed_h.reserve(n);
+        location_h.reserve(n);
+        types_h.reserve(n);
+        agents_h.reserve(n);
+        locationOffset_h.reserve(n + 1);
+        locationOffset_h.push_back(0);
+
         for (const auto& person : inputData.people) {
-            PPValues.push_back(PPState{ person.state });
+            PPValues_h.push_back(PPState{ person.state });
             if (person.sex.size() != 1) { throw IOAgents::InvalidGender(person.sex); }
-            agentMetaData.push_back(BasicAgentMeta(person.sex.front(), person.age, person.preCond));
+            agentMetaData_h.push_back(BasicAgentMeta(person.sex.front(), person.age, person.preCond));
             // I don't know if we should put any data about it in the input
-            diagnosed.push_back(false);
+            diagnosed_h.push_back(false);
             // Where to put them first?
-            location.push_back(0);
-            agents.push_back(Agent<AgentList>{ static_cast<unsigned>(agents.size()) });
+            location_h.push_back(0);
+            agents_h.push_back(Agent<AgentList>{ static_cast<unsigned>(agents.size()) });
             auto itType = typeMap.find(person.typeID);
             if (itType == typeMap.end()) { throw IOAgents::InvalidAgentType(person.typeID); }
-            types.push_back(itType->second);
+            types_h.push_back(itType->second);
             std::vector<unsigned> locs;
             locs.reserve(person.locations.size());
             for (const auto& l : person.locations) {
@@ -100,8 +126,18 @@ public:
                 if (itLoc == locMap.end()) { throw IOAgents::InvalidLocationID(l.locID); }
                 locs.push_back(itLoc->second);
             }
-            possibleLocations.push_back(locs);
+            possibleLocations_h.insert(possibleLocations_h.end(), locs.begin(), locs.end());
+            locationOffset_h.push_back(locationOffset_h.back() + locs.size());
         }
+
+        PPValues = PPValues_h;
+        agentMetaData = agentMetaData_h;
+        diagnosed = diagnosed_h;
+        location = location_h;
+        types = types_h;
+        agents = agents_h;
+        locationOffset = locationOffset_h;
+        possibleLocations = possibleLocations_h;
     }
 
     [[nodiscard]] static AgentList* getInstance() {
