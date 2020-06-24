@@ -149,6 +149,11 @@ namespace IOAgentTypes {
     public:
         explicit InvalidDayInSchedule(const std::string& day) : AgentTypesInputError(day + " is not a valid day.\n") {}
     };
+
+    class RepetitiveEventType : AgentTypesInputError {
+    public:
+        explicit RepetitiveEventType(const std::string& agentType) : AgentTypesInputError("Repetittive state for a schedule.\n") {}
+    };
 }// namespace IOAgentTypes
 
 namespace init {

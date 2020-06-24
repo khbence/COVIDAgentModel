@@ -4,7 +4,9 @@
 #include <vector>
 #include "globalStates.h"
 #include "timeHandler.h"
+#include "timeDay.h"
 #include "unordered_map"
+#include "datatypes.h"
 
 // hash function for the key
 namespace std {
@@ -23,23 +25,24 @@ public:
     class Event {
         unsigned locationType;
         float chance;
-        float start;
-        float end;
+        TimeDay start;
+        TimeDay end;
+        TimeDayDuration duration;
 
     public:
-        // template because there are multiple (two) different kind of event, they all have these
-        // used fields
-        template<typename EventType>
-        explicit Event(const EventType& in)
-            : locationType(in.type), chance(static_cast<float>(in.chance)), start(static_cast<float>(in.start)), end(static_cast<float>(in.end)) {}
+        Event();
+        explicit Event(const parser::AgentTypes::Type::ScheduleUnique::Event& in);
     };
 
 private:
     std::string name;
-    // TODO use some thrust version
-    std::unordered_map<std::pair<states::WBStates, Days>, std::vector<Event>> schedules;
+    // use the getOffsetIndex function to get the position for this vector, and use this value to search in events
+    thrust::device_vector<unsigned> eventOffset;
+    thrust::device_vector<Event> events;
+
+    [[nodiscard]] static unsigned getOffsetIndex(states::WBStates state, Days day);
 
 public:
-    explicit AgentType(const std::string& name_p);
+    explicit AgentType(std::string name_p);
     void addSchedule(std::pair<states::WBStates, Days> state, const std::vector<Event>& schedule);
 };

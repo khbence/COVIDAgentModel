@@ -1,3 +1,4 @@
+#pragma once
 #include "agentsFormat.h"
 #include "agentTypesFormat.h"
 #include "locationsFormat.h"

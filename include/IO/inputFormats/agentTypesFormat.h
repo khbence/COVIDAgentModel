@@ -13,6 +13,7 @@ namespace parser {
                     DECODABLE_MEMBER(double, chance);
                     DECODABLE_MEMBER(double, start);
                     DECODABLE_MEMBER(double, end);
+                    DECODABLE_MEMBER(double, duration);
                     END_MEMBER_DECLARATIONS();
                 };
 
