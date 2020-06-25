@@ -41,7 +41,7 @@ void HD DynamicPPState::updateMeta() {
 #endif
 }
 
-void DynamicPPState::initTransitionMatrix(parser::TransitionFormat& inputData) {
+std::string DynamicPPState::initTransitionMatrix(parser::TransitionFormat& inputData) {
     // init global parameters that are used to be static
     detail::DynamicPPState::h_numberOfStates = inputData.states.size();
     detail::DynamicPPState::h_infectious = new float[detail::DynamicPPState::h_numberOfStates];
@@ -80,8 +80,10 @@ void DynamicPPState::initTransitionMatrix(parser::TransitionFormat& inputData) {
     detail::DynamicPPState::h_firstInfectedState = std::distance(inputData.states.begin(), currentIt);
 
     // setup name index mapping for the constructor
+    std::string header;
     char idx = 0;
     for (const auto& s : inputData.states) {
+        header += s.stateName + "\t";
         detail::DynamicPPState::h_infectious[idx] = s.infectious;
         detail::DynamicPPState::h_WB[idx] = states::parseWBState(s.WB);
         detail::DynamicPPState::nameIndexMap.emplace(std::make_pair(s.stateName, idx));
@@ -89,6 +91,7 @@ void DynamicPPState::initTransitionMatrix(parser::TransitionFormat& inputData) {
             (std::find(inputData.susceptibleStates.begin(), inputData.susceptibleStates.end(), s.stateName) != inputData.susceptibleStates.end());
         ++idx;
     }
+    header.pop_back();
 
     detail::DynamicPPState::transition = new SingleBadTransitionMatrix(inputData);
 
@@ -120,6 +123,7 @@ void DynamicPPState::initTransitionMatrix(parser::TransitionFormat& inputData) {
         &detail::DynamicPPState::h_firstInfectedState,
         sizeof(detail::DynamicPPState::h_firstInfectedState));
 #endif
+    return header;
 }
 
 HD unsigned DynamicPPState::getNumberOfStates() {

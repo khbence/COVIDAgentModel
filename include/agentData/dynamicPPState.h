@@ -5,18 +5,18 @@
 #include "progressionMatrixFormat.h"
 
 class DynamicPPState {
-    char state = 0;// a number
     float infectious = 0.0;
-    bool susceptible = true;
 
+    char state = 0;// a number
     short daysBeforeNextState = -1;
+    bool susceptible = true;
 
     static HD SingleBadTransitionMatrix& getTransition();
 
     void HD updateMeta();
 
 public:
-    static void initTransitionMatrix(parser::TransitionFormat& inputData);
+    static std::string initTransitionMatrix(parser::TransitionFormat& inputData);
     static HD unsigned getNumberOfStates();
 
     explicit DynamicPPState(const std::string& name);

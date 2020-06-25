@@ -63,7 +63,7 @@ public:
     void refreshAndPrintStatistics() {
         PROFILE_FUNCTION();
         auto result = locs->refreshAndGetStatistic();
-        for (auto val : result) { std::cout << val << ", "; }
+        for (auto val : result) { std::cout << val << "\t"; }
         std::cout << '\n';
     }
 
@@ -75,12 +75,13 @@ public:
         MovementPolicy<Simulation>::initializeArgs(result);
         DataProvider data{ result };
         try {
-            PPState_t::initTransitionMatrix(data.acquireProgressionMatrix());
+            std::string header = PPState_t::initTransitionMatrix(data.acquireProgressionMatrix());
             agents->initAgentMeta(data.acquireParameters());
             locs->initLocationTypes(data.acquireLocationTypes());
             auto locationMapping = locs->initLocations(data.acquireLocations());
             auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
             agents->initAgents(data.acquireAgents(), locationMapping, agentTypeMapping);
+            std::cout << header << '\n';
         } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;

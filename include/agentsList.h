@@ -45,6 +45,7 @@ public:
     thrust::device_vector<unsigned long> locationOffset;
     // longer, every agents' every locations, indexed by the offset
     thrust::device_vector<unsigned> possibleLocations;
+    thrust::device_vector<unsigned> possibleTypes;
 
     using PPState_t = PPState;
 
@@ -83,7 +84,7 @@ public:
         return agentTypeIDMapping;
     }
 
-    void initAgents(const parser::Agents& inputData, const std::map<unsigned, unsigned>& locMap, const std::map<unsigned, unsigned>& typeMap) {
+    void initAgents(parser::Agents& inputData, const std::map<unsigned, unsigned>& locMap, const std::map<unsigned, unsigned>& typeMap) {
         auto n = inputData.people.size();
         reserve(n);
 
@@ -97,6 +98,7 @@ public:
         thrust::host_vector<unsigned long> locationOffset_h;
         // longer, every agents' every locations, indexed by the offset
         thrust::host_vector<unsigned> possibleLocations_h;
+        thrust::host_vector<unsigned> possibleTypes_h;
 
         PPValues_h.reserve(n);
         agentMetaData_h.reserve(n);
@@ -107,7 +109,7 @@ public:
         locationOffset_h.reserve(n + 1);
         locationOffset_h.push_back(0);
 
-        for (const auto& person : inputData.people) {
+        for (auto& person : inputData.people) {
             PPValues_h.push_back(PPState{ person.state });
             if (person.sex.size() != 1) { throw IOAgents::InvalidGender(person.sex); }
             agentMetaData_h.push_back(BasicAgentMeta(person.sex.front(), person.age, person.preCond));
@@ -120,13 +122,18 @@ public:
             if (itType == typeMap.end()) { throw IOAgents::InvalidAgentType(person.typeID); }
             types_h.push_back(itType->second);
             std::vector<unsigned> locs;
+            std::vector<unsigned> ts;// types
             locs.reserve(person.locations.size());
+            ts.reserve(person.locations.size());
+            std::sort(person.locations.begin(), person.locations.end(), [](const auto& lhs, const auto& rhs) { return lhs.typeID < rhs.typeID; });
             for (const auto& l : person.locations) {
                 auto itLoc = locMap.find(l.locID);
                 if (itLoc == locMap.end()) { throw IOAgents::InvalidLocationID(l.locID); }
                 locs.push_back(itLoc->second);
+                ts.push_back(l.typeID);
             }
             possibleLocations_h.insert(possibleLocations_h.end(), locs.begin(), locs.end());
+            possibleTypes_h.insert(possibleTypes_h.end(), ts.begin(), ts.end());
             locationOffset_h.push_back(locationOffset_h.back() + locs.size());
         }
 
