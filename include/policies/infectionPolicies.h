@@ -5,12 +5,14 @@
 
 template<class SimulationType>
 class BasicInfection {
+    public:
     struct Parameters {
         double v, h, s;
         double a, b;
 
         Parameters() = default;
     };
+    private:
 
     Parameters par;
 

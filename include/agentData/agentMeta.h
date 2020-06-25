@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include "parametersFormat.h"
+#include "datatypes.h"
 
 class BasicAgentMeta {
     class AgeInterval {
@@ -33,6 +34,6 @@ public:
 
     BasicAgentMeta(char gender, unsigned age, unsigned preCondition);
 
-    [[nodiscard]] float getScalingSymptoms() const;
-    [[nodiscard]] float getScalingTransmission() const;
+    [[nodiscard]] float HD getScalingSymptoms() const;
+    [[nodiscard]] float HD getScalingTransmission() const;
 };

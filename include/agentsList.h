@@ -24,7 +24,7 @@ template<typename PPState, typename AgentMeta, typename Location>
 class AgentList {
     AgentList() = default;
 
-    thrust::device_vector<AgentType> agentTypes;
+    AgentTypeList agentTypes;
 
     void reserve(std::size_t s) {
         PPValues.reserve(s);
@@ -63,22 +63,20 @@ public:
         std::map<unsigned, unsigned> agentTypeIDMapping;
 
         // agent types
-        agentTypes.reserve(inputData.types.size());
         unsigned idx = 0;
         for (auto& type : inputData.types) {
-            agentTypeIDMapping.emplace(type.ID, idx++);
-            AgentType currentAgentType{ type.name };
+            std::cout << idx << '\n';
+            agentTypeIDMapping.emplace(type.ID, idx);
             for (const auto& sch : type.schedulesUnique) {
                 auto wb = states::parseWBState(sch.WB);
                 auto days = Timehandler::parseDays(sch.dayType);
 
-                std::vector<AgentType::Event> events;
+                std::vector<AgentTypeList::Event> events;
                 events.reserve(sch.schedule.size());
                 for (const auto& e : sch.schedule) { events.emplace_back(e); }
-                for (auto day : days) { currentAgentType.addSchedule(std::make_pair(wb, day), events); }
+                for (auto day : days) { agentTypes.addSchedule(idx, std::make_pair(wb, day), events); }
             }
-
-            agentTypes.push_back(currentAgentType);
+            ++idx;
         }
 
         return agentTypeIDMapping;

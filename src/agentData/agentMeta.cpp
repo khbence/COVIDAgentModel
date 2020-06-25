@@ -66,6 +66,6 @@ BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, unsigned preCondition)
     scalingSymptoms *= itMap->second;
 }
 
-float BasicAgentMeta::getScalingSymptoms() const { return scalingSymptoms; }
+float HD BasicAgentMeta::getScalingSymptoms() const { return scalingSymptoms; }
 
-float BasicAgentMeta::getScalingTransmission() const { return scalingTransmission; }
+float HD BasicAgentMeta::getScalingTransmission() const { return scalingTransmission; }
