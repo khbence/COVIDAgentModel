@@ -10,7 +10,6 @@
 #include "datatypes.h"
 #include "timing.h"
 #include "util.h"
-#include "programParameters.h"
 #include <string>
 #include "locationTypesFormat.h"
 #include <map>

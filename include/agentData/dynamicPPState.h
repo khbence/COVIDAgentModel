@@ -6,7 +6,7 @@
 
 class DynamicPPState {
     char state = 0;// a number
-    bool infectious = false;
+    float infectious = 0.0;
     bool susceptible = true;
 
     short daysBeforeNextState = -1;
@@ -23,6 +23,6 @@ public:
     void HD gotInfected();
     void HD update(float scalingSymptons);
     [[nodiscard]] char HD getStateIdx() const { return state; }
-    [[nodiscard]] bool HD isInfectious() const { return infectious; }
+    [[nodiscard]] float HD isInfectious() const { return infectious; }
     [[nodiscard]] bool HD isSusceptible() const { return susceptible; }
 };

@@ -7,7 +7,7 @@ namespace detail {
     namespace DynamicPPState {
         unsigned h_numberOfStates = 0;
         char h_firstInfectedState = 0;
-        bool* h_infectious;
+        float* h_infectious;
         bool* h_susceptible;
         states::WBStates* h_WB;
         std::map<std::string, char> nameIndexMap;
@@ -15,7 +15,7 @@ namespace detail {
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
         __constant__ unsigned numberOfStates = 0;
         __constant__ char firstInfectedState = 0;
-        __constant__ bool* infectious;
+        __constant__ float* infectious;
         __constant__ bool* susceptible;
         __constant__ states::WBStates* WB;
         __constant__ SingleBadTransitionMatrix* transition_gpu;
@@ -34,12 +34,9 @@ HD SingleBadTransitionMatrix& DynamicPPState::getTransition() {
 void HD DynamicPPState::updateMeta() {
 #ifdef __CUDA_ARCH__
     infectious = detail::DynamicPPState::infectious[state];
-#else
-    infectious = detail::DynamicPPState::h_infectious[state];
-#endif
-#ifdef __CUDA_ARCH__
     susceptible = detail::DynamicPPState::susceptible[state];
 #else
+    infectious = detail::DynamicPPState::h_infectious[state];
     susceptible = detail::DynamicPPState::h_susceptible[state];
 #endif
 }
@@ -47,7 +44,7 @@ void HD DynamicPPState::updateMeta() {
 void DynamicPPState::initTransitionMatrix(parser::TransitionFormat& inputData) {
     // init global parameters that are used to be static
     detail::DynamicPPState::h_numberOfStates = inputData.states.size();
-    detail::DynamicPPState::h_infectious = new bool[detail::DynamicPPState::h_numberOfStates];
+    detail::DynamicPPState::h_infectious = new float[detail::DynamicPPState::h_numberOfStates];
     detail::DynamicPPState::h_WB = new states::WBStates[detail::DynamicPPState::h_numberOfStates];
     detail::DynamicPPState::h_susceptible = new bool[detail::DynamicPPState::h_numberOfStates];
 
@@ -100,10 +97,10 @@ void DynamicPPState::initTransitionMatrix(parser::TransitionFormat& inputData) {
     cudaMemcpyToSymbol(detail::DynamicPPState::transition_gpu, &tmp, sizeof(SingleBadTransitionMatrix*));
 
     // do I have to make a fancy copy or it's automatic
-    bool* infTMP;
-    cudaMalloc((void**)&infTMP, detail::DynamicPPState::h_numberOfStates * sizeof(bool));
-    cudaMemcpy(infTMP, detail::DynamicPPState::h_infectious, detail::DynamicPPState::h_numberOfStates * sizeof(bool), cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(detail::DynamicPPState::infectious, &infTMP, sizeof(bool*));
+    float* infTMP;
+    cudaMalloc((void**)&infTMP, detail::DynamicPPState::h_numberOfStates * sizeof(float));
+    cudaMemcpy(infTMP, detail::DynamicPPState::h_infectious, detail::DynamicPPState::h_numberOfStates * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(detail::DynamicPPState::infectious, &infTMP, sizeof(float*));
 
     states::SIRD* wbTMP;
     cudaMalloc((void**)&wbTMP, detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD));

@@ -12,6 +12,7 @@
 #include <omp.h>
 #include "timing.h"
 #include <cxxopts.hpp>
+#include "smallTools.h"
 
 cxxopts::Options defineProgramParameters() {
     cxxopts::Options options("covid", "An agent-based epidemic simulator");

@@ -46,23 +46,23 @@ public:
         auto& ppstates = realThis->agents->PPValues;
 
         thrust::device_vector<double> infectionRatios(locationListOffsets.size() - 1, 0.0);
-        thrust::device_vector<unsigned> fullInfectedCounts(locationListOffsets.size() - 1, 0);
+        thrust::device_vector<float> fullInfectedCounts(locationListOffsets.size() - 1, 0);
         // Cout up infectious people - those who are Infected, and Infected state is >1
-        reduce_by_location(locationListOffsets, fullInfectedCounts, ppstates, [] HD(typename SimulationType::PPState_t & ppstate) {
-            return (unsigned)(ppstate.isInfectious());
+        reduce_by_location(locationListOffsets, fullInfectedCounts, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> float {
+            return ppstate.isInfectious();
         });
         auto parTMP = par;
         thrust::transform(
             thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.begin(), locationListOffsets.begin(), locationListOffsets.begin() + 1)),
             thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.end(), locationListOffsets.end() - 1, locationListOffsets.end())),
             infectionRatios.begin(),
-            [=] HD(thrust::tuple<unsigned&, unsigned&, unsigned&> tuple) {
-                unsigned numInfectedAgentsPresent = thrust::get<0>(tuple);
+            [=] HD(thrust::tuple<float&, unsigned&, unsigned&> tuple) {
+                float numInfectedAgentsPresent = thrust::get<0>(tuple);
                 unsigned offset0 = thrust::get<1>(tuple);
                 unsigned offset1 = thrust::get<2>(tuple);
                 unsigned num_agents = offset1 - offset0;
-                if (numInfectedAgentsPresent == 0) { return 0.0; }
-                double densityOfInfected = static_cast<double>(numInfectedAgentsPresent) / num_agents;
+                if (numInfectedAgentsPresent == 0.0) { return 0.0; }
+                double densityOfInfected = numInfectedAgentsPresent / num_agents;
                 double y = 1.0 / (1.0 + parTMP.v * std::exp(-parTMP.s * 2 * (densityOfInfected - parTMP.h - 0.5)));
                 y = parTMP.a * y + parTMP.b;
                 return y / (60.0 * 24.0 / static_cast<double>(timeStep));

@@ -21,7 +21,7 @@ namespace parser {
             DECODABLE_MEMBER(std::string, stateName);
             DECODABLE_MEMBER(int, avgLength);
             DECODABLE_MEMBER(int, maxlength);
-            DECODABLE_MEMBER(bool, infectious);
+            DECODABLE_MEMBER(float, infectious);
             DECODABLE_MEMBER(std::string, WB);
             DECODABLE_MEMBER(std::vector<Progression>, progressions);
 
