@@ -42,3 +42,9 @@ Timehandler::Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture)
       stepsPerDay(minsPerDay / timeStep_p) {
     if (minsPerDay % timeStep_p != 0) { throw init::BadTimeStep(timeStep_p); }
 }
+
+Days Timehandler::getDay() const {
+    time_t tt = std::chrono::system_clock::to_time_t(current);
+    tm* date = std::localtime(&tt);
+    return static_cast<Days>(date->tm_wday - 1);
+}
