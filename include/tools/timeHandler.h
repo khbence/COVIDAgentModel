@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <string>
 #include "customExceptions.h"
+#include "timeDay.h"
+
+class TimeDay;
 
 enum class Days { MONDAY = 0, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY };
 
@@ -34,6 +37,15 @@ class Timehandler {
     }
 
 public:
+    friend bool operator==(const Timehandler&, const TimeDay&);
+    friend bool operator==(const TimeDay&, const Timehandler&);
+    friend bool operator!=(const Timehandler&, const TimeDay&);
+    friend bool operator!=(const TimeDay&, const Timehandler&);
+    friend bool operator<(const Timehandler&, const TimeDay&);
+    friend bool operator<(const TimeDay&, const Timehandler&);
+    friend bool operator>(const Timehandler&, const TimeDay&);
+    friend bool operator>(const TimeDay&, const Timehandler&);
+
     [[nodiscard]] static std::vector<Days> parseDays(const std::string& rawDays);
 
     explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0);
