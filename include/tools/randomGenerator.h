@@ -16,6 +16,7 @@ class RandomGenerator {
 
 public:
     static void init(unsigned agents);
+    static void resize(unsigned agents);
 
     [[nodiscard]] static __host__ thrust::host_vector<float> fillUnitf(unsigned size) {
         Timing::startTimer("RandomGenerator::fillUnitf");
