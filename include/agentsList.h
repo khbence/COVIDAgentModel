@@ -65,7 +65,6 @@ public:
         // agent types
         unsigned idx = 0;
         for (auto& type : inputData.types) {
-            std::cout << idx << '\n';
             agentTypeIDMapping.emplace(type.ID, idx);
             for (const auto& sch : type.schedulesUnique) {
                 auto wb = states::parseWBState(sch.WB);
