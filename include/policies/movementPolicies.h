@@ -137,7 +137,7 @@ class RealMovement : public DummyMovement {
             // 4 neither -1, then pick randomly between one of the events
 
             //ISSUES:
-            //do we forcibly finish at midnight?? WHat if the duration goes beyond that?
+            //do we forcibly finish at midnight?? What if the duration goes beyond that?
 
             //Case 1
             if (activeEventsBegin==-1 && activeEventsEnd == -1) {
@@ -189,8 +189,30 @@ class RealMovement : public DummyMovement {
                 
             }
 
+            //Case 3
+            if (activeEventsBegin==-1 && activeEventsEnd!=-1) {
+                //Randomly decide when the move will occur in the next window:
+                TimeDayDuration length = eventsPtr[activeEventsEnd].end-eventsPtr[activeEventsEnd].start;
+                unsigned length_steps = length.steps(timeStep);
+                unsigned randDelay = RandomGenerator::randomUnsigned(length_steps);
+                stepsUntilMovePtr[i] = (eventsPtr[activeEventsEnd].start-simTime).steps(timeStep) + randDelay; //TODO: add these properly
+                unsigned timeLeft = stepsUntilMovePtr[i] - simTime; //TODO properly
+                //Case 3.a -- less than 30 mins -> stay here
+                if (timeLeft < TimeDay(0.3)) {
+                    //Do nothing - location stays the same
+                } else if (timeLeft < TimeDay(1.0)) {
+                    //Go to public place
+                    unsigned myPublicPlace = findActualLocationForType(i, 1, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr); //TODO: public place
+                    agentLocationsPtr[i] = myPublicPlace;
+                } else {
+                    //Go home
+                    unsigned myHome = findActualLocationForType(i, typeToGoTo, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                    agentLocationsPtr[i] = myHome;
+                }
+            }
+
             //Movement should start at random within the movement period (i.e. between start and end)
-            //->but here we need to determine the exact time of the next move
+            //->but here we need to determine the exact time of the next move. So for cases 3 and 4 we add a random on top of duration
         }
     }
-}
+};
