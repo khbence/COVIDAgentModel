@@ -24,8 +24,6 @@ template<typename PPState, typename AgentMeta, typename Location>
 class AgentList {
     AgentList() = default;
 
-    AgentTypeList agentTypes;
-
     void reserve(std::size_t s) {
         PPValues.reserve(s);
         agentMetaData.reserve(s);
@@ -35,6 +33,7 @@ class AgentList {
     }
 
 public:
+    AgentTypeList agentTypes;
     thrust::device_vector<PPState> PPValues;
     thrust::device_vector<AgentMeta> agentMetaData;
     thrust::device_vector<bool> diagnosed;
