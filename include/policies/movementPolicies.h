@@ -6,13 +6,14 @@
 
 template<typename SimulationType>
 class NoMovement {
-protected:
+public:
     void planLocations() {}
     void movement(Timehandler simTime, unsigned timeStep) {}
 };
 
 template<typename SimulationType>
 class DummyMovement {
+protected:
     thrust::device_vector<unsigned> stepsUntilMove;
 
 public:
@@ -54,16 +55,31 @@ public:
 };
 
 template<typename SimulationType>
-class RealMovement : public DummyMovement {
-    [[nodiscard]] static unsigned findActualLocationForType(unsigned agent, unsigned locType, unsigned *locationOffsetPtr, unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr) {
+class RealMovement {
+    [[nodiscard]] static unsigned findActualLocationForType(unsigned agent, unsigned locType, unsigned long *locationOffsetPtr, unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr) {
         for (unsigned i = locationOffsetPtr[agent]; i < locationOffsetPtr[agent+1]; i++) {
             if (locType == possibleTypesPtr[i])
                 return possibleLocationsPtr[i];
         }
     }
 
+    thrust::device_vector<unsigned> stepsUntilMove;
+
     public:
-    void movement(Timehandler simTime, unsigned timeStep) override {
+    // add program parameters if we need any, this function got called already from Simulation
+    static void addProgramParameters(cxxopts::Options& options) {}
+    void initializeArgs(const cxxopts::ParseResult& result) {}
+
+    void planLocations() {
+        auto realThis = static_cast<SimulationType*>(this);
+        thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
+        unsigned numberOfAgents = agentLocations.size();
+
+        if (stepsUntilMove.size() == 0) stepsUntilMove.resize(numberOfAgents);
+        thrust::fill(stepsUntilMove.begin(), stepsUntilMove.end(), 0u);
+    }
+
+    void movement(Timehandler simTime, unsigned timeStep) {
         auto realThis = static_cast<SimulationType*>(this);
         thrust::device_vector<unsigned>& locationAgentList = realThis->locs->locationAgentList;
         unsigned *locationAgentListPtr = thrust::raw_pointer_cast(locationAgentList.data());
@@ -75,13 +91,13 @@ class RealMovement : public DummyMovement {
         unsigned *agentLocationsPtr = thrust::raw_pointer_cast(agentLocations.data());
         thrust::device_vector<unsigned>& agentTypes = realThis->agents->types;
         unsigned *agentTypesPtr = thrust::raw_pointer_cast(agentTypes.data());
-        thrust::device_vector<SimulationType::PPState_t>& agentStates = realThis->agents->PPValues;
-        SimulationType::PPState_t *agentStatesPtr = thrust::raw_pointer_cast(agentStates.data());
+        thrust::device_vector<typename SimulationType::PPState_t>& agentStates = realThis->agents->PPValues;
+        typename SimulationType::PPState_t *agentStatesPtr = thrust::raw_pointer_cast(agentStates.data());
         unsigned *stepsUntilMovePtr = thrust::raw_pointer_cast(this->stepsUntilMove.data());
 
         //Arrays storing actual location IDs for each agent, for each location type
         thrust::device_vector<unsigned long> &locationOffset = realThis->agents->locationOffset;
-        unsigned *locationOffsetPtr = thrust::raw_pointer_cast(locationOffset.data());
+        unsigned long*locationOffsetPtr = thrust::raw_pointer_cast(locationOffset.data());
         thrust::device_vector<unsigned> &possibleLocations = realThis->agents->possibleLocations;
         unsigned *possibleLocationsPtr = thrust::raw_pointer_cast(possibleLocations.data());
         thrust::device_vector<unsigned> &possibleTypes = realThis->agents->possibleTypes;
@@ -90,7 +106,7 @@ class RealMovement : public DummyMovement {
         //Arrays storing movement behaviour with general locationTypes - for each agent type, WB state, and day
         thrust::device_vector<unsigned> &eventOffset = realThis->agents->agentTypes.eventOffset;
         unsigned *eventOffsetPtr = thrust::raw_pointer_cast(eventOffset.data());
-        thrust::device_vector<Event> &events = realThis->agents->agentTypes.events;
+        thrust::device_vector<AgentTypeList::Event> &events = realThis->agents->agentTypes.events;
         AgentTypeList::Event *eventsPtr = thrust::raw_pointer_cast(events.data());
 
         unsigned numberOfAgents = agentLocations.size();
@@ -103,11 +119,12 @@ class RealMovement : public DummyMovement {
                 stepsUntilMovePtr[i]--;
                 continue;
             }
-            states::WBStates wBState = agentTypesPtr[i].getWBState();
+            states::WBStates wBState = agentStatesPtr[i].getWBState();
             if (wBState == states::WBStates::D) { //If dead, do not go anywhere
                 stepsUntilMovePtr[i] = UINT32_MAX;
                 continue;
             }
+            //TODO: during disease progression, move people who just diesd to some specific place
 
             unsigned &agentType = agentTypesPtr[i];
 
@@ -144,7 +161,7 @@ class RealMovement : public DummyMovement {
                 unsigned typeToGoTo = wBState == states::WBStates::S ? 12 : 2; //Hostpital if sick, home otherwise
                 unsigned myHome = findActualLocationForType(i, typeToGoTo, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
                 agentLocationsPtr[i] = myHome;
-                stepsUntilMovePtr[i] = simTime.stepsUntilMidnight(); //TODO: Need to figure out how many timesteps until midnight (if we forcibly stop then)
+                stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight(); //TODO: Need to figure out how many timesteps until midnight (if we forcibly stop then)
             }
             //Case 2 and 4
             if (activeEventsBegin!=-1) {
@@ -169,19 +186,19 @@ class RealMovement : public DummyMovement {
                 agentLocationsPtr[i] = newLocation;
                 if (activeEventsEnd==-1) {
                     //TODO: Do we truncate to midnight?
-                    if (simTime + basicDuration > simTime.nextMidnight()) { //TODO: is this right?
-                        stepsUntilMovePtr[i] = simTime.stepsUntilMidnight();
+                    if (simTime + basicDuration > simTime.getNextMidnight()) { //TODO: is this right?
+                        stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight();
                     } else {
                         //does not last till midnight, but no events afterwards - spend full duration there
                         stepsUntilMovePtr[i] = basicDuration.steps(timeStep); //TODO: Need to be able to convert TimeDayDuration to number of timesteps
                     }
                 } else {
                     //If duration is less then the beginning of the next move window, then spend full duration here
-                    if (simtTime + basicDuration < eventsPtr[activeEventsEnd].start)
+                    if (simTime + basicDuration < eventsPtr[activeEventsEnd].start)
                         stepsUntilMovePtr[i] = basicDuration.steps(timeStep); //TODO: Need to be able to convert TimeDayDuration to number of timesteps
                     else {
                         //Otherwise I need to move again randomly between the end of this duration and the end of next movement window
-                        TimeDayDuration window = eventsPtr[activeEventsEnd].end - (simtTime + basicDuration);
+                        TimeDayDuration window = eventsPtr[activeEventsEnd].end - (simTime + basicDuration);
                         unsigned randExtra = RandomGenerator::randomUnsigned(window.steps(timeStep));
                         stepsUntilMovePtr[i] = basicDuration.steps(timeStep) + randExtra;
                     }
@@ -201,12 +218,12 @@ class RealMovement : public DummyMovement {
                 if (timeLeft < TimeDay(0.3)) {
                     //Do nothing - location stays the same
                 } else if (timeLeft < TimeDay(1.0)) {
-                    //Go to public place
+                    //TODO: Go to public place
                     unsigned myPublicPlace = findActualLocationForType(i, 1, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr); //TODO: public place
                     agentLocationsPtr[i] = myPublicPlace;
                 } else {
-                    //Go home
-                    unsigned myHome = findActualLocationForType(i, typeToGoTo, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                    //TODO: Go home
+                    unsigned myHome = findActualLocationForType(i, 2, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
                     agentLocationsPtr[i] = myHome;
                 }
             }

@@ -56,6 +56,7 @@ public:
     explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0);
 
     bool operator<(const Timehandler& rhs) { return current < rhs.current; }
+    bool operator>(const Timehandler& rhs) { return current > rhs.current; }
 
     Timehandler& operator++() {
         current += timeStep;

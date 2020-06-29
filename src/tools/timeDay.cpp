@@ -27,3 +27,7 @@ unsigned TimeDay::getMinutes() const {
 TimeDayDuration::TimeDayDuration(float raw) : TimeDay(raw) {}
 
 bool TimeDayDuration::isUndefinedDuration() const { return hours == std::numeric_limits<decltype(hours)>::max(); }
+
+[[nodiscard]] unsigned TimeDayDuration::steps(unsigned timestep) const {
+    return ((unsigned)this->hours*60)/timestep +(unsigned)this->minutes/timestep;
+};

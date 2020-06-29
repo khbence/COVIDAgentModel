@@ -11,6 +11,7 @@
 class AgentTypeList {
 public:
     class Event {
+        public:
         unsigned locationType;
         float chance;
         TimeDay start;
