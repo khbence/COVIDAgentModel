@@ -1,48 +1,48 @@
 #include "timeHandler.h"
 
 // + operators
-Timehandler Timehandler::operator+(unsigned steps) const {
+Timehandler HD Timehandler::operator+(unsigned steps) const {
     Timehandler ret = *this;
     ret += steps;
     return ret;
 }
 
-Timehandler& Timehandler::operator+=(unsigned steps) {
+Timehandler& HD Timehandler::operator+=(unsigned steps) {
     counter += steps;
     current += steps * timeStep;
     return *this;
 }
 
-Timehandler Timehandler::operator+(const TimeDayDuration& dur) const {
+Timehandler HD Timehandler::operator+(const TimeDayDuration& dur) const {
     auto mins = dur.getMinutes();
     return this->operator+(static_cast<unsigned>(mins / timeStep.count()));
 }
 
-Timehandler& Timehandler::operator+=(const TimeDayDuration& dur) {
+Timehandler& HD Timehandler::operator+=(const TimeDayDuration& dur) {
     auto mins = dur.getMinutes();
     return this->operator+=(static_cast<unsigned>(mins / timeStep.count()));
 }
 
 // - operators
-Timehandler Timehandler::operator-(unsigned steps) const {
+Timehandler HD Timehandler::operator-(unsigned steps) const {
     Timehandler ret = *this;
     ret -= steps;
     return ret;
 }
 
-Timehandler& Timehandler::operator-=(unsigned steps) {
+Timehandler& HD Timehandler::operator-=(unsigned steps) {
     // doesn't handle if steps > counter, it will not happen hopefully for various reasons
     counter -= steps;
     current -= steps * timeStep;
     return *this;
 }
 
-Timehandler Timehandler::operator-(const TimeDayDuration& dur) const {
+Timehandler HD Timehandler::operator-(const TimeDayDuration& dur) const {
     auto mins = dur.getMinutes();
     return this->operator-(static_cast<unsigned>(mins / timeStep.count()));
 }
 
-Timehandler& Timehandler::operator-=(const TimeDayDuration& dur) {
+Timehandler& HD Timehandler::operator-=(const TimeDayDuration& dur) {
     auto mins = dur.getMinutes();
     return this->operator-=(static_cast<unsigned>(mins / timeStep.count()));
 }
@@ -91,17 +91,17 @@ Timehandler::Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture)
     if (minsPerDay % timeStep_p != 0) { throw init::BadTimeStep(timeStep_p); }
 }
 
-unsigned Timehandler::getStepsUntilMidnight() const {
+unsigned HD Timehandler::getStepsUntilMidnight() const {
     return stepsPerDay - counter;
 }
 
-Timehandler& Timehandler::getNextMidnight() const {
+Timehandler& HD Timehandler::getNextMidnight() const {
     Timehandler ret = *this;
     unsigned steps = ret.getStepsUntilMidnight();
     ret += steps;
 }
 
-Days Timehandler::getDay() const {
+Days HD Timehandler::getDay() const {
     time_t tt = std::chrono::system_clock::to_time_t(current);
     tm* date = std::localtime(&tt);
     return static_cast<Days>(date->tm_wday - 1);

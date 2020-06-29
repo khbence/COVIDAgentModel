@@ -1,5 +1,6 @@
 #pragma once
 #include "timeHandler.h"
+#include "datatypes.h"
 
 class Timehandler;
 class TimeDayDuration;
@@ -10,32 +11,32 @@ protected:
     unsigned char minutes;
 
 public:
-    friend bool operator==(const Timehandler&, const TimeDay&);
-    friend bool operator==(const TimeDay&, const Timehandler&);
-    friend bool operator!=(const Timehandler&, const TimeDay&);
-    friend bool operator!=(const TimeDay&, const Timehandler&);
-    friend bool operator<(const Timehandler&, const TimeDay&);
-    friend bool operator<=(const Timehandler&, const TimeDay&);
-    friend bool operator<(const TimeDay&, const Timehandler&);
-    friend bool operator<=(const TimeDay&, const Timehandler&);
-    friend bool operator>(const Timehandler&, const TimeDay&);
-    friend bool operator>=(const Timehandler&, const TimeDay&);
-    friend bool operator>(const TimeDay&, const Timehandler&);
-    friend bool operator>=(const TimeDay&, const Timehandler&);
+    friend bool HD operator==(const Timehandler&, const TimeDay&);
+    friend bool HD operator==(const TimeDay&, const Timehandler&);
+    friend bool HD operator!=(const Timehandler&, const TimeDay&);
+    friend bool HD operator!=(const TimeDay&, const Timehandler&);
+    friend bool HD operator<(const Timehandler&, const TimeDay&);
+    friend bool HD operator<=(const Timehandler&, const TimeDay&);
+    friend bool HD operator<(const TimeDay&, const Timehandler&);
+    friend bool HD operator<=(const TimeDay&, const Timehandler&);
+    friend bool HD operator>(const Timehandler&, const TimeDay&);
+    friend bool HD operator>=(const Timehandler&, const TimeDay&);
+    friend bool HD operator>(const TimeDay&, const Timehandler&);
+    friend bool HD operator>=(const TimeDay&, const Timehandler&);
 
-    TimeDay operator+(const TimeDayDuration& dur) const;
-    TimeDay& operator+=(const TimeDayDuration& dur);
+    TimeDay HD operator+(const TimeDayDuration& dur) const;
+    TimeDay& HD operator+=(const TimeDayDuration& dur);
 
-    TimeDay operator-(const TimeDayDuration& dur) const;
-    TimeDay& operator-=(const TimeDayDuration& dur);
+    TimeDay HD operator-(const TimeDayDuration& dur) const;
+    TimeDay& HD operator-=(const TimeDayDuration& dur);
 
     explicit TimeDay(float raw);
-    unsigned getMinutes() const;
+    unsigned HD getMinutes() const;
 };
 
 class TimeDayDuration : public TimeDay {
 public:
     explicit TimeDayDuration(float raw);
-    [[nodiscard]] bool isUndefinedDuration() const;
-    [[nodiscard]] unsigned steps(unsigned timestep) const;
+    [[nodiscard]] bool HD isUndefinedDuration() const;
+    [[nodiscard]] unsigned HD steps(unsigned timestep) const;
 };

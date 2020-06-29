@@ -8,6 +8,7 @@
 #include <string>
 #include "customExceptions.h"
 #include "timeDay.h"
+#include "datatypes.h"
 
 class TimeDay;
 
@@ -37,31 +38,35 @@ class Timehandler {
     }
 
 public:
-    friend bool operator==(const Timehandler&, const TimeDay&);
-    friend bool operator==(const TimeDay&, const Timehandler&);
-    friend bool operator!=(const Timehandler&, const TimeDay&);
-    friend bool operator!=(const TimeDay&, const Timehandler&);
-    friend bool operator<(const Timehandler&, const TimeDay&);
-    friend bool operator<(const TimeDay&, const Timehandler&);
-    friend bool operator>(const Timehandler&, const TimeDay&);
-    friend bool operator>(const TimeDay&, const Timehandler&);
+    friend bool HD operator==(const Timehandler&, const TimeDay&);
+    friend bool HD operator==(const TimeDay&, const Timehandler&);
+    friend bool HD operator!=(const Timehandler&, const TimeDay&);
+    friend bool HD operator!=(const TimeDay&, const Timehandler&);
+    friend bool HD operator<(const Timehandler&, const TimeDay&);
+    friend bool HD operator<=(const Timehandler&, const TimeDay&);
+    friend bool HD operator<(const TimeDay&, const Timehandler&);
+    friend bool HD operator<=(const TimeDay&, const Timehandler&);
+    friend bool HD operator>(const Timehandler&, const TimeDay&);
+    friend bool HD operator>=(const Timehandler&, const TimeDay&);
+    friend bool HD operator>(const TimeDay&, const Timehandler&);
+    friend bool HD operator>=(const TimeDay&, const Timehandler&);
 
-    Timehandler operator+(unsigned steps) const;
-    Timehandler& operator+=(unsigned steps);
-    Timehandler operator+(const TimeDayDuration& dur) const;
-    Timehandler& operator+=(const TimeDayDuration& dur);
+    Timehandler HD operator+(unsigned steps) const;
+    Timehandler& HD operator+=(unsigned steps);
+    Timehandler HD operator+(const TimeDayDuration& dur) const;
+    Timehandler& HD operator+=(const TimeDayDuration& dur);
 
-    Timehandler operator-(unsigned steps) const;
-    Timehandler& operator-=(unsigned steps);
-    Timehandler operator-(const TimeDayDuration& dur) const;
-    Timehandler& operator-=(const TimeDayDuration& dur);
+    Timehandler HD operator-(unsigned steps) const;
+    Timehandler& HD operator-=(unsigned steps);
+    Timehandler HD operator-(const TimeDayDuration& dur) const;
+    Timehandler& HD operator-=(const TimeDayDuration& dur);
 
     [[nodiscard]] static std::vector<Days> parseDays(const std::string& rawDays);
 
     explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0);
 
-    bool operator<(const Timehandler& rhs) { return current < rhs.current; }
-    bool operator>(const Timehandler& rhs) { return current > rhs.current; }
+    bool HD operator<(const Timehandler& rhs) { return current < rhs.current; }
+    bool HD operator>(const Timehandler& rhs) { return current > rhs.current; }
 
     Timehandler& operator++() {
         current += timeStep;
@@ -69,8 +74,8 @@ public:
         return *this;
     }
 
-    unsigned getStepsUntilMidnight() const;
-    Timehandler& getNextMidnight() const;
+    unsigned HD getStepsUntilMidnight() const;
+    Timehandler& HD getNextMidnight() const;
 
     [[nodiscard]] bool isMidnight() const { return (counter % stepsPerDay) == 0; }
 
@@ -82,7 +87,7 @@ public:
         return out;
     }
 
-    Days getDay() const;// TODO calculate day "type"
+    Days HD getDay() const;// TODO calculate day "type"
 
     void printDay() const {
         auto t_c = std::chrono::system_clock::to_time_t(current);

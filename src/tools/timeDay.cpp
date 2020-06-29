@@ -2,13 +2,13 @@
 #include <cmath>
 #include <limits>
 
-TimeDay TimeDay::operator+(const TimeDayDuration& dur) const {
+TimeDay HD TimeDay::operator+(const TimeDayDuration& dur) const {
     TimeDay ret = *this;
     ret += dur;
     return ret;
 }
 
-TimeDay& TimeDay::operator+=(const TimeDayDuration& dur) {
+TimeDay& HD TimeDay::operator+=(const TimeDayDuration& dur) {
     unsigned mins = dur.getMinutes();
     minutes += mins % 60;
     auto overflow = minutes / 60;
@@ -17,13 +17,13 @@ TimeDay& TimeDay::operator+=(const TimeDayDuration& dur) {
     return *this;
 }
 
-TimeDay TimeDay::operator-(const TimeDayDuration& dur) const {
+TimeDay HD TimeDay::operator-(const TimeDayDuration& dur) const {
     TimeDay ret = *this;
     ret -= dur;
     return ret;
 }
 
-TimeDay& TimeDay::operator-=(const TimeDayDuration& dur) {
+TimeDay& HD TimeDay::operator-=(const TimeDayDuration& dur) {
     auto minsDur = dur.getMinutes();
     auto minsThis = getMinutes();
     auto mins = minsThis - minsDur;
@@ -37,14 +37,14 @@ TimeDay::TimeDay(float raw)
     if (raw == -1.0) { hours = std::numeric_limits<decltype(hours)>::max(); }
 }
 
-unsigned TimeDay::getMinutes() const {
+unsigned HD TimeDay::getMinutes() const {
     return static_cast<unsigned>((static_cast<unsigned>(hours) * 60) + static_cast<unsigned>(minutes));
 }
 
 TimeDayDuration::TimeDayDuration(float raw) : TimeDay(raw) {}
 
-bool TimeDayDuration::isUndefinedDuration() const { return hours == std::numeric_limits<decltype(hours)>::max(); }
+bool HD TimeDayDuration::isUndefinedDuration() const { return hours == std::numeric_limits<decltype(hours)>::max(); }
 
-[[nodiscard]] unsigned TimeDayDuration::steps(unsigned timestep) const {
+[[nodiscard]] unsigned HD TimeDayDuration::steps(unsigned timestep) const {
     return ((unsigned)this->hours*60)/timestep +(unsigned)this->minutes/timestep;
 };
