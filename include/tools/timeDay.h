@@ -2,6 +2,7 @@
 #include "timeHandler.h"
 
 class Timehandler;
+class TimeDayDuration;
 
 class TimeDay {
 protected:
@@ -18,7 +19,11 @@ public:
     friend bool operator>(const Timehandler&, const TimeDay&);
     friend bool operator>(const TimeDay&, const Timehandler&);
 
+    TimeDay operator+(const TimeDayDuration& dur) const;
+    TimeDay& operator+=(const TimeDayDuration& dur);
+
     explicit TimeDay(float raw);
+    unsigned getMinutes() const;
 };
 
 class TimeDayDuration : public TimeDay {

@@ -46,6 +46,11 @@ public:
     friend bool operator>(const Timehandler&, const TimeDay&);
     friend bool operator>(const TimeDay&, const Timehandler&);
 
+    Timehandler operator+(unsigned steps) const;
+    Timehandler& operator+=(unsigned steps);
+    Timehandler operator+(const TimeDayDuration& dur) const;
+    Timehandler& operator+=(const TimeDayDuration& dur);
+
     [[nodiscard]] static std::vector<Days> parseDays(const std::string& rawDays);
 
     explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0);
@@ -57,6 +62,9 @@ public:
         ++counter;
         return *this;
     }
+
+    unsigned getStepsUntilMidnight() const;
+    Timehandler& getNextMidnight() const;
 
     [[nodiscard]] bool isMidnight() const { return (counter % stepsPerDay) == 0; }
 

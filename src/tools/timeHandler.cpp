@@ -1,5 +1,27 @@
 #include "timeHandler.h"
 
+Timehandler Timehandler::operator+(unsigned steps) const {
+    Timehandler ret = *this;
+    ret += steps;
+    return ret;
+}
+
+Timehandler& Timehandler::operator+=(unsigned steps) {
+    counter += steps;
+    current += steps * timeStep;
+    return *this;
+}
+
+Timehandler Timehandler::operator+(const TimeDayDuration& dur) const {
+    auto mins = dur.getMinutes();
+    return this->operator+(static_cast<unsigned>(mins / timeStep.count()));
+}
+
+Timehandler& Timehandler::operator+=(const TimeDayDuration& dur) {
+    auto mins = dur.getMinutes();
+    return this->operator+=(static_cast<unsigned>(mins / timeStep.count()));
+}
+
 [[nodiscard]] std::vector<Days> Timehandler::parseDays(const std::string& rawDays) {
     std::string day;
     std::vector<Days> result;
@@ -41,6 +63,16 @@ Timehandler::Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture)
       current(nextMidnight() + std::chrono::hours(hoursPerWeek * weeksInTheFuture)),
       stepsPerDay(minsPerDay / timeStep_p) {
     if (minsPerDay % timeStep_p != 0) { throw init::BadTimeStep(timeStep_p); }
+}
+
+unsigned Timehandler::getStepsUntilMidnight() const {
+    return stepsPerDay - counter;
+}
+
+Timehandler& Timehandler::getNextMidnight() const {
+    Timehandler ret = *this;
+    unsigned steps = ret.getStepsUntilMidnight();
+    ret += steps;
 }
 
 Days Timehandler::getDay() const {
