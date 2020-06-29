@@ -26,6 +26,9 @@ public:
     TimeDay operator+(const TimeDayDuration& dur) const;
     TimeDay& operator+=(const TimeDayDuration& dur);
 
+    TimeDay operator-(const TimeDayDuration& dur) const;
+    TimeDay& operator-=(const TimeDayDuration& dur);
+
     explicit TimeDay(float raw);
     unsigned getMinutes() const;
 };

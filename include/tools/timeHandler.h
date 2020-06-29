@@ -51,6 +51,11 @@ public:
     Timehandler operator+(const TimeDayDuration& dur) const;
     Timehandler& operator+=(const TimeDayDuration& dur);
 
+    Timehandler operator-(unsigned steps) const;
+    Timehandler& operator-=(unsigned steps);
+    Timehandler operator-(const TimeDayDuration& dur) const;
+    Timehandler& operator-=(const TimeDayDuration& dur);
+
     [[nodiscard]] static std::vector<Days> parseDays(const std::string& rawDays);
 
     explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0);

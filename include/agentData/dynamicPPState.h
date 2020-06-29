@@ -27,6 +27,7 @@ public:
     void HD gotInfected();
     void HD update(float scalingSymptons);
     [[nodiscard]] char HD getStateIdx() const { return state; }
+    [[nodiscard]] states::WBStates HD getWBState() const;
     [[nodiscard]] float HD isInfectious() const { return infectious; }
     [[nodiscard]] bool HD isSusceptible() const { return susceptible; }
 };

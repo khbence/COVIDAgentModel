@@ -10,8 +10,25 @@ TimeDay TimeDay::operator+(const TimeDayDuration& dur) const {
 
 TimeDay& TimeDay::operator+=(const TimeDayDuration& dur) {
     unsigned mins = dur.getMinutes();
-    hours += mins / 60;
     minutes += mins % 60;
+    auto overflow = minutes / 60;
+    minutes %= 60;
+    hours += (mins / 60) + overflow;
+    return *this;
+}
+
+TimeDay TimeDay::operator-(const TimeDayDuration& dur) const {
+    TimeDay ret = *this;
+    ret -= dur;
+    return ret;
+}
+
+TimeDay& TimeDay::operator-=(const TimeDayDuration& dur) {
+    auto minsDur = dur.getMinutes();
+    auto minsThis = getMinutes();
+    auto mins = minsThis - minsDur;
+    minutes = mins % 60;
+    hours = mins / 60;
     return *this;
 }
 

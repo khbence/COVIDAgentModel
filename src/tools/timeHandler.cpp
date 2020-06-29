@@ -1,5 +1,6 @@
 #include "timeHandler.h"
 
+// + operators
 Timehandler Timehandler::operator+(unsigned steps) const {
     Timehandler ret = *this;
     ret += steps;
@@ -21,6 +22,31 @@ Timehandler& Timehandler::operator+=(const TimeDayDuration& dur) {
     auto mins = dur.getMinutes();
     return this->operator+=(static_cast<unsigned>(mins / timeStep.count()));
 }
+
+// - operators
+Timehandler Timehandler::operator-(unsigned steps) const {
+    Timehandler ret = *this;
+    ret -= steps;
+    return ret;
+}
+
+Timehandler& Timehandler::operator-=(unsigned steps) {
+    // doesn't handle if steps > counter, it will not happen hopefully for various reasons
+    counter -= steps;
+    current -= steps * timeStep;
+    return *this;
+}
+
+Timehandler Timehandler::operator-(const TimeDayDuration& dur) const {
+    auto mins = dur.getMinutes();
+    return this->operator-(static_cast<unsigned>(mins / timeStep.count()));
+}
+
+Timehandler& Timehandler::operator-=(const TimeDayDuration& dur) {
+    auto mins = dur.getMinutes();
+    return this->operator-=(static_cast<unsigned>(mins / timeStep.count()));
+}
+
 
 [[nodiscard]] std::vector<Days> Timehandler::parseDays(const std::string& rawDays) {
     std::string day;

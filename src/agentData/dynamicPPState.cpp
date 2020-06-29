@@ -157,3 +157,11 @@ void HD DynamicPPState::update(float scalingSymptons) {
         daysBeforeNextState = tmp.second;
     }
 }
+
+states::WBStates DynamicPPState::getWBState() const {
+#ifdef __CUDA_ARCH__
+    return detail::DynamicPPState::WB[state];
+#else
+    return detail::DynamicPPState::h_WB[state];
+#endif
+}
