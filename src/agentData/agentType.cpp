@@ -20,5 +20,5 @@ void AgentTypeList::addSchedule(unsigned ID, std::pair<states::WBStates, Days> s
     auto idx = getOffsetIndex(ID, state.first, state.second);
     auto n = schedule.size();
     for (auto i = idx + 1; i < eventOffset.size(); ++i) { eventOffset[i] += n; }
-    events.insert(events.begin() + idx, schedule.begin(), schedule.end());
+    events.insert(events.begin() + eventOffset[idx], schedule.begin(), schedule.end());
 }
