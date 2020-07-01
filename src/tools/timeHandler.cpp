@@ -92,7 +92,7 @@ Timehandler::Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture)
 }
 
 unsigned HD Timehandler::getStepsUntilMidnight() const {
-    return stepsPerDay - counter;
+    return stepsPerDay - (counter % stepsPerDay);
 }
 
 Timehandler HD Timehandler::getNextMidnight() const {
