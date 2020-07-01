@@ -109,5 +109,5 @@ unsigned HD Timehandler::getMinutes() const {
 Days HD Timehandler::getDay() const {
     time_t tt = std::chrono::system_clock::to_time_t(current);
     tm* date = std::localtime(&tt);
-    return static_cast<Days>(date->tm_wday - 1);
+    return static_cast<Days>(date->tm_wday == 0 ? 6 : date->tm_wday - 1);
 }

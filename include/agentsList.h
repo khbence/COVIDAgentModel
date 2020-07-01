@@ -60,7 +60,7 @@ public:
         // mapping, that will be used by the agents when I fill them up. Use it only during
         // initialization ID from files -> index in vectors
         std::map<unsigned, unsigned> agentTypeIDMapping;
-
+        agentTypes = AgentTypeList(inputData.types.size());
         // agent types
         unsigned idx = 0;
         for (auto& type : inputData.types) {
@@ -141,6 +141,7 @@ public:
         agents = agents_h;
         locationOffset = locationOffset_h;
         possibleLocations = possibleLocations_h;
+        possibleTypes = possibleTypes_h;
     }
 
     [[nodiscard]] static AgentList* getInstance() {

@@ -62,6 +62,7 @@ class RealMovement {
             if (locType == possibleTypesPtr[i])
                 return possibleLocationsPtr[i];
         }
+        return 0;
     }
 
     thrust::device_vector<unsigned> stepsUntilMove;
