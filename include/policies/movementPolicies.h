@@ -115,6 +115,7 @@ class RealMovement {
         unsigned numberOfLocations = locationListOffsets.size() - 1;
 
         Days day = simTime.getDay();
+        unsigned tracked = 0;
 
         for (unsigned i = 0; i < numberOfAgents; i++) {
             if (stepsUntilMovePtr[i]>0) {
@@ -132,7 +133,7 @@ class RealMovement {
 
             unsigned agentTypeOffset = AgentTypeList::getOffsetIndex(agentType,wBState, day);
             unsigned eventsBegin = eventOffsetPtr[agentTypeOffset];
-            unsigned eventsEnd = eventOffsetPtr[agentTypeOffset];
+            unsigned eventsEnd = eventOffsetPtr[agentTypeOffset+1];
 
             int activeEventsBegin=-1;
             int activeEventsEnd=-1;
@@ -146,6 +147,8 @@ class RealMovement {
                     break;
                 }
             }
+            if (i == tracked)
+                std::cout << "Agent " << i << " day "<<(int)day<<" at " << simTime.getMinutes()/60 << ":" <<simTime.getMinutes()%60 << " type " << agentType << " WBState " << (int)wBState <<" activeEventsBegin: " << activeEventsBegin << " activeEventsEnd: " << activeEventsEnd << std::endl;
             //Possibilities:
             // 1 both are -1 -> no more events for that day. Should be home if wBState != S, or at hospital if S
             // 2 Begin != -1, End == -1 -> last event for the day. Move there (if needed pick randomly)
@@ -164,6 +167,8 @@ class RealMovement {
                 unsigned myHome = findActualLocationForType(i, typeToGoTo, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
                 agentLocationsPtr[i] = myHome;
                 stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight(); //TODO: Need to figure out how many timesteps until midnight (if we forcibly stop then)
+                if (i == tracked)
+                    std::cout << "\tCase 1- moving to locType " << typeToGoTo << " location " << myHome << " until midnight (for " << stepsUntilMovePtr[i] << " steps)\n";
             }
             //Case 2 and 4
             if (activeEventsBegin!=-1) {
@@ -205,6 +210,8 @@ class RealMovement {
                         stepsUntilMovePtr[i] = basicDuration.steps(timeStep) + randExtra;
                     }
                 }
+                if (i == tracked)
+                    std::cout << "\tCase 2&4- moving to locType " << newLocationType << " location " << newLocation << " for " << stepsUntilMovePtr[i] << " steps\n";
                 
             }
 
@@ -218,20 +225,27 @@ class RealMovement {
                 unsigned timeLeft = stepsUntilMovePtr[i];
                 //Case 3.a -- less than 30 mins -> stay here
                 if (timeLeft < TimeDayDuration(0.3).steps(timeStep)) {
+                    if (i == tracked)
+                        std::cout << "\tCase 3a- staying in place for " << stepsUntilMovePtr[i] << " steps\n";
                     //Do nothing - location stays the same
                 } else if (timeLeft < TimeDayDuration(1.0).steps(timeStep)) {
                     //TODO: Go to public place
                     unsigned myPublicPlace = findActualLocationForType(i, 1, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr); //TODO: public place
                     agentLocationsPtr[i] = myPublicPlace;
+                    if (i == tracked)
+                    std::cout << "\tCase 3b- moving to public Place type " << 1 << " location " << myPublicPlace << " for " << stepsUntilMovePtr[i] << " steps\n";
                 } else {
                     //TODO: Go home
                     unsigned myHome = findActualLocationForType(i, 2, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
                     agentLocationsPtr[i] = myHome;
+                    if (i == tracked)
+                    std::cout << "\tCase 3c- moving to home type " << 2 << " location " << myHome << " for " << stepsUntilMovePtr[i] << " steps\n";
                 }
             }
-
+            stepsUntilMovePtr[i]--;
             //Movement should start at random within the movement period (i.e. between start and end)
             //->but here we need to determine the exact time of the next move. So for cases 3 and 4 we add a random on top of duration
         }
+        Util::updatePerLocationAgentLists(agentLocations, locationIdsOfAgents, locationAgentList, locationListOffsets);
     }
 };
