@@ -1,7 +1,7 @@
 #pragma once
 #include "globalStates.h"
 #include <string>
-#include "transitionMatrix.h"
+#include "progressionMatrices.h"
 #include "progressionMatrixFormat.h"
 
 class DynamicPPState {

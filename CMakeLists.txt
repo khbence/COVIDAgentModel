@@ -14,11 +14,14 @@ include_directories(include
                     include/IO
                     include/IO/inputFormats
                     include/IO/dataProviders
-                    parameterParser/include)
+                    parameterParser/include
+                    include/tools/progressionMatrices)
+                    
 file (GLOB SOURCES
       "src/*.cpp"
       "src/agentData/*.cpp"
       "src/tools/*.cpp"
+      "src/tools/progressionMatrices/*.cpp"
       "src/IO/dataProviders/*.cpp")
 
 add_executable (${PROJECT_NAME} ${SOURCES})

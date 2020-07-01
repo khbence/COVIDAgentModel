@@ -1,6 +1,6 @@
 #pragma once
 #include "globalStates.h"
-#include "transitionMatrix.h"
+#include "progressionMatrices.h"
 #include <string>
 
 
