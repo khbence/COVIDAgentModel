@@ -1,4 +1,7 @@
 {
+    "home": 2,
+    "hospital": 12,
+    "publicSpace": 1,
     "types": [
         {
             "ID": 1,

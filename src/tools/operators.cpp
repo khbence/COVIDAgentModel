@@ -46,7 +46,7 @@ bool HD operator>=(const Timehandler& lhs, const TimeDay& rhs) {
 }
 
 bool HD operator>(const TimeDay& lhs, const Timehandler& rhs) {
-    unsigned minutes = rhs.counter * rhs.timeStep.count();
+    unsigned minutes = (rhs.counter % rhs.stepsPerDay) * rhs.timeStep.count();
     const char hours = static_cast<char>(minutes / 60);
     const char mins = static_cast<char>(minutes % 60);
     return std::tie(lhs.hours, lhs.minutes) > std::tie(hours, mins);
@@ -54,4 +54,10 @@ bool HD operator>(const TimeDay& lhs, const Timehandler& rhs) {
 
 bool HD operator>=(const TimeDay& lhs, const Timehandler& rhs) {
     return !(lhs<rhs);
+}
+
+TimeDayDuration HD operator-(const TimeDay& lhs, const Timehandler& rhs) {
+    auto minslhs = lhs.getMinutes();
+    auto minsrhs = rhs.getMinutes();
+    return TimeDayDuration(minslhs - minsrhs);
 }

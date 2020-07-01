@@ -95,10 +95,15 @@ unsigned HD Timehandler::getStepsUntilMidnight() const {
     return stepsPerDay - counter;
 }
 
-Timehandler& HD Timehandler::getNextMidnight() const {
+Timehandler HD Timehandler::getNextMidnight() const {
     Timehandler ret = *this;
     unsigned steps = ret.getStepsUntilMidnight();
     ret += steps;
+    return ret;
+}
+
+unsigned HD Timehandler::getMinutes() const {
+    return (counter % stepsPerDay) * timeStep.count();
 }
 
 Days HD Timehandler::getDay() const {

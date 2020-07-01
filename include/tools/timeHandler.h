@@ -11,6 +11,7 @@
 #include "datatypes.h"
 
 class TimeDay;
+class TimeDayDuration;
 
 enum class Days { MONDAY = 0, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY };
 
@@ -50,6 +51,7 @@ public:
     friend bool HD operator>=(const Timehandler&, const TimeDay&);
     friend bool HD operator>(const TimeDay&, const Timehandler&);
     friend bool HD operator>=(const TimeDay&, const Timehandler&);
+    friend TimeDayDuration HD operator-(const TimeDay&, const Timehandler&);
 
     Timehandler HD operator+(unsigned steps) const;
     Timehandler& HD operator+=(unsigned steps);
@@ -75,7 +77,8 @@ public:
     }
 
     unsigned HD getStepsUntilMidnight() const;
-    Timehandler& HD getNextMidnight() const;
+    Timehandler HD getNextMidnight() const;
+    unsigned HD getMinutes() const;
 
     [[nodiscard]] bool isMidnight() const { return (counter % stepsPerDay) == 0; }
 

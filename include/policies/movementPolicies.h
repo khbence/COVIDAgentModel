@@ -3,6 +3,7 @@
 #include "timeHandler.h"
 #include "datatypes.h"
 #include "cxxopts.hpp"
+#include "operators.h"
 
 template<typename SimulationType>
 class NoMovement {
@@ -167,7 +168,7 @@ class RealMovement {
             if (activeEventsBegin!=-1) {
                 unsigned numPotentialEvents = eventsEnd-activeEventsBegin;
                 unsigned newLocationType = -1;
-                TimeDayDuration basicDuration(0);
+                TimeDayDuration basicDuration(0.0);
                 if (numPotentialEvents == 1) {
                     newLocationType = eventsPtr[activeEventsBegin].locationType;
                     basicDuration = eventsPtr[activeEventsBegin].duration;
@@ -213,11 +214,11 @@ class RealMovement {
                 unsigned length_steps = length.steps(timeStep);
                 unsigned randDelay = RandomGenerator::randomUnsigned(length_steps);
                 stepsUntilMovePtr[i] = (eventsPtr[activeEventsEnd].start-simTime).steps(timeStep) + randDelay; //TODO: add these properly
-                unsigned timeLeft = stepsUntilMovePtr[i] - simTime; //TODO properly
+                unsigned timeLeft = stepsUntilMovePtr[i];
                 //Case 3.a -- less than 30 mins -> stay here
-                if (timeLeft < TimeDay(0.3)) {
+                if (timeLeft < TimeDayDuration(0.3).steps(timeStep)) {
                     //Do nothing - location stays the same
-                } else if (timeLeft < TimeDay(1.0)) {
+                } else if (timeLeft < TimeDayDuration(1.0).steps(timeStep)) {
                     //TODO: Go to public place
                     unsigned myPublicPlace = findActualLocationForType(i, 1, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr); //TODO: public place
                     agentLocationsPtr[i] = myPublicPlace;
