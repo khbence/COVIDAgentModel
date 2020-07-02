@@ -87,33 +87,37 @@ SingleBadTransitionMatrix::~SingleBadTransitionMatrix() {
 }
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-SingleBadTransitionMatrix* SingleBadTransitionMatrix::upload() {
-    SingleBadTransitionMatrix* tmp = (SingleBadTransitionMatrix*)malloc(sizeof(SingleBadTransitionMatrix));
-    tmp->numStates = numStates;
-    cudaMalloc((void**)&tmp->lengths, numStates * sizeof(LengthOfState));
-    cudaMemcpy(tmp->lengths, lengths, numStates * sizeof(LengthOfState), cudaMemcpyHostToDevice);
-    NextStates* tmp2 = (NextStates*)malloc(numStates * sizeof(NextStates));
-    memcpy(tmp2, transitions, numStates * sizeof(NextStates));
-    for (unsigned i = 0; i < numStates; i++) {
-        cudaMalloc((void**)&tmp2[i].neutral, transitions[i].neutralCount * sizeof(thrust::pair<unsigned, float>));
-        cudaMemcpy(
-            tmp2[i].neutral, transitions[i].neutral, transitions[i].neutralCount * sizeof(thrust::pair<unsigned, float>), cudaMemcpyHostToDevice);
+    SingleBadTransitionMatrix* upload() {
+        SingleBadTransitionMatrix* tmp = (SingleBadTransitionMatrix*)malloc(sizeof(SingleBadTransitionMatrix));
+        tmp->numStates = numStates;
+        cudaMalloc((void**)&tmp->lengths, numStates * sizeof(LengthOfState));
+        cudaMemcpy(tmp->lengths, lengths, numStates * sizeof(LengthOfState), cudaMemcpyHostToDevice);
+        NextStates* tmp2 = (NextStates*)malloc(numStates * sizeof(NextStates));
+        memcpy(tmp2, transitions, numStates * sizeof(NextStates));
+        for (unsigned i = 0; i < numStates; i++) {
+            cudaMalloc((void**)&tmp2[i].neutral, transitions[i].neutralCount * sizeof(thrust::pair<unsigned, float>));
+            cudaMemcpy(
+                tmp2[i].neutral, transitions[i].neutral, transitions[i].neutralCount * sizeof(thrust::pair<unsigned, float>), cudaMemcpyHostToDevice);
+        }
+        cudaMalloc((void**)&tmp->transitions, numStates * sizeof(NextStates));
+        cudaMemcpy(tmp->transitions, tmp2, numStates * sizeof(NextStates), cudaMemcpyHostToDevice);
+        free(tmp2);
+        SingleBadTransitionMatrix* dev;
+        cudaMalloc((void**)&dev, sizeof(SingleBadTransitionMatrix));
+        cudaMemcpy(dev, tmp, sizeof(SingleBadTransitionMatrix), cudaMemcpyHostToDevice);
+        free(tmp);
+        return dev;
     }
-    cudaMalloc((void**)&tmp->transitions, numStates * sizeof(NextStates));
-    cudaMemcpy(tmp->transitions, tmp2, numStates * sizeof(NextStates), cudaMemcpyHostToDevice);
-    free(tmp2);
-    SingleBadTransitionMatrix* dev;
-    cudaMalloc((void**)&dev, sizeof(SingleBadTransitionMatrix));
-    cudaMemcpy(dev, tmp, sizeof(SingleBadTransitionMatrix), cudaMemcpyHostToDevice);
-    free(tmp);
-    return dev;
-}
 #endif
 
 thrust::pair<unsigned, int> HD SingleBadTransitionMatrix::calculateNextState(unsigned currentState, float scalingSymptons) const {
+    #ifdef __CUDA_ARCH__
+            printf("%s %d\n", "begin", threadIdx.x);
+        #endif
     unsigned nextState = transitions[currentState].selectNext(scalingSymptons);
+    #ifdef __CUDA_ARCH__
+            printf("%s %d\n", "end", threadIdx.x);
+        #endif
     int days = lengths[nextState].calculateDays();
     return thrust::make_pair(nextState, days);
 }
-
-int HD SingleBadTransitionMatrix::calculateJustDays(unsigned state) const { return lengths[state].calculateDays(); }

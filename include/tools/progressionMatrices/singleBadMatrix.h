@@ -37,8 +37,6 @@ class SingleBadTransitionMatrix : public BasicLengthAbstract {
 
 public:
     NextStates* transitions;
-    LengthOfState* lengths;
-    unsigned numStates;
 
 public:
     SingleBadTransitionMatrix() = default;
@@ -53,5 +51,4 @@ public:
 #endif
 
     [[nodiscard]] thrust::pair<unsigned, int> HD calculateNextState(unsigned currentState, float scalingSymptons) const override;
-    [[nodiscard]] int HD calculateJustDays(unsigned state) const override;
 };

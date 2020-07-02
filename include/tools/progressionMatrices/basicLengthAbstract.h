@@ -14,4 +14,10 @@ protected:
         LengthOfState(int avgLength_p, int maxLength_p);
         [[nodiscard]] HD int calculateDays() const;
     };
+
+    LengthOfState* lengths;
+    unsigned numStates;
+
+public:
+    [[nodiscard]] int HD calculateJustDays(unsigned state) const override;
 };

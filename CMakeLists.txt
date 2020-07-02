@@ -38,7 +38,7 @@ option(USE_GPU "If Cuda found but set as OFF it CPU code will be generated, if s
 #SET(CUDA_SEPARABLE_COMPILATION ON)
 find_package(CUDA)
 if(CUDA_FOUND AND USE_GPU)
-	message("CUDA exists")
+message("CUDA exists")
 	enable_language(CUDA)
 	set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_CUDA)
   set(CUDA_ARCH_LIST Auto)
