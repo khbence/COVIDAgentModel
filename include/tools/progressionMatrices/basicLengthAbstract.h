@@ -15,9 +15,9 @@ protected:
         [[nodiscard]] HD int calculateDays() const;
     };
 
+public:
     LengthOfState* lengths;
     unsigned numStates;
 
-public:
     [[nodiscard]] int HD calculateJustDays(unsigned state) const override;
 };

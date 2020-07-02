@@ -123,6 +123,7 @@ std::string DynamicPPState::initTransitionMatrix(parser::TransitionFormat& input
         &detail::DynamicPPState::h_firstInfectedState,
         sizeof(detail::DynamicPPState::h_firstInfectedState));
 #endif
+    std::cout << (detail::DynamicPPState::transition) << '\n';
     return header;
 }
 

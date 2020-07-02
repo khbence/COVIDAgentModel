@@ -87,7 +87,7 @@ SingleBadTransitionMatrix::~SingleBadTransitionMatrix() {
 }
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-    SingleBadTransitionMatrix* upload() {
+    SingleBadTransitionMatrix* SingleBadTransitionMatrix::upload() {
         SingleBadTransitionMatrix* tmp = (SingleBadTransitionMatrix*)malloc(sizeof(SingleBadTransitionMatrix));
         tmp->numStates = numStates;
         cudaMalloc((void**)&tmp->lengths, numStates * sizeof(LengthOfState));
@@ -111,13 +111,7 @@ SingleBadTransitionMatrix::~SingleBadTransitionMatrix() {
 #endif
 
 thrust::pair<unsigned, int> HD SingleBadTransitionMatrix::calculateNextState(unsigned currentState, float scalingSymptons) const {
-    #ifdef __CUDA_ARCH__
-            printf("%s %d\n", "begin", threadIdx.x);
-        #endif
     unsigned nextState = transitions[currentState].selectNext(scalingSymptons);
-    #ifdef __CUDA_ARCH__
-            printf("%s %d\n", "end", threadIdx.x);
-        #endif
     int days = lengths[nextState].calculateDays();
     return thrust::make_pair(nextState, days);
 }
