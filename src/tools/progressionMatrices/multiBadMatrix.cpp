@@ -19,7 +19,10 @@ unsigned HD MultiBadMatrix::NextStates::selectNext(float scalingSypmtons) const 
         badSum += bad[i].second;
     }
 
-    double badScaling = (badSum - preSum) / (1.0 - badSum);
+    double badScaling = 1.0 + ((badSum - preSum) / (1.0 - badSum));
+    if(badCount == 0) {
+        badScaling = 1.0;
+    }
 
     unsigned idx = 0;
     do {
@@ -27,6 +30,7 @@ unsigned HD MultiBadMatrix::NextStates::selectNext(float scalingSypmtons) const 
         ++idx;
     } while (preSum < random);
     idx--;
+    assert(neutral[idx].first < 15);
     return neutral[idx].first;
 }
 
@@ -44,11 +48,10 @@ void MultiBadMatrix::NextStatesInit::cleanUp(unsigned ownIndex) {
     }
 }
 
-MultiBadMatrix::MultiBadMatrix(const parser::TransitionFormat& inputData) {
+MultiBadMatrix::MultiBadMatrix(const parser::TransitionFormat& inputData) : BasicLengthAbstract(inputData.states.size()) {
     std::vector<NextStatesInit> initTransitions(inputData.states.size());
-    numStates = inputData.states.size();
+
     // malloc instead of new, because this way we can use free in both CPU and GPU code
-    lengths = (LengthOfState*)malloc(sizeof(LengthOfState) * inputData.states.size());
     transitions = (NextStates*)malloc(sizeof(NextStates) * inputData.states.size());
 
     auto getStateIndex = [&inputData](const std::string& name) {
@@ -80,7 +83,7 @@ MultiBadMatrix::MultiBadMatrix(const parser::TransitionFormat& inputData) {
             (thrust::pair<unsigned, float>*)malloc(initTransitions[i].neutral.size() * sizeof(thrust::pair<unsigned, float>));
         
         for (int j = 0; j < initTransitions[i].neutral.size(); ++j) { neutrals[j] = initTransitions[i].neutral[j]; }
-        for (int j = 0; j < initTransitions[i].bad.size(); ++j) { bads[j] = initTransitions[j].bad[j]; }
+        for (int j = 0; j < initTransitions[i].bad.size(); ++j) { bads[j] = initTransitions[i].bad[j]; }
 
         transitions[i] = NextStates(initTransitions[i].bad.size(), bads, initTransitions[i].neutral.size(), neutrals);
         ++i;

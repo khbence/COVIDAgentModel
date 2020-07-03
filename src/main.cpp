@@ -1,3 +1,9 @@
+#include <array>
+#include "progressionMatrices.h"
+#include "simulation.h"
+#include "dynamicPPState.h"
+#include "movementPolicies.h"
+#include "infectionPolicies.h"
 #include <iostream>
 #include "agentMeta.h"
 // for testing
@@ -9,7 +15,6 @@
 #include <cxxopts.hpp>
 #include "smallTools.h"
 #include "datatypes.h"
-#include "typeConfig.h"
 
 cxxopts::Options defineProgramParameters() {
     cxxopts::Options options("covid", "An agent-based epidemic simulator");
@@ -36,12 +41,17 @@ cxxopts::Options defineProgramParameters() {
     return options;
 }
 
+using PositionType = std::array<double, 2>;
+using TypeOfLocation = unsigned;
+using ProgressionMatrix = MultiBadMatrix;
+using PPStates = DynamicPPState;
+using Simulation_t = Simulation<PositionType, TypeOfLocation, PPStates, BasicAgentMeta, DummyMovement, BasicInfection>;
 
 int main(int argc, char** argv) {
     BEGIN_PROFILING("main");
 
     auto options = defineProgramParameters();
-    types::Simulation_t::addProgramParameters(options);
+    Simulation_t::addProgramParameters(options);
 
     options.add_options()("h,help", "Print usage");
     cxxopts::ParseResult result = options.parse(argc, argv);
@@ -51,7 +61,7 @@ int main(int argc, char** argv) {
     }
 
     RandomGenerator::init(omp_get_max_threads());
-    types::Simulation_t s{ result };
+    Simulation_t s{ result };
 
     s.runSimulation();
     END_PROFILING("main");

@@ -15,6 +15,8 @@ protected:
         [[nodiscard]] HD int calculateDays() const;
     };
 
+    BasicLengthAbstract(std::size_t n);
+
 public:
     LengthOfState* lengths;
     unsigned numStates;

@@ -34,8 +34,6 @@ class MultiBadMatrix : public BasicLengthAbstract {
 
 public:
     NextStates* transitions;
-    LengthOfState* lengths;
-    unsigned numStates;
 
 public:
     MultiBadMatrix() = default;

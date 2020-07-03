@@ -14,4 +14,8 @@ BasicLengthAbstract::LengthOfState::LengthOfState(int avgLength_p, int maxLength
     return days;
 }
 
+BasicLengthAbstract::BasicLengthAbstract(std::size_t n)
+                 : numStates(n)
+                 , lengths((LengthOfState*)malloc(sizeof(LengthOfState) * n)) {}
+
 int HD BasicLengthAbstract::calculateJustDays(unsigned state) const { return lengths[state].calculateDays(); }

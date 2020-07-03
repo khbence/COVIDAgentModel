@@ -40,10 +40,8 @@ void SingleBadTransitionMatrix::NextStatesInit::cleanUp(unsigned ownIndex) {
     }
 }
 
-SingleBadTransitionMatrix::SingleBadTransitionMatrix(const parser::TransitionFormat& inputData) {
+SingleBadTransitionMatrix::SingleBadTransitionMatrix(const parser::TransitionFormat& inputData) : BasicLengthAbstract(inputData.states.size()) {
     std::vector<NextStatesInit> initTransitions(inputData.states.size());
-    numStates = inputData.states.size();
-    lengths = (LengthOfState*)malloc(sizeof(LengthOfState) * inputData.states.size());
     transitions = (NextStates*)malloc(sizeof(NextStates) * inputData.states.size());
 
     auto getStateIndex = [&inputData](const std::string& name) {
