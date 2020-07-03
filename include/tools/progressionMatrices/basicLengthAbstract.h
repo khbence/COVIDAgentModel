@@ -21,5 +21,5 @@ public:
     LengthOfState* lengths;
     unsigned numStates;
 
-    [[nodiscard]] int HD calculateJustDays(unsigned state) const override;
+    [[nodiscard]] HD int calculateJustDays(unsigned state) const;// override;
 };
