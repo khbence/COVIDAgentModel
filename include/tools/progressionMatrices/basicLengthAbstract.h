@@ -1,8 +1,7 @@
 #pragma once
-#include "abstractMatrix.h"
 #include "randomGenerator.h"
 
-class BasicLengthAbstract : public AbstractMatrix {
+class BasicLengthAbstract {
 protected:
     class LengthOfState {
         int avgLength;
@@ -21,5 +20,5 @@ public:
     LengthOfState* lengths;
     unsigned numStates;
 
-    [[nodiscard]] HD int calculateJustDays(unsigned state) const;// override;
+    [[nodiscard]] HD int calculateJustDays(unsigned state) const;
 };

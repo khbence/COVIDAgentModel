@@ -50,5 +50,5 @@ public:
     SingleBadTransitionMatrix* upload();
 #endif
 
-    [[nodiscard]] thrust::pair<unsigned, int> HD calculateNextState(unsigned currentState, float scalingSymptons) const;// override;
+    [[nodiscard]] thrust::pair<unsigned, int> HD calculateNextState(unsigned currentState, float scalingSymptons) const;
 };
