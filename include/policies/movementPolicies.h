@@ -131,7 +131,7 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
         agentLocationsPtr[i] = myHome;
         stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight(timeStep);
         if (i == tracked)
-            printf("\tCase 1- moving to locType %d location %d until midnight (for %d steps)\n", typeToGoTo, myHome, stepsUntilMovePtr[i]);
+            printf("\tCase 1- moving to locType %d location %d until midnight (for %d steps)\n", typeToGoTo, myHome, stepsUntilMovePtr[i]-1);
     }
     //Case 2 and 4
     if (activeEventsBegin!=-1) {
@@ -160,12 +160,12 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
                 stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight(timeStep);
             } else {
                 //does not last till midnight, but no events afterwards - spend full duration there
-                stepsUntilMovePtr[i] = basicDuration.steps(timeStep); //TODO: Need to be able to convert TimeDayDuration to number of timesteps
+                stepsUntilMovePtr[i] = basicDuration.steps(timeStep);
             }
         } else {
             //If duration is less then the beginning of the next move window, then spend full duration here
             if (simTime + basicDuration < eventsPtr[activeEventsEnd].start)
-                stepsUntilMovePtr[i] = basicDuration.steps(timeStep); //TODO: Need to be able to convert TimeDayDuration to number of timesteps
+                stepsUntilMovePtr[i] = basicDuration.steps(timeStep);
             else {
                 //Otherwise I need to move again randomly between the end of this duration and the end of next movement window
                 TimeDayDuration window = eventsPtr[activeEventsEnd].end - (simTime + basicDuration);
@@ -174,7 +174,7 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
             }
         }
         if (i == tracked)
-            printf("\tCase 2&4- moving to locType %d location for %d steps\n", newLocationType, newLocation, stepsUntilMovePtr[i]);
+            printf("\tCase 2&4- moving to locType %d location %d for %d steps\n", newLocationType, newLocation, stepsUntilMovePtr[i]-1);
 
         
     }
@@ -190,18 +190,18 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
         //Case 3.a -- less than 30 mins -> stay here
         if (timeLeft < TimeDayDuration(0.3).steps(timeStep)) {
             if (i == tracked)
-                printf("\tCase 3a- staying in place for %d steps\n", stepsUntilMovePtr[i]);
+                printf("\tCase 3a- staying in place for %d steps\n", stepsUntilMovePtr[i]-1);
             //Do nothing - location stays the same
         } else if (timeLeft < TimeDayDuration(1.0).steps(timeStep)) {
             unsigned myPublicPlace = RealMovementOps::findActualLocationForType(i, publicPlaceType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
             agentLocationsPtr[i] = myPublicPlace;
             if (i == tracked)
-                printf("\tCase 3b- moving to public Place type 1 location %d for %d steps\n", myPublicPlace, stepsUntilMovePtr[i]);
+                printf("\tCase 3b- moving to public Place type 1 location %d for %d steps\n", myPublicPlace, stepsUntilMovePtr[i]-1);
         } else {
             unsigned myHome = RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
             agentLocationsPtr[i] = myHome;
             if (i == tracked)
-                printf("\tCase 3c- moving to home type 2 location %d for %d steps\n", myHome, stepsUntilMovePtr[i]);
+                printf("\tCase 3c- moving to home type 2 location %d for %d steps\n", myHome, stepsUntilMovePtr[i]-1);
         }
     }
     stepsUntilMovePtr[i]--;
@@ -233,11 +233,17 @@ class RealMovement {
     unsigned publicSpace;
     unsigned home;
     unsigned hospital;
+    unsigned tracked;
 
     public:
     // add program parameters if we need any, this function got called already from Simulation
-    static void addProgramParameters(cxxopts::Options& options) {}
-    void initializeArgs(const cxxopts::ParseResult& result) {}
+    static void addProgramParameters(cxxopts::Options& options) {
+        options.add_options()("trace", "Trace movements of agent", cxxopts::value<unsigned>()->default_value(std::to_string(UINT32_MAX)));
+
+    }
+    void initializeArgs(const cxxopts::ParseResult& result) {
+        tracked = result["trace"].as<unsigned>();
+    }
     void init(const parser::LocationTypes& data) {
         publicSpace = data.publicSpace;
         home = data.home;
@@ -289,7 +295,6 @@ class RealMovement {
         unsigned numberOfLocations = locationListOffsets.size() - 1;
 
         Days day = simTime.getDay();
-        unsigned tracked = 0;
 
         #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
         #pragma omp parallel for
@@ -297,14 +302,14 @@ class RealMovement {
             RealMovementOps::doMovement(i, stepsUntilMovePtr, agentStatesPtr,
                        agentTypesPtr,  eventOffsetPtr, eventsPtr, agentLocationsPtr,
                        locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, 
-                       day, hospital, home, publicSpace, TimeDay(simTime), timeStep, tracked);
+                       day, hospital, home, publicSpace, TimeDay(simTime), timeStep, this->tracked);
             
         }
         #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
         RealMovementOps::doMovementDriver<<<(numberOfAgents-1)/256+1,256>>>(numberOfAgents, stepsUntilMovePtr, agentStatesPtr,
                        agentTypesPtr,  eventOffsetPtr, eventsPtr, agentLocationsPtr,
                        locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, 
-                       day, hospital, home, publicSpace, TimeDay(simTime), timeStep, tracked);
+                       day, hospital, home, publicSpace, TimeDay(simTime), timeStep, this->tracked);
         cudaDeviceSynchronize();
         #endif
         Util::updatePerLocationAgentLists(agentLocations, locationIdsOfAgents, locationAgentList, locationListOffsets);
