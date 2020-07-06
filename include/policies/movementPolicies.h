@@ -4,10 +4,16 @@
 #include "datatypes.h"
 #include "cxxopts.hpp"
 #include "operators.h"
-
+#include "locationTypesFormat.h"
+ 
 template<typename SimulationType>
 class NoMovement {
 public:
+    // add program parameters if we need any, this function got called already from Simulation
+    static void addProgramParameters(cxxopts::Options& options) {}
+    void initializeArgs(const cxxopts::ParseResult& result) {}
+    void init(const parser::LocationTypes& data) {}
+
     void planLocations() {}
     void movement(Timehandler simTime, unsigned timeStep) {}
 };
@@ -21,6 +27,7 @@ public:
     // add program parameters if we need any, this function got called already from Simulation
     static void addProgramParameters(cxxopts::Options& options) {}
     void initializeArgs(const cxxopts::ParseResult& result) {}
+    void init(const parser::LocationTypes& data) {}
 
     void planLocations() {
         auto realThis = static_cast<SimulationType*>(this);
@@ -66,11 +73,19 @@ class RealMovement {
     }
 
     thrust::device_vector<unsigned> stepsUntilMove;
+    unsigned publicSpace;
+    unsigned home;
+    unsigned hospital;
 
     public:
     // add program parameters if we need any, this function got called already from Simulation
     static void addProgramParameters(cxxopts::Options& options) {}
     void initializeArgs(const cxxopts::ParseResult& result) {}
+    void init(const parser::LocationTypes& data) {
+        publicSpace = data.publicSpace;
+        home = data.home;
+        hospital = data.hospital;
+    }
 
     void planLocations() {
         auto realThis = static_cast<SimulationType*>(this);
@@ -116,10 +131,6 @@ class RealMovement {
 
         Days day = simTime.getDay();
         unsigned tracked = 0;
-        //TODO: set these properly
-        unsigned hospitalType = 12;
-        unsigned homeType = 2;
-        unsigned publicPlaceType = 1;
 
         for (unsigned i = 0; i < numberOfAgents; i++) {
             if (stepsUntilMovePtr[i]>0) {
@@ -167,7 +178,7 @@ class RealMovement {
 
             //Case 1
             if (activeEventsBegin==-1 && activeEventsEnd == -1) {
-                unsigned typeToGoTo = wBState == states::WBStates::S ? hospitalType : homeType; //Hostpital if sick, home otherwise
+                unsigned typeToGoTo = wBState == states::WBStates::S ? hospital : home; //Hostpital if sick, home otherwise
                 unsigned myHome = findActualLocationForType(i, typeToGoTo, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
                 agentLocationsPtr[i] = myHome;
                 stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight();
@@ -233,12 +244,12 @@ class RealMovement {
                         std::cout << "\tCase 3a- staying in place for " << stepsUntilMovePtr[i] << " steps\n";
                     //Do nothing - location stays the same
                 } else if (timeLeft < TimeDayDuration(1.0).steps(timeStep)) {
-                    unsigned myPublicPlace = findActualLocationForType(i, publicPlaceType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                    unsigned myPublicPlace = findActualLocationForType(i, publicSpace, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
                     agentLocationsPtr[i] = myPublicPlace;
                     if (i == tracked)
                     std::cout << "\tCase 3b- moving to public Place type " << 1 << " location " << myPublicPlace << " for " << stepsUntilMovePtr[i] << " steps\n";
                 } else {
-                    unsigned myHome = findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                    unsigned myHome = findActualLocationForType(i, home, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
                     agentLocationsPtr[i] = myHome;
                     if (i == tracked)
                     std::cout << "\tCase 3c- moving to home type " << 2 << " location " << myHome << " for " << stepsUntilMovePtr[i] << " steps\n";
