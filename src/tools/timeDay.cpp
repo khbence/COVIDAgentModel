@@ -50,9 +50,9 @@ unsigned HD TimeDay::getMinutes() const {
     return static_cast<unsigned>((static_cast<unsigned>(hours) * 60) + static_cast<unsigned>(minutes));
 }
 
-TimeDayDuration::TimeDayDuration(double raw) : TimeDay(raw) {}
+HD TimeDayDuration::TimeDayDuration(double raw) : TimeDay(raw) {}
 
-TimeDayDuration::TimeDayDuration(unsigned mins) : TimeDay(mins) {}
+HD TimeDayDuration::TimeDayDuration(unsigned mins) : TimeDay(mins) {}
 
 bool HD TimeDayDuration::isUndefinedDuration() const { return hours == std::numeric_limits<decltype(hours)>::max(); }
 

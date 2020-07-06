@@ -46,7 +46,7 @@ using PositionType = std::array<double, 2>;
 using TypeOfLocation = unsigned;
 using ProgressionMatrix = MultiBadMatrix;
 using PPStates = DynamicPPState;
-using Simulation_t = Simulation<PositionType, TypeOfLocation, PPStates, BasicAgentMeta, DummyMovement, BasicInfection>;
+using Simulation_t = Simulation<PositionType, TypeOfLocation, PPStates, BasicAgentMeta, RealMovement, BasicInfection>;
 
 int main(int argc, char** argv) {
     BEGIN_PROFILING("main");

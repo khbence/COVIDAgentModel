@@ -28,7 +28,7 @@ public:
     thrust::device_vector<unsigned> eventOffset;
     thrust::device_vector<Event> events;
 
-    [[nodiscard]] static unsigned getOffsetIndex(unsigned ID, states::WBStates state, Days day);
+    [[nodiscard]] static HD unsigned getOffsetIndex(unsigned ID, states::WBStates state, Days day);
 
     AgentTypeList() = default;
     AgentTypeList(std::size_t n);

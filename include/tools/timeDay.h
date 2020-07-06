@@ -34,15 +34,15 @@ public:
 
 
 
-    explicit TimeDay(double raw);
-    explicit TimeDay(unsigned mins);
+    explicit HD TimeDay(double raw);
+    explicit HD TimeDay(unsigned mins);
     unsigned HD getMinutes() const;
 };
 
 class TimeDayDuration : public TimeDay {
 public:
-    explicit TimeDayDuration(double raw);
-    explicit TimeDayDuration(unsigned mins);
+    explicit HD TimeDayDuration(double raw);
+    explicit HD TimeDayDuration(unsigned mins);
     [[nodiscard]] bool HD isUndefinedDuration() const;
     [[nodiscard]] unsigned HD steps(unsigned timestep) const;
 };

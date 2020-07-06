@@ -10,7 +10,7 @@ AgentTypeList::Event::Event(const parser::AgentTypes::Type::ScheduleUnique::Even
       end(static_cast<float>(in.end)),
       duration(static_cast<float>(in.duration)) {}
 
-unsigned AgentTypeList::getOffsetIndex(unsigned ID, states::WBStates state, Days day) {
+HD unsigned AgentTypeList::getOffsetIndex(unsigned ID, states::WBStates state, Days day) {
     return (7 * static_cast<unsigned>(state)) + static_cast<unsigned>(day) + ID * 28;
 }
 
