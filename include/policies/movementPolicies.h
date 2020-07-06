@@ -69,6 +69,7 @@ namespace RealMovementOps {
         if (locType == possibleTypesPtr[i])
             return possibleLocationsPtr[i];
     }
+    printf("locType %d not found for angent %d\n", locType, agent );
     return 0;
 }
 template <typename PPState>
@@ -248,6 +249,7 @@ class RealMovement {
         publicSpace = data.publicSpace;
         home = data.home;
         hospital = data.hospital;
+        printf("%d %d %d\n",publicSpace,home,hospital);
     }
 
     void planLocations() {

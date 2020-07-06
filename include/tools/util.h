@@ -1,5 +1,6 @@
 #pragma once
 #include "datatypes.h"
+#include "timing.h"
 
 class Util {
 public:
@@ -35,6 +36,8 @@ void reduce_by_location(thrust::device_vector<unsigned>& locationListOffsets,
     float* fullInfectedCountsPtr = thrust::raw_pointer_cast(fullInfectedCounts.data());
     PPState_t* PPValuesPtr = thrust::raw_pointer_cast(PPValues.data());
 
+PROFILE_FUNCTION();
+
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
 #pragma omp parallel for
     for (unsigned l = 0; l < numLocations; l++) {
@@ -44,5 +47,6 @@ void reduce_by_location(thrust::device_vector<unsigned>& locationListOffsets,
     }
 #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     reduce_by_location_kernel<<<(numLocations - 1) / 256 + 1, 256>>>(locationListOffsetsPtr, fullInfectedCountsPtr, PPValuesPtr, numLocations, lam);
+    cudaDeviceSynchronize();
 #endif
 }
