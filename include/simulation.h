@@ -98,7 +98,7 @@ public:
         refreshAndPrintStatistics();
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
-                MovementPolicy<Simulation>::planLocations();
+                MovementPolicy<Simulation>::planLocations(); 
                 updateAgents();
                 refreshAndPrintStatistics();
             }

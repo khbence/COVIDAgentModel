@@ -32,11 +32,23 @@ public:
     TimeDay& HD operator-=(const TimeDayDuration& dur);
     TimeDayDuration HD operator-(const TimeDay& other);
 
+    bool HD operator<(const TimeDay& other) const;
+    bool HD operator<=(const TimeDay& other) const;
+    bool HD operator>(const TimeDay& other) const;
+    bool HD operator>=(const TimeDay& other) const;
+    bool HD operator==(const TimeDay& other) const;
+    bool HD operator!=(const TimeDay& other) const;
+
 
 
     explicit HD TimeDay(double raw);
     explicit HD TimeDay(unsigned mins);
+    explicit HD TimeDay(const Timehandler& t);
     unsigned HD getMinutes() const;
+
+    [[nodiscard]] unsigned HD steps(unsigned timeStep) const;
+    [[nodiscard]] unsigned HD getStepsUntilMidnight(unsigned timeStep) const;
+    [[nodiscard]] bool HD isOverMidnight() const;
 };
 
 class TimeDayDuration : public TimeDay {
@@ -44,5 +56,4 @@ public:
     explicit HD TimeDayDuration(double raw);
     explicit HD TimeDayDuration(unsigned mins);
     [[nodiscard]] bool HD isUndefinedDuration() const;
-    [[nodiscard]] unsigned HD steps(unsigned timestep) const;
 };

@@ -79,7 +79,7 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
                         unsigned *agentTypesPtr,  unsigned *eventOffsetPtr, AgentTypeList::Event *eventsPtr, unsigned *agentLocationsPtr,
                         unsigned long*locationOffsetPtr, unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, 
                         Days day, unsigned hospitalType, unsigned homeType, unsigned publicPlaceType, 
-                        Timehandler simTime, unsigned timeStep, unsigned tracked) {
+                        TimeDay simTime, unsigned timeStep, unsigned tracked) {
     if (stepsUntilMovePtr[i]>0) {
         stepsUntilMovePtr[i]--;
         return;
@@ -129,7 +129,7 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
         unsigned typeToGoTo = wBState == states::WBStates::S ? hospitalType : homeType; //Hostpital if sick, home otherwise
         unsigned myHome = RealMovementOps::findActualLocationForType(i, typeToGoTo, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
         agentLocationsPtr[i] = myHome;
-        stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight();
+        stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight(timeStep);
         if (i == tracked)
             printf("\tCase 1- moving to locType %d location %d until midnight (for %d steps)\n", typeToGoTo, myHome, stepsUntilMovePtr[i]);
     }
@@ -156,8 +156,8 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
         agentLocationsPtr[i] = newLocation;
         if (activeEventsEnd==-1) {
             //TODO: Do we truncate to midnight?
-            if (simTime + basicDuration > simTime.getNextMidnight()) { //TODO: is this right?
-                stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight();
+            if ((simTime + basicDuration).isOverMidnight()) { //TODO: is this right?
+                stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight(timeStep);
             } else {
                 //does not last till midnight, but no events afterwards - spend full duration there
                 stepsUntilMovePtr[i] = basicDuration.steps(timeStep); //TODO: Need to be able to convert TimeDayDuration to number of timesteps
@@ -215,7 +215,7 @@ __global__ void doMovementDriver(unsigned numberOfAgents, unsigned *stepsUntilMo
                         unsigned *agentTypesPtr,  unsigned *eventOffsetPtr, AgentTypeList::Event *eventsPtr, unsigned *agentLocationsPtr,
                         unsigned long*locationOffsetPtr, unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, 
                         Days day, unsigned hospitalType, unsigned homeType, unsigned publicPlaceType, 
-                        Timehandler simTime, unsigned timeStep, unsigned tracked) {
+                        TimeDay simTime, unsigned timeStep, unsigned tracked) {
     unsigned i = threadIdx.x + blockIdx.x*blockDim.x;
     if (i < numberOfAgents) {
         RealMovementOps::doMovement(i, stepsUntilMovePtr, agentStatesPtr,
@@ -297,14 +297,14 @@ class RealMovement {
             RealMovementOps::doMovement(i, stepsUntilMovePtr, agentStatesPtr,
                        agentTypesPtr,  eventOffsetPtr, eventsPtr, agentLocationsPtr,
                        locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, 
-                       day, hospital, home, publicSpace, simTime, timeStep, tracked);
+                       day, hospital, home, publicSpace, TimeDay(simTime), timeStep, tracked);
             
         }
         #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
         RealMovementOps::doMovementDriver<<<(numberOfAgents-1)/256+1,256>>>(numberOfAgents, stepsUntilMovePtr, agentStatesPtr,
                        agentTypesPtr,  eventOffsetPtr, eventsPtr, agentLocationsPtr,
                        locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, 
-                       day, hospital, home, publicSpace, simTime, timeStep, tracked);
+                       day, hospital, home, publicSpace, TimeDay(simTime), timeStep, tracked);
         cudaDeviceSynchronize();
         #endif
         Util::updatePerLocationAgentLists(agentLocations, locationIdsOfAgents, locationAgentList, locationListOffsets);

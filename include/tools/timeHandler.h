@@ -19,6 +19,7 @@ enum class Days { MONDAY = 0, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SU
 class Timehandler {
     std::chrono::system_clock::time_point current = std::chrono::system_clock::now();
     std::chrono::minutes timeStep;
+    Days day;
 
     static constexpr unsigned hoursPerWeek = 168;
     static constexpr unsigned minsPerDay = 1440;
@@ -53,15 +54,16 @@ public:
     friend bool HD operator>=(const TimeDay&, const Timehandler&);
     friend TimeDayDuration HD operator-(const TimeDay&, const Timehandler&);
 
-    Timehandler HD operator+(unsigned steps) const;
-    Timehandler& HD operator+=(unsigned steps);
-    Timehandler HD operator+(const TimeDayDuration& dur) const;
-    Timehandler& HD operator+=(const TimeDayDuration& dur);
 
-    Timehandler HD operator-(unsigned steps) const;
-    Timehandler& HD operator-=(unsigned steps);
-    Timehandler HD operator-(const TimeDayDuration& dur) const;
-    Timehandler& HD operator-=(const TimeDayDuration& dur);
+    Timehandler operator+(unsigned steps) const;
+    Timehandler& operator+=(unsigned steps);
+    Timehandler operator+(const TimeDayDuration& dur) const;
+    Timehandler& operator+=(const TimeDayDuration& dur);
+
+    Timehandler operator-(unsigned steps) const;
+    Timehandler& operator-=(unsigned steps);
+    Timehandler operator-(const TimeDayDuration& dur) const;
+    Timehandler& operator-=(const TimeDayDuration& dur);
 
     [[nodiscard]] static std::vector<Days> parseDays(const std::string& rawDays);
 
@@ -77,7 +79,7 @@ public:
     }
 
     unsigned HD getStepsUntilMidnight() const;
-    Timehandler HD getNextMidnight() const;
+    Timehandler getNextMidnight() const;
     unsigned HD getMinutes() const;
 
     [[nodiscard]] bool isMidnight() const { return (counter % stepsPerDay) == 0; }
@@ -90,7 +92,7 @@ public:
         return out;
     }
 
-    Days HD getDay() const;// TODO calculate day "type"
+    Days getDay() const;
 
     void printDay() const {
         auto t_c = std::chrono::system_clock::to_time_t(current);
