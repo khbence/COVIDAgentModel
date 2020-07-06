@@ -81,7 +81,7 @@ public:
         return agentTypeIDMapping;
     }
 
-    void initAgents(parser::Agents& inputData, const std::map<unsigned, unsigned>& locMap, const std::map<unsigned, unsigned>& typeMap) {
+    void initAgents(parser::Agents& inputData, const std::map<std::string, unsigned>& locMap, const std::map<unsigned, unsigned>& typeMap) {
         auto n = inputData.people.size();
         reserve(n);
 

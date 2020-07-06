@@ -24,7 +24,7 @@ class DataProvider {
     // only for random generations
     parser::ConfigRandom configRandom;
     std::map<unsigned, std::vector<unsigned>> aTypeToLocationTypes;
-    std::map<unsigned, std::vector<unsigned>> typeToLocationMapping;
+    std::map<unsigned, std::vector<std::string>> typeToLocationMapping;
 
     void readParameters(const std::string& fileName);
     void readProgressionMatrix(const std::string& fileName);

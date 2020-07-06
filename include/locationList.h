@@ -16,7 +16,6 @@
 #include "locationsFormat.h"
 #include "customExceptions.h"
 
-// concept
 template<typename SimulationType>
 class LocationsList {
     using AgentType = Agent<typename SimulationType::AgentListType>;
@@ -62,12 +61,12 @@ public:
         for (auto& type : inputData.types) { generalLocationTypes.emplace(std::make_pair(type.ID, std::move(type.name))); }
     }
 
-    [[nodiscard]] std::map<unsigned, unsigned> initLocations(const parser::Locations& inputData) {
+    [[nodiscard]] std::map<std::string, unsigned> initLocations(const parser::Locations& inputData) {
         // For the runtime performance, it would be better, that the IDs of the locations would be
         // the same as their indexes, but we can not ensure it in the input file, so I create this
         // mapping, that will be used by the agents when I fill them up. Use it only during
         // initialization ID from files -> index in vectors
-        std::map<unsigned, unsigned> IDMapping{};
+        std::map<std::string, unsigned> IDMapping{};
 
         thrust::host_vector<TypeOfLocation> locType_h;
         thrust::host_vector<PositionType> position_h;

@@ -30,7 +30,7 @@ void DataProvider::randomLocations(unsigned N) {
     auto locTypes = static_cast<unsigned>(locationTypes.types.size());
     for (unsigned i = 0; i < N; ++i) {
         parser::Locations::Place current{};
-        current.ID = static_cast<decltype(current.ID)>(i);
+        current.ID = std::to_string(i);
         current.type = randomSelect(configRandom.locationTypeDistibution.begin());
         typeToLocationMapping[current.type].push_back(current.ID);
         current.coordinates = std::vector<double>{ 0.0, 0.0 };
@@ -59,11 +59,9 @@ void DataProvider::randomAgents(unsigned N) {
             const auto& possibleLocations = typeToLocationMapping[currentLoc.typeID];
             if ((possibleLocations.size() == 0) || (RandomGenerator::randomUnit() < configRandom.irregulalLocationChance)) {
                 currentLoc.locID = locations.places[RandomGenerator::randomUnsigned(locations.places.size())].ID;
-                assert(currentLoc.locID < locations.places.size());
             } else {
                 auto r = RandomGenerator::randomUnsigned(possibleLocations.size());
                 currentLoc.locID = possibleLocations[r];
-                assert(currentLoc.locID < locations.places.size());
             }
             current.locations.push_back(currentLoc);
         }

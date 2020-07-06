@@ -9,7 +9,7 @@ namespace parser {
             struct Location : public jsond::JSONDecodable<Location> {
                 BEGIN_MEMBER_DECLARATIONS();
                 DECODABLE_MEMBER(int, typeID);
-                DECODABLE_MEMBER(int, locID);
+                DECODABLE_MEMBER(std::string, locID);
                 END_MEMBER_DECLARATIONS();
             };
 

@@ -111,8 +111,8 @@ namespace IOAgents {
 
     class InvalidLocationID : public AgentsInputError {
     public:
-        explicit InvalidLocationID(unsigned ID)
-            : AgentsInputError("Location ID " + std::to_string(ID) + " does not exists in Locations input file.\n") {}
+        explicit InvalidLocationID(const std::string& ID)
+            : AgentsInputError("Location ID " + ID + " does not exists in Locations input file.\n") {}
     };
 }// namespace IOAgents
 
