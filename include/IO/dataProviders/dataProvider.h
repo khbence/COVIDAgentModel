@@ -31,7 +31,7 @@ class DataProvider {
     void readConfigRandom(const std::string& fileName);
     void readAgentTypes(const std::string& fileName);
     void readLocationTypes(const std::string& fileName);
-    void readLocations(const std::string& fileName);
+    void readLocations(const std::string& fileName, bool randomAgents);
     void readAgents(const std::string& fileName);
 
     template<typename Iter>
@@ -47,6 +47,7 @@ class DataProvider {
 
     void randomLocations(unsigned N);
     void randomAgents(unsigned N);
+    void randomStates();
 
 public:
     explicit DataProvider(const cxxopts::ParseResult& result);

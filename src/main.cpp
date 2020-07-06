@@ -35,7 +35,8 @@ cxxopts::Options defineProgramParameters() {
         "List of all general parameters for the simulation except the progression data.",
         cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "parameters.json"))("c,configRandom",
         "Config file for random initialization.",
-        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "configRandom.json"));
+        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "configRandom.json"))("r,randomStates",
+        "Change the states from the agents file with the configRandom file's stateDistribution.");
     ;
 
     return options;

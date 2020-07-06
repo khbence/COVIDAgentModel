@@ -21,7 +21,14 @@ void DataProvider::readAgentTypes(const std::string& fileName) {
 
 void DataProvider::readLocationTypes(const std::string& fileName) { locationTypes = DECODE_JSON_FILE(fileName, decltype(locationTypes)); }
 
-void DataProvider::readLocations(const std::string& fileName) { locations = DECODE_JSON_FILE(fileName, decltype(locations)); }
+void DataProvider::readLocations(const std::string& fileName, bool randomAgents) {
+    locations = DECODE_JSON_FILE(fileName, decltype(locations));
+    if(randomAgents) {
+        for(const auto& l : locations.places) {
+            typeToLocationMapping[l.type].push_back(l.ID);
+        }
+    }    
+}
 
 void DataProvider::readAgents(const std::string& fileName) { agents = DECODE_JSON_FILE(fileName, decltype(agents)); }
 
@@ -69,22 +76,33 @@ void DataProvider::randomAgents(unsigned N) {
     }
 }
 
+void DataProvider::randomStates() {
+    for(auto& a : agents.people) {
+        a.state = randomSelect(configRandom.stateDistibution.begin());
+    }
+}
+
 DataProvider::DataProvider(const cxxopts::ParseResult& result) {
     PROFILE_FUNCTION();
     readParameters(result["parameters"].as<std::string>());
     readProgressionMatrix(result["progression"].as<std::string>());
     int numberOfAgents = result["numagents"].as<int>();
     int numberOfLocations = result["numlocs"].as<int>();
-    if ((numberOfAgents != -1) || (numberOfLocations != -1)) { readConfigRandom(result["configRandom"].as<std::string>()); }
+    if ((numberOfAgents != -1) || (numberOfLocations != -1) || result["randomStates"].as<bool>()) {
+        readConfigRandom(result["configRandom"].as<std::string>());
+    }
     readAgentTypes(result["agentTypes"].as<std::string>());
     readLocationTypes(result["locationTypes"].as<std::string>());
     if (numberOfLocations == -1) {
-        readLocations(result["locations"].as<std::string>());
+        readLocations(result["locations"].as<std::string>(), numberOfAgents == -1);
     } else {
         randomLocations(numberOfLocations);
     }
     if (numberOfAgents == -1) {
         readAgents(result["agents"].as<std::string>());
+        if(result["randomStates"].as<bool>()) {
+            randomStates();
+        }
     } else {
         randomAgents(numberOfAgents);
     }
