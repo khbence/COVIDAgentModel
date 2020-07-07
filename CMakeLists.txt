@@ -28,34 +28,39 @@ add_executable (${PROJECT_NAME} ${SOURCES})
 
 find_package(OpenMP)
 if(OPENMP_FOUND)
-    #set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
     target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
+    set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_OMP)
 endif()
 
 option(USE_GPU "If Cuda found but set as OFF it CPU code will be generated, if set as ON but no CUDA found then also CPU code will be generated." OFF)
 
 # TODO move it to a function later
-#SET(CUDA_SEPARABLE_COMPILATION ON)
 find_package(CUDA)
 if(CUDA_FOUND AND USE_GPU)
 message("CUDA exists")
 	enable_language(CUDA)
-	set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_CUDA)
-  set(CUDA_ARCH_LIST Auto)
-  cuda_select_nvcc_arch_flags(CUDA_ARCH_FLAGS ${CUDA_ARCH_LIST})
-  LIST(APPEND CUDA_NVCC_FLAGS ${CUDA_ARCH_FLAGS})
-  string (REPLACE ";" " " ARCH_FLAGS "${CUDA_NVCC_FLAGS}")
-	set_source_files_properties(${SOURCES} PROPERTIES LANGUAGE CUDA)
-	set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr ${ARCH_FLAGS} --expt-extended-lambda -DTHRUST_DEVICE_SYSTEM=${THRUST_DEVICE_SYSTEM} ${OpenMP_CUDA_FLAGS}")
-else()
+  set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_CUDA)
+  
+  # architecture
+  set(ARCHITECTURE "AUTO" CACHE STRING "What is your target CUDA architecture?")
+  if(${ARCHITECTURE} EQUAL "AUTO")
+    set(CUDA_ARCH_LIST Auto)
+    cuda_select_nvcc_arch_flags(CUDA_ARCH_FLAGS ${CUDA_ARCH_LIST})
+    LIST(APPEND CUDA_NVCC_FLAGS ${CUDA_ARCH_FLAGS})
+    string (REPLACE ";" " " ARCH_FLAGS "${CUDA_NVCC_FLAGS}")
+  else()
+    string(REPLACE "NUM" ${ARCHITECTURE} ARCH_FLAGS "-gencode arch=compute_NUM,code=sm_NUM")
+  endif()
+
+  SET_SOURCE_FILES_PROPERTIES(${SOURCES} PROPERTIES LANGUAGE CUDA)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr ${ARCH_FLAGS} --expt-extended-lambda -DTHRUST_DEVICE_SYSTEM=${THRUST_DEVICE_SYSTEM} ${OpenMP_CUDA_FLAGS}")
+
+  else()
   if(NOT CUDA_FOUND)
 	  message("CUDA does not exists")
   endif(NOT CUDA_FOUND)
 	enable_language(CXX)
-	# TODO check if openmp exists
-	set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_OMP)
-	set(CMAKE_CXX_FLAGS "-DTHRUST_DEVICE_SYSTEM=${THRUST_DEVICE_SYSTEM}")
-    	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTHRUST_DEVICE_SYSTEM=${THRUST_DEVICE_SYSTEM}")
 endif()
 
 find_package(Threads)
