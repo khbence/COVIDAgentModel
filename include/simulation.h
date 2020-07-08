@@ -78,6 +78,7 @@ public:
             std::string header = PPState_t::initTransitionMatrix(data.acquireProgressionMatrix());
             agents->initAgentMeta(data.acquireParameters());
             locs->initLocationTypes(data.acquireLocationTypes());
+            MovementPolicy<Simulation>::init(data.acquireLocationTypes());
             auto locationMapping = locs->initLocations(data.acquireLocations());
             auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
             agents->initAgents(data.acquireAgents(), locationMapping, agentTypeMapping, data.getAgentTypeLocTypes());
