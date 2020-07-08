@@ -80,7 +80,10 @@ public:
         return agentTypeIDMapping;
     }
 
-    void initAgents(parser::Agents& inputData, const std::map<std::string, unsigned>& locMap, const std::map<unsigned, unsigned>& typeMap) {
+    void initAgents(parser::Agents& inputData,
+        const std::map<std::string, unsigned>& locMap,
+        const std::map<unsigned, unsigned>& typeMap,
+        const std::map<unsigned, std::vector<unsigned>>& agentTypeLocType) {
         auto n = inputData.people.size();
         reserve(n);
 
@@ -114,9 +117,15 @@ public:
             // Where to put them first?
             location_h.push_back(0);
             agents_h.push_back(Agent<AgentList>{ static_cast<unsigned>(agents.size()) });
+
+            // agentType
             auto itType = typeMap.find(person.typeID);
             if (itType == typeMap.end()) { throw IOAgents::InvalidAgentType(person.typeID); }
             types_h.push_back(itType->second);
+
+            // locations
+            const auto& requestedLocs = agentTypeLocType.find(person.typeID)->second;
+            std::vector<bool> hasThatLocType(requestedLocs.size(), false);
             std::vector<unsigned> locs;
             std::vector<unsigned> ts;// types
             locs.reserve(person.locations.size());
@@ -127,7 +136,21 @@ public:
                 if (itLoc == locMap.end()) { throw IOAgents::InvalidLocationID(l.locID); }
                 locs.push_back(itLoc->second);
                 ts.push_back(l.typeID);
+
+                auto it = std::find(requestedLocs.begin(), requestedLocs.end(), l.typeID);
+                if (it == requestedLocs.end()) { throw IOAgents::UnnecessaryLocType(agents_h.size() - 1, person.typeID, l.typeID); }
+                hasThatLocType[std::distance(requestedLocs.begin(), it)] = true;
             }
+            if (std::any_of(hasThatLocType.begin(), hasThatLocType.end(), [](bool v) { return !v; })) {
+                std::string missingTypes;
+                for (unsigned idx = 0; idx < hasThatLocType.size(); ++idx) {
+                    if (!hasThatLocType[idx]) { missingTypes += std::to_string(requestedLocs[idx]) + ", "; }
+                }
+                missingTypes.pop_back();
+                missingTypes.pop_back();
+                throw IOAgents::MissingLocationType(agents_h.size() - 1, std::move(missingTypes));
+            }
+
             possibleLocations_h.insert(possibleLocations_h.end(), locs.begin(), locs.end());
             possibleTypes_h.insert(possibleTypes_h.end(), ts.begin(), ts.end());
             locationOffset_h.push_back(locationOffset_h.back() + locs.size());

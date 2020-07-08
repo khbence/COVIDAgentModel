@@ -80,7 +80,7 @@ public:
             locs->initLocationTypes(data.acquireLocationTypes());
             auto locationMapping = locs->initLocations(data.acquireLocations());
             auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
-            agents->initAgents(data.acquireAgents(), locationMapping, agentTypeMapping);
+            agents->initAgents(data.acquireAgents(), locationMapping, agentTypeMapping, data.getAgentTypeLocTypes());
             RandomGenerator::resize(agents->PPValues.size());
             std::cout << header << '\n';
         } catch (const CustomErrors& e) {

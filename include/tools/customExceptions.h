@@ -114,6 +114,20 @@ namespace IOAgents {
         explicit InvalidLocationID(const std::string& ID)
             : AgentsInputError("Location ID " + ID + " does not exists in Locations input file.\n") {}
     };
+
+    class UnnecessaryLocType : public AgentsInputError {
+    public:
+        UnnecessaryLocType(unsigned agentID, unsigned aTypeID, unsigned lTypeID)
+            : AgentsInputError("Agent with the index of " + std::to_string(agentID) + " with the agent type ID of " + std::to_string(aTypeID)
+                               + " does not need a location type with the ID of " + std::to_string(lTypeID) + ".\n") {}
+    };
+
+    class MissingLocationType : public AgentsInputError {
+    public:
+        MissingLocationType(unsigned agentID, std::string&& missingTypes)
+            : AgentsInputError(
+                "Agent with the index of " + std::to_string(agentID) + " does not have the following location types: " + missingTypes + ".\n") {}
+    };
 }// namespace IOAgents
 
 namespace IOLocations {

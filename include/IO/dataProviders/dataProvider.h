@@ -21,7 +21,7 @@ class DataProvider {
     parser::Parameters parameters;
     parser::TransitionFormat progressionMatrix;
 
-    // only for random generations
+    // only for random generations and checking
     parser::ConfigRandom configRandom;
     std::map<unsigned, std::vector<unsigned>> aTypeToLocationTypes;
     std::map<unsigned, std::vector<std::string>> typeToLocationMapping;
@@ -29,9 +29,9 @@ class DataProvider {
     void readParameters(const std::string& fileName);
     void readProgressionMatrix(const std::string& fileName);
     void readConfigRandom(const std::string& fileName);
-    void readAgentTypes(const std::string& fileName);
     void readLocationTypes(const std::string& fileName);
     void readLocations(const std::string& fileName, bool randomAgents);
+    void readAgentTypes(const std::string& fileName);
     void readAgents(const std::string& fileName);
 
     template<typename Iter>
@@ -58,4 +58,6 @@ public:
     [[nodiscard]] parser::LocationTypes& acquireLocationTypes();
     [[nodiscard]] parser::Parameters& acquireParameters();
     [[nodiscard]] parser::TransitionFormat& acquireProgressionMatrix();
+
+    [[nodiscard]] const std::map<unsigned, std::vector<unsigned>>& getAgentTypeLocTypes() const;
 };

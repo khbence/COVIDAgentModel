@@ -11,7 +11,7 @@ void DataProvider::readConfigRandom(const std::string& fileName) { configRandom 
 void DataProvider::readAgentTypes(const std::string& fileName) {
     agentTypes = DECODE_JSON_FILE(fileName, decltype(agentTypes));
     for (const auto& aType : agentTypes.types) {
-        std::set<unsigned> locs{};
+        std::set<unsigned> locs{ locationTypes.hospital, locationTypes.publicSpace, locationTypes.home };
         for (const auto& sch : aType.schedulesUnique) {
             for (const auto& event : sch.schedule) { locs.insert(event.type); }
         }
@@ -91,8 +91,8 @@ DataProvider::DataProvider(const cxxopts::ParseResult& result) {
     if ((numberOfAgents != -1) || (numberOfLocations != -1) || result["randomStates"].as<bool>()) {
         readConfigRandom(result["configRandom"].as<std::string>());
     }
-    readAgentTypes(result["agentTypes"].as<std::string>());
     readLocationTypes(result["locationTypes"].as<std::string>());
+    readAgentTypes(result["agentTypes"].as<std::string>());
     if (numberOfLocations == -1) {
         readLocations(result["locations"].as<std::string>(), numberOfAgents == -1);
     } else {
@@ -114,3 +114,5 @@ DataProvider::DataProvider(const cxxopts::ParseResult& result) {
 [[nodiscard]] parser::LocationTypes& DataProvider::acquireLocationTypes() { return locationTypes; }
 [[nodiscard]] parser::Parameters& DataProvider::acquireParameters() { return parameters; }
 [[nodiscard]] parser::TransitionFormat& DataProvider::acquireProgressionMatrix() { return progressionMatrix; }
+
+[[nodiscard]] const std::map<unsigned, std::vector<unsigned>>& DataProvider::getAgentTypeLocTypes() const { return aTypeToLocationTypes; }
