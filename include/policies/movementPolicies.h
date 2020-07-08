@@ -249,7 +249,6 @@ class RealMovement {
         publicSpace = data.publicSpace;
         home = data.home;
         hospital = data.hospital;
-        printf("%d %d %d\n",publicSpace,home,hospital);
     }
 
     void planLocations() {

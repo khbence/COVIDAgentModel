@@ -51,7 +51,7 @@ if(CUDA_FOUND AND USE_GPU)
   set(ARCHITECTURE
       "AUTO"
       CACHE STRING "What is your target CUDA architecture?")
-  if(${ARCHITECTURE} EQUAL "AUTO")
+    if(${ARCHITECTURE} STREQUAL "AUTO")
     set(CUDA_ARCH_LIST Auto)
     cuda_select_nvcc_arch_flags(CUDA_ARCH_FLAGS ${CUDA_ARCH_LIST})
     list(APPEND CUDA_NVCC_FLAGS ${CUDA_ARCH_FLAGS})

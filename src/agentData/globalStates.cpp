@@ -21,7 +21,5 @@ namespace states {
         default:
             throw IOAgentTypes::InvalidWBStateInSchedule(rawState);
         }
-
-        return states::WBStates::W;
     }
 }// namespace states
