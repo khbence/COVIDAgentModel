@@ -1,6 +1,7 @@
 #pragma once
 #include "locationList.h"
 #include "util.h"
+#include "timeHandler.h"
 #include <iostream>
 
 template<class SimulationType>
@@ -39,7 +40,7 @@ protected:
     }
 
 public:
-    void infectionSingleLocation(unsigned timeStep) {
+    void infectionSingleLocation(Timehandler &simTime, unsigned timeStep) {
         PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
         auto& ppstates = realThis->agents->PPValues;
@@ -90,6 +91,6 @@ public:
                 return y / (60.0 * 24.0 / static_cast<double>(timeStep));
             });
 
-        LocationsList<SimulationType>::infectAgents(infectionRatios, agentLocations);
+        LocationsList<SimulationType>::infectAgents(infectionRatios, agentLocations, simTime);
     }
 };

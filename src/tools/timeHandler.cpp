@@ -107,6 +107,10 @@ unsigned HD Timehandler::getMinutes() const {
     return (counter % stepsPerDay) * timeStep.count();
 }
 
+unsigned HD Timehandler::getTimestamp() const {
+    return counter;
+}
+
 Days Timehandler::getDay() const {
     time_t tt = std::chrono::system_clock::to_time_t(current);
     tm* date = std::localtime(&tt);

@@ -16,6 +16,7 @@ namespace parser {
         DECODABLE_MEMBER(unsigned, publicSpace);
         DECODABLE_MEMBER(unsigned, home);
         DECODABLE_MEMBER(unsigned, hospital);
+        DECODABLE_MEMBER(unsigned, doctor);
         DECODABLE_MEMBER(std::vector<Type>, types);
         END_MEMBER_DECLARATIONS();
     };

@@ -17,6 +17,16 @@ template<typename T>
 concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
 */
 
+class AgentStats {
+    public:
+    unsigned infectedTimestamp=0;
+    unsigned infectedLocation=0;
+    unsigned worstStateTimestamp=0;
+    unsigned worstStateEndTimestamp=0;
+    unsigned diagnosedTimestamp=0;
+    char worstState=0;
+};
+
 template<typename T>
 class Agent;
 
@@ -33,13 +43,14 @@ class AgentList {
     }
 
 public:
+
     AgentTypeList agentTypes;
     thrust::device_vector<PPState> PPValues;
     thrust::device_vector<AgentMeta> agentMetaData;
     thrust::device_vector<bool> diagnosed;
     thrust::device_vector<unsigned> location;
     thrust::device_vector<unsigned> types;
-
+    thrust::device_vector<AgentStats> agentStats;
 
     thrust::device_vector<unsigned long> locationOffset;
     // longer, every agents' every locations, indexed by the offset
@@ -107,6 +118,7 @@ public:
         agents_h.reserve(n);
         locationOffset_h.reserve(n + 1);
         locationOffset_h.push_back(0);
+        agentStats.resize(n);
 
         for (auto& person : inputData.people) {
             PPValues_h.push_back(PPState{ person.state });

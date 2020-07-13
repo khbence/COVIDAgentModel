@@ -3,6 +3,7 @@
 #include <string>
 #include "progressionMatrices.h"
 #include "progressionMatrixFormat.h"
+#include "agentsList.h"
 #include <vector>
 #include <map>
 
@@ -26,7 +27,7 @@ public:
 
     explicit DynamicPPState(const std::string& name);
     void HD gotInfected();
-    void HD update(float scalingSymptons);
+    void HD update(float scalingSymptons, AgentStats &agentStats, unsigned simTime);
     [[nodiscard]] char HD getStateIdx() const { return state; }
     [[nodiscard]] states::WBStates HD getWBState() const;
     [[nodiscard]] float HD isInfectious() const { return infectious; }

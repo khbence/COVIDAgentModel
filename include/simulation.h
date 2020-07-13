@@ -47,17 +47,20 @@ public:
         MovementPolicy<Simulation>::addProgramParameters(options);
     }
 
-    void updateAgents() {
+    void updateAgents(Timehandler &simTime) {
         PROFILE_FUNCTION();
         auto& ppstates = agents->PPValues;
+        auto& agentStats = agents->agentStats;
         auto& agentMeta = agents->agentMetaData;
+        unsigned timestamp = simTime.getTimestamp();
         // Update states
-        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin())),
-            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end())),
-            [] HD(thrust::tuple<PPState&, AgentMeta&> tup) {
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin(), agentStats.begin())),
+            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end(), agentStats.end())),
+            [timestamp] HD(thrust::tuple<PPState&, AgentMeta&, AgentStats&> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
-                ppstate.update(meta.getScalingSymptoms());
+                auto agentStat = thrust::get<2>(tup);
+                ppstate.update(meta.getScalingSymptoms(), agentStat, timestamp);
             });
     }
 
@@ -103,14 +106,14 @@ public:
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
-                updateAgents();
+                updateAgents(simTime);
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
             if (singleLocation) {
-                InfectionPolicy<Simulation>::infectionSingleLocation(timeStep);
+                InfectionPolicy<Simulation>::infectionSingleLocation(simTime, timeStep);
             } else {
-                InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
+                InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep);
             }
             ++simTime;
         }

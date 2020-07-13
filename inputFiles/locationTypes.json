@@ -2,6 +2,7 @@
     "publicSpace": 1,
     "home": 2,
     "hospital": 12,
+    "doctor" : 14,
     "types": [
         {
             "ID": 1,

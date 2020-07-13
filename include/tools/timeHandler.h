@@ -81,6 +81,7 @@ public:
     unsigned HD getStepsUntilMidnight() const;
     Timehandler getNextMidnight() const;
     unsigned HD getMinutes() const;
+    unsigned HD getTimestamp() const;
 
     [[nodiscard]] bool isMidnight() const { return (counter % stepsPerDay) == 0; }
 
