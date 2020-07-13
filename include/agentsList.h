@@ -19,7 +19,7 @@ concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
 
 class AgentStats {
     public:
-    unsigned infectedTimestamp=0;
+    unsigned infectedTimestamp=UINT32_MAX;
     unsigned infectedLocation=0;
     unsigned worstStateTimestamp=0;
     unsigned worstStateEndTimestamp=0;
@@ -99,6 +99,7 @@ public:
         reserve(n);
 
         thrust::host_vector<PPState> PPValues_h;
+        thrust::host_vector<AgentStats> agentStats_h;
         thrust::host_vector<AgentMeta> agentMetaData_h;
         thrust::host_vector<bool> diagnosed_h;
         thrust::host_vector<unsigned> location_h;
@@ -118,10 +119,17 @@ public:
         agents_h.reserve(n);
         locationOffset_h.reserve(n + 1);
         locationOffset_h.push_back(0);
-        agentStats.resize(n);
+        agentStats_h.reserve(n);
 
         for (auto& person : inputData.people) {
-            PPValues_h.push_back(PPState{ person.state });
+            PPState state = PPState{ person.state };
+            PPValues_h.push_back(state);
+            AgentStats stat;
+            //TODO: how do I tell that agent is infected (even if not infectious)
+            if (state.getStateIdx()>0) //Is infected at the beginning
+                stat.infectedTimestamp = 0;
+            agentStats_h.push_back(stat);
+
             if (person.sex.size() != 1) { throw IOAgents::InvalidGender(person.sex); }
             agentMetaData_h.push_back(BasicAgentMeta(person.sex.front(), person.age, person.preCond));
             // I don't know if we should put any data about it in the input
@@ -177,6 +185,7 @@ public:
         locationOffset = locationOffset_h;
         possibleLocations = possibleLocations_h;
         possibleTypes = possibleTypes_h;
+        agentStats = agentStats_h;
     }
 
     [[nodiscard]] static AgentList* getInstance() {
