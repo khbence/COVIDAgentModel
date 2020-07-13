@@ -15,6 +15,7 @@
 #include <cxxopts.hpp>
 #include "smallTools.h"
 #include "datatypes.h"
+#include "version.h"
 
 cxxopts::Options defineProgramParameters() {
     cxxopts::Options options("covid", "An agent-based epidemic simulator");
@@ -35,8 +36,8 @@ cxxopts::Options defineProgramParameters() {
         "List of all general parameters for the simulation except the progression data.",
         cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "parameters.json"))("c,configRandom",
         "Config file for random initialization.",
-        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "configRandom.json"))("r,randomStates",
-        "Change the states from the agents file with the configRandom file's stateDistribution.");
+        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator() + "configRandom.json"))(
+        "r,randomStates", "Change the states from the agents file with the configRandom file's stateDistribution.");
     ;
 
     return options;
@@ -55,10 +56,14 @@ int main(int argc, char** argv) {
     Simulation_t::addProgramParameters(options);
 
     options.add_options()("h,help", "Print usage");
+    options.add_options()("version", "Print version");
     cxxopts::ParseResult result = options.parse(argc, argv);
     if (result.count("help") != 0) {
         std::cout << options.help() << std::endl;
-        exit(0);
+        return EXIT_SUCCESS;
+    } else if (result.count("version") != 0) {
+        std::cout << config::GIT_VERSION << std::endl;
+        return EXIT_SUCCESS;
     }
 
     RandomGenerator::init(omp_get_max_threads());

@@ -16,7 +16,8 @@ include_directories(
   include/IO/inputFormats
   include/IO/dataProviders
   parameterParser/include
-  include/tools/progressionMatrices)
+  include/tools/progressionMatrices
+  cmake/config/out)
 
 file(
   GLOB
@@ -51,7 +52,7 @@ if(CUDA_FOUND AND USE_GPU)
   set(ARCHITECTURE
       "AUTO"
       CACHE STRING "What is your target CUDA architecture?")
-    if(${ARCHITECTURE} STREQUAL "AUTO")
+  if(${ARCHITECTURE} STREQUAL "AUTO")
     set(CUDA_ARCH_LIST Auto)
     cuda_select_nvcc_arch_flags(CUDA_ARCH_FLAGS ${CUDA_ARCH_LIST})
     list(APPEND CUDA_NVCC_FLAGS ${CUDA_ARCH_FLAGS})
@@ -82,6 +83,21 @@ else()
 endif()
 
 find_package(Threads)
+
+# Git version information (build time)
+set(GIT_VERSION "unknown")
+find_package(Git QUIET)
+if(GIT_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} describe
+    OUTPUT_VARIABLE GIT_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  message(STATUS "Current program version is ${GIT_VERSION}")
+endif()
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/in/version.h.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/out/version.h @ONLY)
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)

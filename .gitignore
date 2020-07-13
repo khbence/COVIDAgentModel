@@ -5,3 +5,5 @@ Release/*
 compile_commands.json
 .vscode
 build/*
+cmake/config/out/*
+!cmake/config/out/.keepDirectory
