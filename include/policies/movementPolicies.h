@@ -87,13 +87,13 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
     }
     states::WBStates wBState = agentStatesPtr[i].getWBState();
     if (wBState == states::WBStates::D) { //If dead, do not go anywhere
-        stepsUntilMovePtr[i] = UINT32_MAX;
+        stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
         return;
     }
     //TODO: during disease progression, move people who just diesd to some specific place
 
     if (wBState == states::WBStates::S) { //go to hospital if in serious condition
-        stepsUntilMovePtr[i] = UINT32_MAX;
+        stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
         agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(i, hospitalType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
         return;
     }
@@ -101,7 +101,7 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
     //Should agent still be quarantined
     if (diagnosedPtr[i] && (timestamp-agentStatsPtr[i].diagnosedTimestamp)< 2*7*24*60/timeStep) { //TODO: specify quarantine length
         //if less than 2 weeks since diagnosis, stay where agent already is
-        stepsUntilMovePtr[i] = UINT32_MAX;
+        stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
         return;
     }
 
@@ -137,7 +137,7 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
 
     //ISSUES:
     //do we forcibly finish at midnight?? What if the duration goes beyond that?
-    unsigned newLocationType = UINT32_MAX;
+    unsigned newLocationType = std::numeric_limits<unsigned>::max();
 
     //Case 1
     if (activeEventsBegin==-1 && activeEventsEnd == -1) {
@@ -232,7 +232,7 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
             else {
                 //Quarantine for 2 weeks at home
                 agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
-                stepsUntilMovePtr[i] = UINT32_MAX; //this will be set to 0 at midnight, so need to check
+                stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max(); //this will be set to 0 at midnight, so need to check
                 if (i == tracked)
                 printf("\tDiagnosed going into quarantine in home type 2 location %d for %d steps\n", agentLocationsPtr[i], stepsUntilMovePtr[i]-1);
             }
@@ -272,7 +272,7 @@ class RealMovement {
     public:
     // add program parameters if we need any, this function got called already from Simulation
     static void addProgramParameters(cxxopts::Options& options) {
-        options.add_options()("trace", "Trace movements of agent", cxxopts::value<unsigned>()->default_value(std::to_string(UINT32_MAX)));
+        options.add_options()("trace", "Trace movements of agent", cxxopts::value<unsigned>()->default_value(std::to_string(std::numeric_limits<unsigned>::max())));
 
     }
     void initializeArgs(const cxxopts::ParseResult& result) {

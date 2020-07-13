@@ -19,7 +19,7 @@ concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
 
 class AgentStats {
     public:
-    unsigned infectedTimestamp=UINT32_MAX;
+    unsigned infectedTimestamp=std::numeric_limits<unsigned>::max();
     unsigned infectedLocation=0;
     unsigned worstStateTimestamp=0;
     unsigned worstStateEndTimestamp=0;
