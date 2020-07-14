@@ -59,7 +59,7 @@ public:
             [timestamp] HD(thrust::tuple<PPState&, AgentMeta&, AgentStats&> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
-                auto agentStat = thrust::get<2>(tup);
+                auto& agentStat = thrust::get<2>(tup);
                 ppstate.update(meta.getScalingSymptoms(), agentStat, timestamp);
             });
     }
@@ -117,5 +117,6 @@ public:
             }
             ++simTime;
         }
+        thrust::copy(agents->agentStats.begin(), agents->agentStats.end(), std::ostream_iterator<AgentStats>(std::cout, ""));
     }
 };
