@@ -12,21 +12,8 @@
 #include <iterator>
 #include "agentsFormat.h"
 #include "agentMeta.h"
-/*
-template<typename T>
-concept PPStateType = requires (T x) { x.update(); x.gotInfected(); };
-*/
-
-class AgentStats {
-    public:
-    unsigned infectedTimestamp=std::numeric_limits<unsigned>::max();
-    unsigned infectedLocation=0;
-    unsigned worstStateTimestamp=0;
-    unsigned worstStateEndTimestamp=0;
-    unsigned diagnosedTimestamp=0;
-    char worstState=0;
-    friend std::ostream& operator<<(std::ostream& os, const AgentStats& s);
-};
+#include "agentStats.h"
+#include "agentStatOutput.h"
 
 template<typename T>
 class Agent;
@@ -44,7 +31,6 @@ class AgentList {
     }
 
 public:
-
     AgentTypeList agentTypes;
     thrust::device_vector<PPState> PPValues;
     thrust::device_vector<AgentMeta> agentMetaData;
@@ -126,8 +112,8 @@ public:
             PPState state = PPState{ person.state };
             PPValues_h.push_back(state);
             AgentStats stat;
-            //TODO: how do I tell that agent is infected (even if not infectious)
-            if (state.getStateIdx()>0) //Is infected at the beginning
+            // TODO: how do I tell that agent is infected (even if not infectious)
+            if (state.getStateIdx() > 0)// Is infected at the beginning
                 stat.infectedTimestamp = 0;
             agentStats_h.push_back(stat);
 
@@ -195,4 +181,8 @@ public:
     }
 
     PPState& getPPState(unsigned i) { return PPValues[i]; }
+    void printAgentStatJSON(const std::string& fileName) {
+        AgentStatOutput writer{ agentStats };
+        writer.writeFile(fileName);
+    }
 };

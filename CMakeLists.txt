@@ -15,6 +15,7 @@ include_directories(
   include/IO
   include/IO/inputFormats
   include/IO/dataProviders
+  include/IO/outputs
   parameterParser/include
   include/tools/progressionMatrices
   cmake/config/out)
@@ -26,7 +27,8 @@ file(
   "src/agentData/*.cpp"
   "src/tools/*.cpp"
   "src/tools/progressionMatrices/*.cpp"
-  "src/IO/dataProviders/*.cpp")
+  "src/IO/dataProviders/*.cpp"
+  "src/IO/outputs/*.cpp")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 

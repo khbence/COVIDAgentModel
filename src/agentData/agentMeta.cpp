@@ -70,11 +70,3 @@ BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, unsigned preCondition)
 float HD BasicAgentMeta::getScalingSymptoms() const { return scalingSymptoms; }
 
 float HD BasicAgentMeta::getScalingTransmission() const { return scalingTransmission; }
-
-std::ostream& operator<<(std::ostream& os, const AgentStats& s)
-{
-    if (s.infectedTimestamp == std::numeric_limits<unsigned>::max()) return os;
-    os << "Infected at " << s.infectedTimestamp << " location " << s.infectedLocation << " diagnosed: " << s.diagnosedTimestamp;
-    os << " worst state " << (unsigned)s.worstState << " between: " << s.worstStateTimestamp << "-" << s.worstStateEndTimestamp << "\n";
-    return os;
-}

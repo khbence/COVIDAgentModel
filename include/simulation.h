@@ -38,6 +38,7 @@ public:
     unsigned lengthOfSimulationWeeks;
     bool succesfullyInitialized = true;
     bool singleLocation;
+    std::string outAgentStat;
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -47,7 +48,7 @@ public:
         MovementPolicy<Simulation>::addProgramParameters(options);
     }
 
-    void updateAgents(Timehandler &simTime) {
+    void updateAgents(Timehandler& simTime) {
         PROFILE_FUNCTION();
         auto& ppstates = agents->PPValues;
         auto& agentStats = agents->agentStats;
@@ -77,6 +78,7 @@ public:
           lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()),
           singleLocation(result["numlocs"].as<int>() == 1) {
         PROFILE_FUNCTION();
+        outAgentStat = result["outAgentStat"].as<std::string>();
         InfectionPolicy<Simulation>::initializeArgs(result);
         MovementPolicy<Simulation>::initializeArgs(result);
         DataProvider data{ result };
@@ -117,6 +119,7 @@ public:
             }
             ++simTime;
         }
-        thrust::copy(agents->agentStats.begin(), agents->agentStats.end(), std::ostream_iterator<AgentStats>(std::cout, ""));
+        // thrust::copy(agents->agentStats.begin(), agents->agentStats.end(), std::ostream_iterator<AgentStats>(std::cout, ""));
+        agents->printAgentStatJSON(outAgentStat);
     }
 };
