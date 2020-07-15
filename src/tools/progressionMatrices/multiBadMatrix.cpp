@@ -7,7 +7,7 @@ MultiBadMatrix::NextStates::NextStates(unsigned _badCount,
     : badCount(_badCount), bad(_bad), neutralCount(_neutralCount), neutral(_neutral) {}
 
 thrust::pair<unsigned, bool> HD MultiBadMatrix::NextStates::selectNext(float scalingSypmtons) const {
-    if (neutralCount == 0) { scalingSypmtons == 1.0; }
+    if (neutralCount == 0) { scalingSypmtons = 1.0; }
     double random = RandomGenerator::randomUnit();
     double preSum = 0.0;
     double badSum = 0.0;
@@ -110,7 +110,7 @@ MultiBadMatrix* MultiBadMatrix::upload() {
 #endif
 
 thrust::tuple<unsigned, int, bool> HD MultiBadMatrix::calculateNextState(unsigned currentState, float scalingSymptons) const {
-    thrust::pair<unsigned, int> ret = transitions[currentState].selectNext(scalingSymptons);
+    thrust::pair<unsigned, bool> ret = transitions[currentState].selectNext(scalingSymptons);
     unsigned nextState = ret.first;
     int days = lengths[nextState].calculateDays();
     return thrust::make_tuple<unsigned, int, bool>(nextState, days, ret.second);

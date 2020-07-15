@@ -141,6 +141,8 @@ public:
                     ppstate.gotInfected();
                     agentStat.infectedTimestamp = timestamp;
                     agentStat.infectedLocation = agentLocation;
+                    agentStat.worstState = ppstate.getStateIdx();
+                    agentStat.worstStateTimestamp = timestamp;
                 }
             });
         // DEBUG unsigned count2 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto

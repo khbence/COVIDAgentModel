@@ -159,8 +159,7 @@ void HD DynamicPPState::update(float scalingSymptons, AgentStats &stats, unsigne
         if (thrust::get<2>(tmp)) { //was a bad progression
             stats.worstState = state;
             stats.worstStateTimestamp = simTime;
-        } else if (oldWBState != states::WBStates::W) {
-            //neutral progression and was not well (e.g. R1->R2 does not count)
+        } else { // if (oldWBState != states::WBStates::W) this will record any good progression!
             stats.worstStateEndTimestamp = simTime;
         }
     }

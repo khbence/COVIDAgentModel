@@ -113,8 +113,11 @@ public:
             PPValues_h.push_back(state);
             AgentStats stat;
             // TODO: how do I tell that agent is infected (even if not infectious)
-            if (state.getStateIdx() > 0)// Is infected at the beginning
+            if (state.getStateIdx() > 0) {// Is infected at the beginning
                 stat.infectedTimestamp = 0;
+                stat.worstState = state.getStateIdx();
+                stat.worstStateTimestamp = 0;
+            }
             agentStats_h.push_back(stat);
 
             if (person.sex.size() != 1) { throw IOAgents::InvalidGender(person.sex); }

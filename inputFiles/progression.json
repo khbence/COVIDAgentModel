@@ -161,8 +161,8 @@
         },
         {
             "stateName": "R",
-            "avgLength": 365,
-            "maxlength": 730,
+            "avgLength": -1,
+            "maxlength": -1,
             "infectious": 0.0,
             "WB": "W",
             "progressions": []
