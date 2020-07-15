@@ -36,17 +36,23 @@ void reduce_by_location(thrust::device_vector<unsigned>& locationListOffsets,
     float* fullInfectedCountsPtr = thrust::raw_pointer_cast(fullInfectedCounts.data());
     PPState_t* PPValuesPtr = thrust::raw_pointer_cast(PPValues.data());
 
-PROFILE_FUNCTION();
+    PROFILE_FUNCTION();
 
-#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
-#pragma omp parallel for
-    for (unsigned l = 0; l < numLocations; l++) {
-        for (unsigned agent = locationListOffsetsPtr[l]; agent < locationListOffsetsPtr[l + 1]; agent++) {
-            fullInfectedCountsPtr[l] += lam(PPValuesPtr[agent]);
+    if (numLocations == 1) {
+        fullInfectedCounts[0] = thrust::reduce(thrust::make_transform_iterator(PPValues.begin(), lam),
+                                               thrust::make_transform_iterator(PPValues.end(), lam), 0.0f);
+    } else {
+
+    #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
+    #pragma omp parallel for
+        for (unsigned l = 0; l < numLocations; l++) {
+            for (unsigned agent = locationListOffsetsPtr[l]; agent < locationListOffsetsPtr[l + 1]; agent++) {
+                fullInfectedCountsPtr[l] += lam(PPValuesPtr[agent]);
+            }
         }
+    #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+        reduce_by_location_kernel<<<(numLocations - 1) / 256 + 1, 256>>>(locationListOffsetsPtr, fullInfectedCountsPtr, PPValuesPtr, numLocations, lam);
+        cudaDeviceSynchronize();
+    #endif
     }
-#elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-    reduce_by_location_kernel<<<(numLocations - 1) / 256 + 1, 256>>>(locationListOffsetsPtr, fullInfectedCountsPtr, PPValuesPtr, numLocations, lam);
-    cudaDeviceSynchronize();
-#endif
 }
