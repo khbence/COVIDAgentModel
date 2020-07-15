@@ -108,7 +108,7 @@ public:
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
-                updateAgents(simTime);
+                if (simTime.getTimestamp()>0) updateAgents(simTime); //No disease progression at launch
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
