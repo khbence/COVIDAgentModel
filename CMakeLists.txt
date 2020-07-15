@@ -99,6 +99,20 @@ endif()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/in/version.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/out/version.h @ONLY)
 
+# Preset simulation template types
+set(MovementPolicy
+    "RealMovement"
+    CACHE STRING "Type of the movement policy.")
+set_property(
+  CACHE MovementPolicy
+  PROPERTY STRINGS
+           RealMovement
+           DummyMovement
+           NoMovement)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/in/configTypes.h.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/out/configTypes.h @ONLY)
+
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
 target_compile_features(project_options INTERFACE cxx_std_14)

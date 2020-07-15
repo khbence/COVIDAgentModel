@@ -1,7 +1,7 @@
 Debug/*
-!Debug/create_makefile.sh
+!Debug/.keepDirectory
 Release/*
-!Release/create_makefile.sh
+!Release/.keepDirectory
 compile_commands.json
 .vscode
 build/*

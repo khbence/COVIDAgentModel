@@ -1,7 +1,5 @@
-#include <array>
-#include "progressionMatrices.h"
 #include "simulation.h"
-#include "dynamicPPState.h"
+#include "configTypes.h"
 #include "movementPolicies.h"
 #include "infectionPolicies.h"
 #include <iostream>
@@ -43,17 +41,11 @@ cxxopts::Options defineProgramParameters() {
     return options;
 }
 
-using PositionType = std::array<double, 2>;
-using TypeOfLocation = unsigned;
-using ProgressionMatrix = MultiBadMatrix;
-using PPStates = DynamicPPState;
-using Simulation_t = Simulation<PositionType, TypeOfLocation, PPStates, BasicAgentMeta, RealMovement, BasicInfection>;
-
 int main(int argc, char** argv) {
     BEGIN_PROFILING("main");
 
     auto options = defineProgramParameters();
-    Simulation_t::addProgramParameters(options);
+    config::Simulation_t::addProgramParameters(options);
 
     options.add_options()("h,help", "Print usage");
     options.add_options()("version", "Print version");
@@ -67,7 +59,7 @@ int main(int argc, char** argv) {
     }
 
     RandomGenerator::init(omp_get_max_threads());
-    Simulation_t s{ result };
+    config::Simulation_t s{ result };
 
     s.runSimulation();
     END_PROFILING("main");
