@@ -5,15 +5,15 @@
 
 template<class SimulationType>
 class BasicInfection {
-    public:
+public:
     struct Parameters {
         double v, h, s;
         double a, b;
 
         Parameters() = default;
     };
-    private:
 
+private:
     Parameters par;
 
 public:
@@ -39,6 +39,26 @@ protected:
     }
 
 public:
+    void infectionSingleLocation(unsigned timeStep) {
+        PROFILE_FUNCTION();
+        auto realThis = static_cast<SimulationType*>(this);
+        auto& ppstates = realThis->agents->PPValues;
+        const double numInfectedAgentsPresent = thrust::transform_reduce(
+            ppstates.begin(),
+            ppstates.end(),
+            [] HD(const typename SimulationType::PPState_t& ppstate) -> float { return ppstate.isInfectious(); },
+            0.0,
+            [] HD(double cur, double next) { return cur + next; });
+        unsigned num_agents = ppstates.size();
+        double ratio;
+        if (numInfectedAgentsPresent == 0.0) { ratio = 0.0; }
+        double densityOfInfected = numInfectedAgentsPresent / num_agents;
+        double y = 1.0 / (1.0 + par.v * std::exp(-par.s * 2 * (densityOfInfected - par.h - 0.5)));
+        y = par.a * y + par.b;
+        ratio = y / (60.0 * 24.0 / static_cast<double>(timeStep));
+        LocationsList<SimulationType>::infectAgentsSingleLocation(ratio);
+    }
+
     void infectionsAtLocations(unsigned timeStep) {
         PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);

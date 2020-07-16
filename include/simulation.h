@@ -37,6 +37,7 @@ public:
     unsigned timeStep;
     unsigned lengthOfSimulationWeeks;
     bool succesfullyInitialized = true;
+    bool singleLocation;
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -69,7 +70,9 @@ public:
 
 public:
     explicit Simulation(const cxxopts::ParseResult& result)
-        : timeStep(result["deltat"].as<decltype(timeStep)>()), lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
+        : timeStep(result["deltat"].as<decltype(timeStep)>()),
+          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()),
+          singleLocation(result["numlocs"].as<int>() == 1) {
         PROFILE_FUNCTION();
         InfectionPolicy<Simulation>::initializeArgs(result);
         MovementPolicy<Simulation>::initializeArgs(result);
@@ -99,12 +102,16 @@ public:
         refreshAndPrintStatistics();
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
-                MovementPolicy<Simulation>::planLocations(); 
+                MovementPolicy<Simulation>::planLocations();
                 updateAgents();
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
-            InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
+            if (singleLocation) {
+                InfectionPolicy<Simulation>::infectionSingleLocation(timeStep);
+            } else {
+                InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
+            }
             ++simTime;
         }
     }
