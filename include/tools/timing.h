@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 
-#define PROFILING 1
+#define PROFILING 0
 
 class Timing {
     struct LoopData {

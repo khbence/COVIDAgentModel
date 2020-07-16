@@ -21,7 +21,7 @@ namespace parser {
         struct StateChance : public jsond::JSONDecodable<StateChance> {
             BEGIN_MEMBER_DECLARATIONS();
             DECODABLE_MEMBER(std::string, value);
-            DECODABLE_MEMBER(double, chance);
+            DECODABLE_MEMBER(long double, chance);
             END_MEMBER_DECLARATIONS();
         };
         struct AgentTypeChance : public jsond::JSONDecodable<AgentTypeChance> {
