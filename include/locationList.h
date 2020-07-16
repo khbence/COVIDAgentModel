@@ -109,13 +109,6 @@ public:
         Util::updatePerLocationAgentLists(agents->location, locationIdsOfAgents, locationAgentList, locationListOffsets);
     }
 
-    static void infectAgentsSingleLocation(const double ratio) {
-        auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
-        thrust::for_each(ppstates.begin(), ppstates.end(), [=] HD(typename SimulationType::PPState_t& state) {
-            if (state.isSusceptible() && RandomGenerator::randomUnit() < ratio) { state.gotInfected(); }
-        });
-    }
-
     // TODO optimise randoms for performance
     static void infectAgents(thrust::device_vector<double>& infectionRatioAtLocations, thrust::device_vector<unsigned>& agentLocations, Timehandler &simTime) {
         PROFILE_FUNCTION();

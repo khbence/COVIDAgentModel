@@ -27,7 +27,6 @@ public:
     static std::vector<std::string> getStateNames();
 
     explicit DynamicPPState(const std::string& name);
-    explicit DynamicPPState() {};
     void HD gotInfected();
     void HD update(float scalingSymptons, AgentStats& agentStats, unsigned simTime);
     [[nodiscard]] char HD getStateIdx() const { return state; }

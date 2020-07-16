@@ -37,7 +37,6 @@ public:
     unsigned timeStep;
     unsigned lengthOfSimulationWeeks;
     bool succesfullyInitialized = true;
-    bool singleLocation;
     std::string outAgentStat;
 
     friend class MovementPolicy<Simulation>;
@@ -75,8 +74,7 @@ public:
 public:
     explicit Simulation(const cxxopts::ParseResult& result)
         : timeStep(result["deltat"].as<decltype(timeStep)>()),
-          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()),
-          singleLocation(result["numlocs"].as<int>() == 1) {
+          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
         PROFILE_FUNCTION();
         outAgentStat = result["outAgentStat"].as<std::string>();
         InfectionPolicy<Simulation>::initializeArgs(result);
@@ -112,11 +110,7 @@ public:
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
-            if (singleLocation) {
-                InfectionPolicy<Simulation>::infectionSingleLocation(simTime, timeStep);
-            } else {
-                InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep);
-            }
+            InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep);
             ++simTime;
         }
         // thrust::copy(agents->agentStats.begin(), agents->agentStats.end(), std::ostream_iterator<AgentStats>(std::cout, ""));
