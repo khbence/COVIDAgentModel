@@ -20,6 +20,7 @@ class DynamicPPState {
     void HD updateMeta();
 
 public:
+    DynamicPPState() = default;
     static std::string initTransitionMatrix(parser::TransitionFormat& inputData);
     static HD unsigned getNumberOfStates();
 

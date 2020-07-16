@@ -110,7 +110,7 @@ public:
 
     static void infectAgentsSingleLocation(const double ratio) {
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
-        thrust::for_each(ppstates.begin(), ppstates.end(), [=] HD(auto& state) {
+        thrust::for_each(ppstates.begin(), ppstates.end(), [=] HD(typename SimulationType::PPState_t& state) {
             if (state.isSusceptible() && RandomGenerator::randomUnit() < ratio) { state.gotInfected(); }
         });
     }
