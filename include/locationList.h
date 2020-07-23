@@ -15,6 +15,7 @@
 #include <map>
 #include "locationsFormat.h"
 #include "customExceptions.h"
+#include "timeHandler.h"
 
 template<typename SimulationType>
 class LocationsList {
@@ -108,29 +109,34 @@ public:
         Util::updatePerLocationAgentLists(agents->location, locationIdsOfAgents, locationAgentList, locationListOffsets);
     }
 
-    static void infectAgentsSingleLocation(const double ratio) {
-        auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
-        thrust::for_each(ppstates.begin(), ppstates.end(), [=] HD(typename SimulationType::PPState_t& state) {
-            if (state.isSusceptible() && RandomGenerator::randomUnit() < ratio) { state.gotInfected(); }
-        });
-    }
-
     // TODO optimise randoms for performance
-    static void infectAgents(thrust::device_vector<double>& infectionRatioAtLocations, thrust::device_vector<unsigned>& agentLocations) {
+    static void infectAgents(thrust::device_vector<double>& infectionRatioAtLocations, thrust::device_vector<unsigned>& agentLocations, Timehandler &simTime) {
         PROFILE_FUNCTION();
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
+        auto& agentStats = SimulationType::AgentListType::getInstance()->agentStats;
+        unsigned timestamp = simTime.getTimestamp();
         // DEBUG unsigned count1 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto
         // &ppstate) {return ppstate.getSIRD() == states::SIRD::I;}); DESC: for (int i = 0; i <
         // number_of_agents; i++) {ppstate = ppstates[i]; infectionRatio =
         // infectionRatioAtLocations[agentLocations[i]];...}
         thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(
-                             ppstates.begin(), thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.begin()))),
+                             ppstates.begin(), thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.begin()),
+                             agentStats.begin(),agentLocations.begin())),
             thrust::make_zip_iterator(
-                thrust::make_tuple(ppstates.end(), thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.end()))),
-            [] HD(thrust::tuple<typename SimulationType::PPState_t&, double&> tuple) {
+                thrust::make_tuple(ppstates.end(), thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.end()),
+                agentStats.end(),agentLocations.end())),
+            [timestamp] HD(thrust::tuple<typename SimulationType::PPState_t&, double&, AgentStats&, unsigned&> tuple) {
                 auto& ppstate = thrust::get<0>(tuple);
                 double& infectionRatio = thrust::get<1>(tuple);
-                if (ppstate.isSusceptible() && RandomGenerator::randomUnit() < infectionRatio) { ppstate.gotInfected(); }
+                auto& agentStat = thrust::get<2>(tuple);
+                unsigned &agentLocation = thrust::get<3>(tuple);
+                if (ppstate.isSusceptible() && RandomGenerator::randomUnit() < infectionRatio) { 
+                    ppstate.gotInfected();
+                    agentStat.infectedTimestamp = timestamp;
+                    agentStat.infectedLocation = agentLocation;
+                    agentStat.worstState = ppstate.getStateIdx();
+                    agentStat.worstStateTimestamp = timestamp;
+                }
             });
         // DEBUG unsigned count2 = thrust::count_if(ppstates.begin(),ppstates.end(), [](auto
         // &ppstate) {return ppstate.getSIRD() == states::SIRD::I;}); DEBUG std::cout << count1 << "

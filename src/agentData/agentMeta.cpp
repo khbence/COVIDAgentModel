@@ -3,6 +3,7 @@
 #include "JSONDecoder.h"
 #include <limits>
 #include <algorithm>
+#include "agentsList.h"
 
 BasicAgentMeta::AgeInterval::AgeInterval(parser::Parameters::Age in)
     : symptoms(static_cast<float>(in.symptoms)), transmission(static_cast<float>(in.transmission)) {

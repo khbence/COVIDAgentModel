@@ -37,7 +37,7 @@ public:
     unsigned timeStep;
     unsigned lengthOfSimulationWeeks;
     bool succesfullyInitialized = true;
-    bool singleLocation;
+    std::string outAgentStat;
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -47,17 +47,20 @@ public:
         MovementPolicy<Simulation>::addProgramParameters(options);
     }
 
-    void updateAgents() {
+    void updateAgents(Timehandler& simTime) {
         PROFILE_FUNCTION();
         auto& ppstates = agents->PPValues;
+        auto& agentStats = agents->agentStats;
         auto& agentMeta = agents->agentMetaData;
+        unsigned timestamp = simTime.getTimestamp();
         // Update states
-        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin())),
-            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end())),
-            [] HD(thrust::tuple<PPState&, AgentMeta&> tup) {
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin(), agentStats.begin())),
+            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end(), agentStats.end())),
+            [timestamp] HD(thrust::tuple<PPState&, AgentMeta&, AgentStats&> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
-                ppstate.update(meta.getScalingSymptoms());
+                auto& agentStat = thrust::get<2>(tup);
+                ppstate.update(meta.getScalingSymptoms(), agentStat, timestamp);
             });
     }
 
@@ -71,9 +74,9 @@ public:
 public:
     explicit Simulation(const cxxopts::ParseResult& result)
         : timeStep(result["deltat"].as<decltype(timeStep)>()),
-          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()),
-          singleLocation(result["numlocs"].as<int>() == 1) {
+          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
         PROFILE_FUNCTION();
+        outAgentStat = result["outAgentStat"].as<std::string>();
         InfectionPolicy<Simulation>::initializeArgs(result);
         MovementPolicy<Simulation>::initializeArgs(result);
         DataProvider data{ result };
@@ -103,16 +106,14 @@ public:
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
-                updateAgents();
+                if (simTime.getTimestamp()>0) updateAgents(simTime); //No disease progression at launch
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
-            if (singleLocation) {
-                InfectionPolicy<Simulation>::infectionSingleLocation(timeStep);
-            } else {
-                InfectionPolicy<Simulation>::infectionsAtLocations(timeStep);
-            }
+            InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep);
             ++simTime;
         }
+        // thrust::copy(agents->agentStats.begin(), agents->agentStats.end(), std::ostream_iterator<AgentStats>(std::cout, ""));
+        agents->printAgentStatJSON(outAgentStat);
     }
 };

@@ -132,6 +132,12 @@ HD unsigned DynamicPPState::getNumberOfStates() {
 #endif
 }
 
+std::vector<std::string> DynamicPPState::getStateNames() {
+    std::vector<std::string> names(detail::DynamicPPState::h_numberOfStates);
+    for (const auto& e : detail::DynamicPPState::nameIndexMap) { names[e.second] = e.first; }
+    return names;
+}
+
 DynamicPPState::DynamicPPState(const std::string& name)
     : state(detail::DynamicPPState::nameIndexMap.find(name)->second), daysBeforeNextState(getTransition().calculateJustDays(state)) {
     updateMeta();
@@ -147,14 +153,21 @@ void HD DynamicPPState::gotInfected() {
     updateMeta();
 }
 
-void HD DynamicPPState::update(float scalingSymptons) {
+void HD DynamicPPState::update(float scalingSymptons, AgentStats& stats, unsigned simTime) {
     if (daysBeforeNextState == -2) { daysBeforeNextState = getTransition().calculateJustDays(state); }
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }
     if (daysBeforeNextState == 0) {
+        states::WBStates oldWBState = this->getWBState();
         auto tmp = getTransition().calculateNextState(state, scalingSymptons);
-        state = tmp.first;
+        state = thrust::get<0>(tmp);
         updateMeta();
-        daysBeforeNextState = tmp.second;
+        daysBeforeNextState = thrust::get<1>(tmp);
+        if (thrust::get<2>(tmp)) {// was a bad progression
+            stats.worstState = state;
+            stats.worstStateTimestamp = simTime;
+        } else {// if (oldWBState != states::WBStates::W) this will record any good progression!
+            stats.worstStateEndTimestamp = simTime;
+        }
     }
 }
 
