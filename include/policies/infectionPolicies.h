@@ -47,6 +47,7 @@ public:
             realThis->locs->locationListOffsets;// offsets into locationAgentList and locationIdsOfAgents
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
         auto& ppstates = realThis->agents->PPValues;
+        auto& infectiousness = realThis->locs->infectiousness;
 
         thrust::device_vector<double> infectionRatios(locationListOffsets.size() - 1, 0.0);
         thrust::device_vector<float> fullInfectedCounts(locationListOffsets.size() - 1, 0);
@@ -56,10 +57,10 @@ public:
         });
         auto parTMP = par;
         thrust::transform(
-            thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.begin(), locationListOffsets.begin(), locationListOffsets.begin() + 1)),
-            thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.end(), locationListOffsets.end() - 1, locationListOffsets.end())),
+            thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.begin(), locationListOffsets.begin(), locationListOffsets.begin() + 1, infectiousness.begin())),
+            thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.end(), locationListOffsets.end() - 1, locationListOffsets.end(), infectiousness.end())),
             infectionRatios.begin(),
-            [=] HD(thrust::tuple<float&, unsigned&, unsigned&> tuple) {
+            [=] HD(thrust::tuple<float&, unsigned&, unsigned&, double&> tuple) {
                 float numInfectedAgentsPresent = thrust::get<0>(tuple);
                 unsigned offset0 = thrust::get<1>(tuple);
                 unsigned offset1 = thrust::get<2>(tuple);
@@ -68,6 +69,7 @@ public:
                 double densityOfInfected = numInfectedAgentsPresent / num_agents;
                 double y = 1.0 / (1.0 + parTMP.v * std::exp(-parTMP.s * 2 * (densityOfInfected - parTMP.h - 0.5)));
                 y = parTMP.a * y + parTMP.b;
+                y *= thrust::get<3>(tuple);
                 return y / (60.0 * 24.0 / static_cast<double>(timeStep));
             });
 

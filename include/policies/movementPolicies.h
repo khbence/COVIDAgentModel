@@ -69,7 +69,7 @@ namespace RealMovementOps {
         if (locType == possibleTypesPtr[i])
             return possibleLocationsPtr[i];
     }
-    printf("locType %d not found for agent %d - locationOffsets: %d-%d\n", locType, agent, locationOffsetPtr[agent], locationOffsetPtr[agent+1]);
+    // printf("locType %d not found for agent %d - locationOffsets: %d-%d\n", locType, agent, locationOffsetPtr[agent], locationOffsetPtr[agent+1]);
     return 0;
 }
 template <typename PPState>

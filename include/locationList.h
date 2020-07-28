@@ -39,6 +39,7 @@ public:
     // the following vectors are the input data for locations in separated vectors
     thrust::device_vector<TypeOfLocation> locType;
     thrust::device_vector<PositionType> position;
+    thrust::device_vector<double> infectiousness;
     thrust::device_vector<unsigned> areas;
     thrust::device_vector<bool> states;// Closed/open or ON/OFF
 
@@ -71,6 +72,7 @@ public:
 
         thrust::host_vector<TypeOfLocation> locType_h;
         thrust::host_vector<PositionType> position_h;
+        thrust::host_vector<double> infectiousness_h;
         thrust::host_vector<unsigned> areas_h;
         thrust::host_vector<bool> states_h;
 
@@ -80,6 +82,7 @@ public:
             IDMapping.emplace(loc.ID, idx++);
             locType_h.push_back(loc.type);
             position_h.push_back(PositionType{ loc.coordinates[0], loc.coordinates[1] });
+            infectiousness_h.push_back(loc.infectious);
             areas_h.push_back(loc.area);
             // Transform to upper case, to make it case insensitive
             std::string tmp = loc.state;
@@ -95,6 +98,7 @@ public:
 
         locType = locType_h;
         position = position_h;
+        infectiousness = infectiousness_h;
         areas = areas_h;
         states = states_h;
 
