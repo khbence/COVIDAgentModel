@@ -16,6 +16,7 @@ public:
 
 private:
     Parameters par;
+    bool dumpToFile=false;
 
 public:
     static void addProgramParameters(cxxopts::Options& options) {
@@ -23,7 +24,8 @@ public:
             "Infection: 1< :longer small phase [0 1] :longer high phase",
             cxxopts::value<double>()->default_value("1.0"))("H,Ihorizontal",
             "sigmoid: horizotal move of inflexcion point; <-1 or >1 :exponential like",
-            cxxopts::value<double>()->default_value("0.0"))("s,Ishape", "shape: bigger, more steep", cxxopts::value<double>()->default_value("5.0"));
+            cxxopts::value<double>()->default_value("0.0"))("s,Ishape", "shape: bigger, more steep", cxxopts::value<double>()->default_value("5.0"))
+            ("dumpLocationInfections", "Dump per-location statistics at each timestep ", cxxopts::value<bool>()->default_value("false"));
     }
 
 protected:
@@ -37,6 +39,7 @@ protected:
 
         par.a = m / (max - min);
         par.b = -m * min / (max - min);
+        dumpToFile = result["dumpLocationInfections"].as<bool>();
     }
 
 public:
@@ -55,6 +58,25 @@ public:
         reduce_by_location(locationListOffsets, fullInfectedCounts, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> float {
             return ppstate.isInfectious();
         });
+        if (dumpToFile) {
+            std::ofstream file;
+            file.open("locationStats_"+std::to_string(simTime.getTimestamp())+".txt");
+            thrust::device_vector<unsigned> location(locationListOffsets.size() - 1);
+            thrust::device_vector<float> infectedCount(locationListOffsets.size() - 1,0);
+            thrust::transform(locationListOffsets.begin()+1,locationListOffsets.end(),
+                              locationListOffsets.begin(),
+                              location.begin(), thrust::minus<unsigned>());
+            reduce_by_location(locationListOffsets, infectedCount, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> float {
+                return ppstate.isInfectious()>0;
+            });
+            thrust::copy(location.begin(), location.end(), std::ostream_iterator<unsigned>(file, " "));
+            file << "\n";
+            thrust::copy(infectedCount.begin(), infectedCount.end(), std::ostream_iterator<float>(file, " "));
+            file << "\n";
+            thrust::copy(fullInfectedCounts.begin(), fullInfectedCounts.end(), std::ostream_iterator<float>(file, " "));
+            file << "\n";
+            file.close();
+        }
         auto parTMP = par;
         thrust::transform(
             thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.begin(), locationListOffsets.begin(), locationListOffsets.begin() + 1, infectiousness.begin())),
