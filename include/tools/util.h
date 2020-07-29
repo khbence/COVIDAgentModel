@@ -12,9 +12,9 @@ public:
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
 // TODO: swap this for loop over agents and atomicAdd to locaiton
-template<typename UnaryFunction, typename PPState_t>
+template<typename UnaryFunction, typename Count_t, typename PPState_t>
 __global__ void reduce_by_location_kernel(unsigned* locationListOffsetsPtr,
-    float* fullInfectedCountsPtr,
+    Count_t* fullInfectedCountsPtr,
     PPState_t* PPValuesPtr,
     unsigned numLocations,
     UnaryFunction lam) {
@@ -26,21 +26,21 @@ __global__ void reduce_by_location_kernel(unsigned* locationListOffsetsPtr,
     }
 }
 #endif
-template<typename UnaryFunction, typename PPState_t>
+template<typename UnaryFunction, typename Count_t, typename PPState_t>
 void reduce_by_location(thrust::device_vector<unsigned>& locationListOffsets,
-    thrust::device_vector<float>& fullInfectedCounts,
+    thrust::device_vector<Count_t>& fullInfectedCounts,
     thrust::device_vector<PPState_t>& PPValues,
     UnaryFunction lam) {
     unsigned numLocations = locationListOffsets.size() - 1;
     unsigned* locationListOffsetsPtr = thrust::raw_pointer_cast(locationListOffsets.data());
-    float* fullInfectedCountsPtr = thrust::raw_pointer_cast(fullInfectedCounts.data());
+    Count_t* fullInfectedCountsPtr = thrust::raw_pointer_cast(fullInfectedCounts.data());
     PPState_t* PPValuesPtr = thrust::raw_pointer_cast(PPValues.data());
 
     PROFILE_FUNCTION();
 
     if (numLocations == 1) {
         fullInfectedCounts[0] = thrust::reduce(thrust::make_transform_iterator(PPValues.begin(), lam),
-                                               thrust::make_transform_iterator(PPValues.end(), lam), 0.0f);
+                                               thrust::make_transform_iterator(PPValues.end(), lam), (Count_t)0.0f);
     } else {
 
     #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP

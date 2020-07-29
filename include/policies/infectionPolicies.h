@@ -58,24 +58,28 @@ public:
         reduce_by_location(locationListOffsets, fullInfectedCounts, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> float {
             return ppstate.isInfectious();
         });
+        std::ofstream file;
+        thrust::device_vector<unsigned> susceptible1;
         if (dumpToFile) {
-            std::ofstream file;
             file.open("locationStats_"+std::to_string(simTime.getTimestamp())+".txt");
             thrust::device_vector<unsigned> location(locationListOffsets.size() - 1);
-            thrust::device_vector<float> infectedCount(locationListOffsets.size() - 1,0);
+            susceptible1.resize(locationListOffsets.size() - 1,0);
+            thrust::device_vector<unsigned> infectedCount(locationListOffsets.size() - 1,0);
             thrust::transform(locationListOffsets.begin()+1,locationListOffsets.end(),
                               locationListOffsets.begin(),
                               location.begin(), thrust::minus<unsigned>());
-            reduce_by_location(locationListOffsets, infectedCount, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> float {
+            reduce_by_location(locationListOffsets, susceptible1, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> unsigned {
+                return ppstate.isSusceptible();
+            });
+            reduce_by_location(locationListOffsets, infectedCount, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> unsigned {
                 return ppstate.isInfectious()>0;
             });
             thrust::copy(location.begin(), location.end(), std::ostream_iterator<unsigned>(file, " "));
             file << "\n";
-            thrust::copy(infectedCount.begin(), infectedCount.end(), std::ostream_iterator<float>(file, " "));
+            thrust::copy(infectedCount.begin(), infectedCount.end(), std::ostream_iterator<unsigned>(file, " "));
             file << "\n";
             thrust::copy(fullInfectedCounts.begin(), fullInfectedCounts.end(), std::ostream_iterator<float>(file, " "));
             file << "\n";
-            file.close();
         }
         auto parTMP = par;
         thrust::transform(
@@ -96,5 +100,17 @@ public:
             });
 
         LocationsList<SimulationType>::infectAgents(infectionRatios, agentLocations, simTime);
+        if (dumpToFile) {
+            thrust::device_vector<unsigned> susceptible2(locationListOffsets.size() - 1,0);
+            reduce_by_location(locationListOffsets, susceptible2, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> unsigned {
+                return ppstate.isSusceptible();
+            });
+            thrust::transform(susceptible1.begin(),susceptible1.end(),
+                              susceptible2.begin(),
+                              susceptible1.begin(), thrust::minus<unsigned>());
+            thrust::copy(susceptible1.begin(), susceptible1.end(), std::ostream_iterator<unsigned>(file, " "));
+            file << "\n";
+            file.close();
+        }
     }
 };
