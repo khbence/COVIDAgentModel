@@ -33,6 +33,7 @@ class LocationsList {
         locType.reserve(s);
         areas.reserve(s);
         states.reserve(s);
+        capacity.reserve(s);
     }
 
 public:
@@ -41,6 +42,7 @@ public:
     thrust::device_vector<PositionType> position;
     thrust::device_vector<double> infectiousness;
     thrust::device_vector<unsigned> areas;
+    thrust::device_vector<unsigned> capacity;
     thrust::device_vector<bool> states;// Closed/open or ON/OFF
 
 
@@ -75,6 +77,7 @@ public:
         thrust::host_vector<double> infectiousness_h;
         thrust::host_vector<unsigned> areas_h;
         thrust::host_vector<bool> states_h;
+        thrust::host_vector<unsigned> capacity_h;
 
         reserve(inputData.places.size());
         unsigned idx = 0;
@@ -83,6 +86,7 @@ public:
             locType_h.push_back(loc.type);
             position_h.push_back(PositionType{ loc.coordinates[0], loc.coordinates[1] });
             infectiousness_h.push_back(loc.infectious);
+            capacity_h.push_back(loc.capacity);
             areas_h.push_back(loc.area);
             // Transform to upper case, to make it case insensitive
             std::string tmp = loc.state;
@@ -101,6 +105,7 @@ public:
         infectiousness = infectiousness_h;
         areas = areas_h;
         states = states_h;
+        capacity = capacity_h;
 
         return IDMapping;
     }
