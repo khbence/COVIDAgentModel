@@ -49,6 +49,7 @@ public:
         thrust::device_vector<unsigned>& locationListOffsets =
             realThis->locs->locationListOffsets;// offsets into locationAgentList and locationIdsOfAgents
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
+        
         auto& ppstates = realThis->agents->PPValues;
         auto& infectiousness = realThis->locs->infectiousness;
 
@@ -95,7 +96,7 @@ public:
                 double densityOfInfected = numInfectedAgentsPresent / num_agents;
                 double y = 1.0 / (1.0 + parTMP.v * std::exp(-parTMP.s * 2 * (densityOfInfected - parTMP.h - 0.5)));
                 y = parTMP.a * y + parTMP.b;
-                y *= thrust::get<3>(tuple);
+                y *= thrust::get<3>(tuple); //Weighted by infectiousness
                 return y / (60.0 * 24.0 / static_cast<double>(timeStep));
             });
 

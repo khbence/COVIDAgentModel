@@ -52,15 +52,18 @@ public:
         auto& ppstates = agents->PPValues;
         auto& agentStats = agents->agentStats;
         auto& agentMeta = agents->agentMetaData;
+        auto& diagnosed = agents->diagnosed;
         unsigned timestamp = simTime.getTimestamp();
         // Update states
-        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin(), agentStats.begin())),
-            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end(), agentStats.end())),
-            [timestamp] HD(thrust::tuple<PPState&, AgentMeta&, AgentStats&> tup) {
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin(), agentStats.begin(), diagnosed.begin())),
+            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end(), agentStats.end(), diagnosed.end())),
+            [timestamp] HD(thrust::tuple<PPState&, AgentMeta&, AgentStats&, bool&> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
                 auto& agentStat = thrust::get<2>(tup);
+                auto& diagnosed = thrust::get<3>(tup);
                 ppstate.update(meta.getScalingSymptoms(), agentStat, timestamp);
+                if (ppstate.isSusceptible()) diagnosed = false;
             });
     }
 

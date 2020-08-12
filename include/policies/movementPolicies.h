@@ -77,7 +77,7 @@ template <typename PPState>
 __device__
 #endif
 void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr,
-                        unsigned *agentTypesPtr, bool *diagnosedPtr, AgentStats *agentStatsPtr, unsigned *eventOffsetPtr, AgentTypeList::Event *eventsPtr, unsigned *agentLocationsPtr,
+                        unsigned *agentTypesPtr, bool *diagnosedPtr, bool *quarantinedPtr, AgentStats *agentStatsPtr, unsigned *eventOffsetPtr, AgentTypeList::Event *eventsPtr, unsigned *agentLocationsPtr,
                         unsigned long*locationOffsetPtr, unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, 
                         bool *locationStatesPtr, unsigned *locationCapacitiesPtr,
                         Days day, unsigned hospitalType, unsigned homeType, unsigned publicPlaceType, unsigned doctorType,
@@ -100,8 +100,15 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
     }
 
     //Should agent still be quarantined
-    if (diagnosedPtr[i] && (timestamp-agentStatsPtr[i].diagnosedTimestamp)< 2*7*24*60/timeStep) { //TODO: specify quarantine length
-        //if less than 2 weeks since diagnosis, stay where agent already is
+    if ((diagnosedPtr[i] && (timestamp-agentStatsPtr[i].diagnosedTimestamp)< 2*7*24*60/timeStep) ||
+        (quarantinedPtr[i] && (timestamp-agentStatsPtr[i].quarantinedTimestamp)< 2*7*24*60/timeStep)) { //TODO: specify quarantine length
+        if (agentStatesPtr[i].getWBState() == states::WBStates::S) //send to hospital
+            agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(i, hospitalType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+        else {
+            //Quarantine for 2 weeks at home
+            agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+        }
+        //if less than 2 weeks since diagnosis/quarantine, stay where agent already is
         stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
         return;
     }
@@ -234,7 +241,9 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
         //If previously undiagnosed and 
         if (!diagnosedPtr[i] && agentStatesPtr[i].isInfectious()) {
             diagnosedPtr[i] = true;
+            quarantinedPtr[i] = true;
             agentStatsPtr[i].diagnosedTimestamp = timestamp;
+            agentStatsPtr[i].quarantinedTimestamp = timestamp;
             if (agentStatesPtr[i].getWBState() == states::WBStates::S) //send to hospital
                 agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(i, hospitalType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
             else {
@@ -242,7 +251,7 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
                 agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
                 stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max(); //this will be set to 0 at midnight, so need to check
                 if (i == tracked)
-                printf("\tDiagnosed going into quarantine in home type 2 location %d for %d steps\n", agentLocationsPtr[i], stepsUntilMovePtr[i]-1);
+                printf("\tDiagnosed, going into quarantine in home type 2 location %d for %d steps\n", agentLocationsPtr[i], stepsUntilMovePtr[i]-1);
             }
         }
     }
@@ -253,7 +262,7 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
 template <typename PPState>
 __global__ void doMovementDriver(unsigned numberOfAgents, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr,
-                        unsigned *agentTypesPtr, bool *diagnosedPtr, AgentStats *agentStatsPtr, unsigned *eventOffsetPtr, AgentTypeList::Event *eventsPtr, unsigned *agentLocationsPtr,
+                        unsigned *agentTypesPtr, bool *diagnosedPtr, bool *quarantinedPtr, AgentStats *agentStatsPtr, unsigned *eventOffsetPtr, AgentTypeList::Event *eventsPtr, unsigned *agentLocationsPtr,
                         unsigned long*locationOffsetPtr, unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, 
                         bool *locationStatesPtr, unsigned *locationCapacitiesPtr,
                         Days day, unsigned hospitalType, unsigned homeType, unsigned publicPlaceType, unsigned doctorType,
@@ -261,7 +270,7 @@ __global__ void doMovementDriver(unsigned numberOfAgents, unsigned *stepsUntilMo
     unsigned i = threadIdx.x + blockIdx.x*blockDim.x;
     if (i < numberOfAgents) {
         RealMovementOps::doMovement(i, stepsUntilMovePtr, agentStatesPtr,
-                    agentTypesPtr, diagnosedPtr, agentStatsPtr, eventOffsetPtr, eventsPtr, agentLocationsPtr,
+                    agentTypesPtr, diagnosedPtr, quarantinedPtr, agentStatsPtr, eventOffsetPtr, eventsPtr, agentLocationsPtr,
                     locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, 
                     locationStatesPtr, locationCapacitiesPtr,
                     day, hospitalType, homeType, publicPlaceType, doctorType, simTime, timeStep, timestamp, tracked);
@@ -331,6 +340,8 @@ class RealMovement {
         typename SimulationType::PPState_t *agentStatesPtr = thrust::raw_pointer_cast(agentStates.data());
         thrust::device_vector<bool>& diagnosed = realThis->agents->diagnosed;
         bool *diagnosedPtr = thrust::raw_pointer_cast(diagnosed.data());
+        thrust::device_vector<bool>& quarantined = realThis->agents->quarantined;
+        bool *quarantinedPtr = thrust::raw_pointer_cast(quarantined.data());
         thrust::device_vector<AgentStats>& agentStats = realThis->agents->agentStats;
         AgentStats *agentStatsPtr = thrust::raw_pointer_cast(agentStats.data());
         unsigned *stepsUntilMovePtr = thrust::raw_pointer_cast(this->stepsUntilMove.data());
@@ -359,7 +370,7 @@ class RealMovement {
         #pragma omp parallel for
         for (unsigned i = 0; i < numberOfAgents; i++) {
             RealMovementOps::doMovement(i, stepsUntilMovePtr, agentStatesPtr,
-                       agentTypesPtr, diagnosedPtr, agentStatsPtr, eventOffsetPtr, eventsPtr, agentLocationsPtr,
+                       agentTypesPtr, diagnosedPtr, quarantinedPtr, agentStatsPtr, eventOffsetPtr, eventsPtr, agentLocationsPtr,
                        locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, 
                        locationStatesPtr, locationCapacitiesPtr,
                        day, hospital, home, publicSpace, doctor, TimeDay(simTime), timeStep, timestamp, this->tracked);
@@ -367,7 +378,7 @@ class RealMovement {
         }
         #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
         RealMovementOps::doMovementDriver<<<(numberOfAgents-1)/256+1,256>>>(numberOfAgents, stepsUntilMovePtr, agentStatesPtr,
-                       agentTypesPtr, diagnosedPtr, agentStatsPtr, eventOffsetPtr, eventsPtr, agentLocationsPtr,
+                       agentTypesPtr, diagnosedPtr, quarantinedPtr, agentStatsPtr, eventOffsetPtr, eventsPtr, agentLocationsPtr,
                        locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, 
                        locationStatesPtr, locationCapacitiesPtr,
                        day, hospital, home, publicSpace, doctor, TimeDay(simTime), timeStep, timestamp, this->tracked);
