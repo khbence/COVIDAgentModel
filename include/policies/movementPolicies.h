@@ -109,15 +109,16 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
             if (i == tracked)
                 printf("Agent %d of type %d day %d at %d:%d location %d is quarantined, staying at home until %d\n", i, agentType+1, (int)day, simTime.getMinutes()/60, simTime.getMinutes()%60, agentLocationsPtr[i], locationQuarantineUntilPtr[agentLocationsPtr[i]]);
         }
+        stepsUntilMovePtr[i] = locationQuarantineUntilPtr[agentLocationsPtr[i]]-timestamp;
+        
         //If not home, send home
         unsigned homeLocation = RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
         if (homeLocation != agentLocationsPtr[i]) {
             unsigned until = locationQuarantineUntilPtr[agentLocationsPtr[i]];
             agentLocationsPtr[i] = homeLocation;
             //TODO: quarantine whole home??
-            locationQuarantineUntilPtr[agentLocationsPtr[i]] = until;
+            //locationQuarantineUntilPtr[agentLocationsPtr[i]] = until;
         }
-        stepsUntilMovePtr[i] = locationQuarantineUntilPtr[agentLocationsPtr[i]]-timestamp;
         return;
     }
 
