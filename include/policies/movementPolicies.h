@@ -79,13 +79,15 @@ __device__
 void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr,
                         unsigned *agentTypesPtr, bool *diagnosedPtr, bool *quarantinedPtr, AgentStats *agentStatsPtr, unsigned *eventOffsetPtr, AgentTypeList::Event *eventsPtr, unsigned *agentLocationsPtr,
                         unsigned long*locationOffsetPtr, unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, 
-                        bool *locationStatesPtr, unsigned *locationCapacitiesPtr,
+                        bool *locationStatesPtr, unsigned *locationCapacitiesPtr, unsigned *locationQuarantineUntilPtr,
                         Days day, unsigned hospitalType, unsigned homeType, unsigned publicPlaceType, unsigned doctorType,
                         TimeDay simTime, unsigned timeStep, unsigned timestamp, unsigned tracked) {
     if (stepsUntilMovePtr[i]>0) {
         stepsUntilMovePtr[i]--;
         return;
     }
+
+    unsigned &agentType = agentTypesPtr[i];
     states::WBStates wBState = agentStatesPtr[i].getWBState();
     if (wBState == states::WBStates::D) { //If dead, do not go anywhere
         stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
@@ -96,6 +98,26 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
     if (wBState == states::WBStates::S) { //go to hospital if in serious condition
         stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
         agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(i, hospitalType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+        return;
+    }
+
+    //Is agent currently in a place under quarantine
+    if (timestamp < locationQuarantineUntilPtr[agentLocationsPtr[i]]) {
+        if (agentStatsPtr[i].quarantinedTimestamp==0) {
+            agentStatsPtr[i].quarantinedTimestamp = timestamp;
+            quarantinedPtr[i] = true;
+            if (i == tracked)
+                printf("Agent %d of type %d day %d at %d:%d location %d is quarantined, staying at home until %d\n", i, agentType+1, (int)day, simTime.getMinutes()/60, simTime.getMinutes()%60, agentLocationsPtr[i], locationQuarantineUntilPtr[agentLocationsPtr[i]]);
+        }
+        //If not home, send home
+        unsigned homeLocation = RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+        if (homeLocation != agentLocationsPtr[i]) {
+            unsigned until = locationQuarantineUntilPtr[agentLocationsPtr[i]];
+            agentLocationsPtr[i] = homeLocation;
+            //TODO: quarantine whole home??
+            locationQuarantineUntilPtr[agentLocationsPtr[i]] = until;
+        }
+        stepsUntilMovePtr[i] = locationQuarantineUntilPtr[agentLocationsPtr[i]]-timestamp;
         return;
     }
 
@@ -112,8 +134,6 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
         stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
         return;
     }
-
-    unsigned &agentType = agentTypesPtr[i];
 
     unsigned agentTypeOffset = AgentTypeList::getOffsetIndex(agentType,wBState, day);
     unsigned eventsBegin = eventOffsetPtr[agentTypeOffset];
@@ -244,6 +264,7 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
             quarantinedPtr[i] = true;
             agentStatsPtr[i].diagnosedTimestamp = timestamp;
             agentStatsPtr[i].quarantinedTimestamp = timestamp;
+            
             if (agentStatesPtr[i].getWBState() == states::WBStates::S) //send to hospital
                 agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(i, hospitalType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
             else {
@@ -251,7 +272,12 @@ void doMovement(unsigned i, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr
                 agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
                 stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max(); //this will be set to 0 at midnight, so need to check
                 if (i == tracked)
-                printf("\tDiagnosed, going into quarantine in home type 2 location %d for %d steps\n", agentLocationsPtr[i], stepsUntilMovePtr[i]-1);
+                    printf("\tDiagnosed, going into quarantine in home type 2 location %d for %d steps\n", agentLocationsPtr[i], stepsUntilMovePtr[i]-1);
+                //TODO: after diagnosis, what locations do we put under quarantine?
+                //Place home under quarantine
+                if (locationQuarantineUntilPtr[agentLocationsPtr[i]]<timestamp) {
+                    locationQuarantineUntilPtr[agentLocationsPtr[i]] = timestamp + 2*7*24*60/timeStep; //TODO: quarantine period
+                }
             }
         }
     }
@@ -264,7 +290,7 @@ template <typename PPState>
 __global__ void doMovementDriver(unsigned numberOfAgents, unsigned *stepsUntilMovePtr, PPState *agentStatesPtr,
                         unsigned *agentTypesPtr, bool *diagnosedPtr, bool *quarantinedPtr, AgentStats *agentStatsPtr, unsigned *eventOffsetPtr, AgentTypeList::Event *eventsPtr, unsigned *agentLocationsPtr,
                         unsigned long*locationOffsetPtr, unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, 
-                        bool *locationStatesPtr, unsigned *locationCapacitiesPtr,
+                        bool *locationStatesPtr, unsigned *locationCapacitiesPtr, unsigned *locationQuarantineUntilPtr,
                         Days day, unsigned hospitalType, unsigned homeType, unsigned publicPlaceType, unsigned doctorType,
                         TimeDay simTime, unsigned timeStep, unsigned timestamp, unsigned tracked) {
     unsigned i = threadIdx.x + blockIdx.x*blockDim.x;
@@ -272,7 +298,7 @@ __global__ void doMovementDriver(unsigned numberOfAgents, unsigned *stepsUntilMo
         RealMovementOps::doMovement(i, stepsUntilMovePtr, agentStatesPtr,
                     agentTypesPtr, diagnosedPtr, quarantinedPtr, agentStatsPtr, eventOffsetPtr, eventsPtr, agentLocationsPtr,
                     locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, 
-                    locationStatesPtr, locationCapacitiesPtr,
+                    locationStatesPtr, locationCapacitiesPtr, locationQuarantineUntilPtr,
                     day, hospitalType, homeType, publicPlaceType, doctorType, simTime, timeStep, timestamp, tracked);
     }
 }
@@ -330,6 +356,8 @@ class RealMovement {
         bool *locationStatesPtr = thrust::raw_pointer_cast(locationStates.data());
         thrust::device_vector<unsigned>& locationCapacities = realThis->locs->capacity;
         unsigned *locationCapacitiesPtr = thrust::raw_pointer_cast(locationCapacities.data());
+        thrust::device_vector<unsigned>& locationQuarantineUntil = realThis->locs->quarantineUntil;
+        unsigned *locationQuarantineUntilPtr = thrust::raw_pointer_cast(locationQuarantineUntil.data());
 
         //Agent-based data
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
@@ -372,7 +400,7 @@ class RealMovement {
             RealMovementOps::doMovement(i, stepsUntilMovePtr, agentStatesPtr,
                        agentTypesPtr, diagnosedPtr, quarantinedPtr, agentStatsPtr, eventOffsetPtr, eventsPtr, agentLocationsPtr,
                        locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, 
-                       locationStatesPtr, locationCapacitiesPtr,
+                       locationStatesPtr, locationCapacitiesPtr, locationQuarantineUntilPtr,
                        day, hospital, home, publicSpace, doctor, TimeDay(simTime), timeStep, timestamp, this->tracked);
             
         }
@@ -380,7 +408,7 @@ class RealMovement {
         RealMovementOps::doMovementDriver<<<(numberOfAgents-1)/256+1,256>>>(numberOfAgents, stepsUntilMovePtr, agentStatesPtr,
                        agentTypesPtr, diagnosedPtr, quarantinedPtr, agentStatsPtr, eventOffsetPtr, eventsPtr, agentLocationsPtr,
                        locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, 
-                       locationStatesPtr, locationCapacitiesPtr,
+                       locationStatesPtr, locationCapacitiesPtr, locationQuarantineUntilPtr,
                        day, hospital, home, publicSpace, doctor, TimeDay(simTime), timeStep, timestamp, this->tracked);
         cudaDeviceSynchronize();
         #endif

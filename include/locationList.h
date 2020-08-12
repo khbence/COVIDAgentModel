@@ -32,8 +32,9 @@ class LocationsList {
         position.reserve(s);
         locType.reserve(s);
         areas.reserve(s);
-        states.reserve(s);
         capacity.reserve(s);
+        states.reserve(s);
+        quarantineUntil.reserve(s);
     }
 
 public:
@@ -44,6 +45,7 @@ public:
     thrust::device_vector<unsigned> areas;
     thrust::device_vector<unsigned> capacity;
     thrust::device_vector<bool> states;// Closed/open or ON/OFF
+    thrust::device_vector<unsigned> quarantineUntil;
 
 
     // indices of agents sorted by location, and sorted by agent index
@@ -78,6 +80,7 @@ public:
         thrust::host_vector<unsigned> areas_h;
         thrust::host_vector<bool> states_h;
         thrust::host_vector<unsigned> capacity_h;
+        thrust::host_vector<unsigned> quarantineUntil_h;
 
         reserve(inputData.places.size());
         unsigned idx = 0;
@@ -88,6 +91,7 @@ public:
             infectiousness_h.push_back(loc.infectious);
             capacity_h.push_back(loc.capacity);
             areas_h.push_back(loc.area);
+            quarantineUntil_h.push_back(0);
             // Transform to upper case, to make it case insensitive
             std::string tmp = loc.state;
             std::for_each(tmp.begin(), tmp.end(), [](char c) { return std::toupper(c); });
@@ -106,6 +110,7 @@ public:
         areas = areas_h;
         states = states_h;
         capacity = capacity_h;
+        quarantineUntil = quarantineUntil_h;
 
         return IDMapping;
     }
