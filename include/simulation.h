@@ -52,15 +52,18 @@ public:
         auto& ppstates = agents->PPValues;
         auto& agentStats = agents->agentStats;
         auto& agentMeta = agents->agentMetaData;
+        auto& diagnosed = agents->diagnosed;
         unsigned timestamp = simTime.getTimestamp();
         // Update states
-        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin(), agentStats.begin())),
-            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end(), agentStats.end())),
-            [timestamp] HD(thrust::tuple<PPState&, AgentMeta&, AgentStats&> tup) {
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin(), agentStats.begin(), diagnosed.begin())),
+            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end(), agentStats.end(), diagnosed.end())),
+            [timestamp] HD(thrust::tuple<PPState&, AgentMeta&, AgentStats&, bool&> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
                 auto& agentStat = thrust::get<2>(tup);
+                auto& diagnosed = thrust::get<3>(tup);
                 ppstate.update(meta.getScalingSymptoms(), agentStat, timestamp);
+                if (ppstate.isSusceptible()) diagnosed = false;
             });
     }
 
@@ -73,8 +76,7 @@ public:
 
 public:
     explicit Simulation(const cxxopts::ParseResult& result)
-        : timeStep(result["deltat"].as<decltype(timeStep)>()),
-          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
+        : timeStep(result["deltat"].as<decltype(timeStep)>()), lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
         PROFILE_FUNCTION();
         outAgentStat = result["outAgentStat"].as<std::string>();
         InfectionPolicy<Simulation>::initializeArgs(result);
@@ -84,8 +86,10 @@ public:
             std::string header = PPState_t::initTransitionMatrix(data.acquireProgressionMatrix());
             agents->initAgentMeta(data.acquireParameters());
             locs->initLocationTypes(data.acquireLocationTypes());
-            MovementPolicy<Simulation>::init(data.acquireLocationTypes());
-            auto locationMapping = locs->initLocations(data.acquireLocations());
+            auto tmp = locs->initLocations(data.acquireLocations());
+            auto cemeteryID = tmp.first;
+            auto locationMapping = tmp.second;
+            MovementPolicy<Simulation>::init(data.acquireLocationTypes(), cemeteryID);
             auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
             agents->initAgents(data.acquireAgents(), locationMapping, agentTypeMapping, data.getAgentTypeLocTypes());
             RandomGenerator::resize(agents->PPValues.size());
@@ -106,7 +110,7 @@ public:
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
-                if (simTime.getTimestamp()>0) updateAgents(simTime); //No disease progression at launch
+                if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);

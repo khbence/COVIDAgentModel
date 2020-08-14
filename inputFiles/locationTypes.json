@@ -3,6 +3,8 @@
     "home": 2,
     "hospital": 12,
     "doctor" : 14,
+    "school" : 3,
+    "work" : 4,
     "types": [
         {
             "ID": 1,

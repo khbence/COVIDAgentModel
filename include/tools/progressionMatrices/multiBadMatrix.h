@@ -13,7 +13,7 @@ class MultiBadMatrix : public BasicLengthAbstract {
         thrust::pair<unsigned, float>* bad;
         NextStates(unsigned _badCount, thrust::pair<unsigned, float>* _bad, unsigned _neutralCount, thrust::pair<unsigned, float>* _neutral);
 
-        [[nodiscard]] thrust::pair<unsigned,bool> HD selectNext(float scalingSypmtons) const;
+        [[nodiscard]] thrust::pair<unsigned, bool> HD selectNext(float scalingSypmtons) const;
     };
 
     class NextStatesInit {

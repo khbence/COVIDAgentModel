@@ -26,6 +26,7 @@ class AgentList {
         PPValues.reserve(s);
         agentMetaData.reserve(s);
         diagnosed.reserve(s);
+        quarantined.reserve(s);
         location.reserve(s);
         agents.reserve(s);
     }
@@ -38,6 +39,7 @@ public:
     thrust::device_vector<unsigned> location;
     thrust::device_vector<unsigned> types;
     thrust::device_vector<AgentStats> agentStats;
+    thrust::device_vector<bool> quarantined;
 
     thrust::device_vector<unsigned long> locationOffset;
     // longer, every agents' every locations, indexed by the offset
@@ -89,6 +91,7 @@ public:
         thrust::host_vector<AgentStats> agentStats_h;
         thrust::host_vector<AgentMeta> agentMetaData_h;
         thrust::host_vector<bool> diagnosed_h;
+        thrust::host_vector<bool> quarantined_h;
         thrust::host_vector<unsigned> location_h;
         thrust::host_vector<unsigned> types_h;
         thrust::host_vector<Agent<AgentList>> agents_h;
@@ -101,6 +104,7 @@ public:
         PPValues_h.reserve(n);
         agentMetaData_h.reserve(n);
         diagnosed_h.reserve(n);
+        quarantined_h.reserve(n);
         location_h.reserve(n);
         types_h.reserve(n);
         agents_h.reserve(n);
@@ -124,6 +128,7 @@ public:
             agentMetaData_h.push_back(BasicAgentMeta(person.sex.front(), person.age, person.preCond));
             // I don't know if we should put any data about it in the input
             diagnosed_h.push_back(false);
+            quarantined_h.push_back(false);
             // Where to put them first?
             location_h.push_back(0);
             agents_h.push_back(Agent<AgentList>{ static_cast<unsigned>(agents.size()) });
@@ -169,6 +174,7 @@ public:
         PPValues = PPValues_h;
         agentMetaData = agentMetaData_h;
         diagnosed = diagnosed_h;
+        quarantined = quarantined_h;
         location = location_h;
         types = types_h;
         agents = agents_h;

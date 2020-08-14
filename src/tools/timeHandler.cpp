@@ -7,7 +7,7 @@ Timehandler Timehandler::operator+(unsigned steps) const {
     ret += steps;
     return ret;
 }
- 
+
 Timehandler& Timehandler::operator+=(unsigned steps) {
     counter += steps;
     current += steps * timeStep;
@@ -92,9 +92,7 @@ Timehandler::Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture)
     if (minsPerDay % timeStep_p != 0) { throw init::BadTimeStep(timeStep_p); }
 }
 
-unsigned HD Timehandler::getStepsUntilMidnight() const {
-    return stepsPerDay - (counter % stepsPerDay);
-}
+unsigned HD Timehandler::getStepsUntilMidnight() const { return stepsPerDay - (counter % stepsPerDay); }
 
 Timehandler Timehandler::getNextMidnight() const {
     Timehandler ret = *this;
@@ -103,13 +101,9 @@ Timehandler Timehandler::getNextMidnight() const {
     return ret;
 }
 
-unsigned HD Timehandler::getMinutes() const {
-    return (counter % stepsPerDay) * timeStep.count();
-}
+unsigned HD Timehandler::getMinutes() const { return (counter % stepsPerDay) * timeStep.count(); }
 
-unsigned HD Timehandler::getTimestamp() const {
-    return counter;
-}
+unsigned HD Timehandler::getTimestamp() const { return counter; }
 
 Days Timehandler::getDay() const {
     time_t tt = std::chrono::system_clock::to_time_t(current);

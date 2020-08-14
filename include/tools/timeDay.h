@@ -40,7 +40,6 @@ public:
     bool HD operator!=(const TimeDay& other) const;
 
 
-
     explicit HD TimeDay(double raw);
     explicit HD TimeDay(unsigned mins);
     explicit HD TimeDay(const Timehandler& t);

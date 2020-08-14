@@ -11,7 +11,7 @@
 class AgentTypeList {
 public:
     class Event {
-        public:
+    public:
         unsigned locationType;
         float chance;
         TimeDay start;
@@ -22,7 +22,7 @@ public:
         Event();
         explicit Event(const parser::AgentTypes::Type::ScheduleUnique::Event& in);
     };
-    
+
 public:
     // use the getOffsetIndex function to get the position for this vector, and use this value to search in events
     thrust::device_vector<unsigned> eventOffset;

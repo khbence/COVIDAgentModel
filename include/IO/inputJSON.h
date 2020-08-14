@@ -11,5 +11,5 @@
 #include "JSONDecoder.h"
 
 namespace parser {
-struct Agent : public jsond::JSONDecodable<Agent> {};
+    struct Agent : public jsond::JSONDecodable<Agent> {};
 }// namespace parser
