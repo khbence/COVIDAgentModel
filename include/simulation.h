@@ -76,8 +76,7 @@ public:
 
 public:
     explicit Simulation(const cxxopts::ParseResult& result)
-        : timeStep(result["deltat"].as<decltype(timeStep)>()),
-          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
+        : timeStep(result["deltat"].as<decltype(timeStep)>()), lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
         PROFILE_FUNCTION();
         outAgentStat = result["outAgentStat"].as<std::string>();
         InfectionPolicy<Simulation>::initializeArgs(result);
@@ -87,8 +86,10 @@ public:
             std::string header = PPState_t::initTransitionMatrix(data.acquireProgressionMatrix());
             agents->initAgentMeta(data.acquireParameters());
             locs->initLocationTypes(data.acquireLocationTypes());
-            MovementPolicy<Simulation>::init(data.acquireLocationTypes());
-            auto locationMapping = locs->initLocations(data.acquireLocations());
+            auto tmp = locs->initLocations(data.acquireLocations());
+            auto cemeteryID = tmp.first;
+            auto locationMapping = tmp.second;
+            MovementPolicy<Simulation>::init(data.acquireLocationTypes(), cemeteryID);
             auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
             agents->initAgents(data.acquireAgents(), locationMapping, agentTypeMapping, data.getAgentTypeLocTypes());
             RandomGenerator::resize(agents->PPValues.size());
@@ -109,7 +110,7 @@ public:
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
-                if (simTime.getTimestamp()>0) updateAgents(simTime); //No disease progression at launch
+                if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);

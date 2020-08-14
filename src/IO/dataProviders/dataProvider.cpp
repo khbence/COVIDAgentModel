@@ -23,11 +23,9 @@ void DataProvider::readLocationTypes(const std::string& fileName) { locationType
 
 void DataProvider::readLocations(const std::string& fileName, bool randomAgents) {
     locations = DECODE_JSON_FILE(fileName, decltype(locations));
-    if(randomAgents) {
-        for(const auto& l : locations.places) {
-            typeToLocationMapping[l.type].push_back(l.ID);
-        }
-    }    
+    if (randomAgents) {
+        for (const auto& l : locations.places) { typeToLocationMapping[l.type].push_back(l.ID); }
+    }
 }
 
 void DataProvider::readAgents(const std::string& fileName) { agents = DECODE_JSON_FILE(fileName, decltype(agents)); }
@@ -77,9 +75,7 @@ void DataProvider::randomAgents(unsigned N) {
 }
 
 void DataProvider::randomStates() {
-    for(auto& a : agents.people) {
-        a.state = randomSelect(configRandom.stateDistibution.begin());
-    }
+    for (auto& a : agents.people) { a.state = randomSelect(configRandom.stateDistibution.begin()); }
 }
 
 DataProvider::DataProvider(const cxxopts::ParseResult& result) {
@@ -100,9 +96,7 @@ DataProvider::DataProvider(const cxxopts::ParseResult& result) {
     }
     if (numberOfAgents == -1) {
         readAgents(result["agents"].as<std::string>());
-        if(result["randomStates"].as<bool>()) {
-            randomStates();
-        }
+        if (result["randomStates"].as<bool>()) { randomStates(); }
     } else {
         randomAgents(numberOfAgents);
     }

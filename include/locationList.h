@@ -65,9 +65,11 @@ public:
 
     void initLocationTypes(const parser::LocationTypes& inputData) {
         for (auto& type : inputData.types) { generalLocationTypes.emplace(std::make_pair(type.ID, std::move(type.name))); }
+        unsigned cemeteryTypeID = generalLocationTypes.rbegin()->first + 1;
+        generalLocationTypes.emplace(std::make_pair(cemeteryTypeID, "cemetery"));
     }
 
-    [[nodiscard]] std::map<std::string, unsigned> initLocations(const parser::Locations& inputData) {
+    [[nodiscard]] std::pair<unsigned, std::map<std::string, unsigned>> initLocations(const parser::Locations& inputData) {
         // For the runtime performance, it would be better, that the IDs of the locations would be
         // the same as their indexes, but we can not ensure it in the input file, so I create this
         // mapping, that will be used by the agents when I fill them up. Use it only during
@@ -81,8 +83,16 @@ public:
         thrust::host_vector<bool> states_h;
         thrust::host_vector<unsigned> capacity_h;
         thrust::host_vector<unsigned> quarantineUntil_h;
+        auto s = inputData.places.size() + 1;//+1 because of the cemetery
+        locType_h.reserve(s);
+        position_h.reserve(s);
+        infectiousness_h.reserve(s);
+        areas_h.reserve(s);
+        states_h.reserve(s);
+        capacity_h.reserve(s);
+        quarantineUntil_h.reserve(s);
 
-        reserve(inputData.places.size());
+        reserve(s);
         unsigned idx = 0;
         for (const auto& loc : inputData.places) {
             IDMapping.emplace(loc.ID, idx++);
@@ -104,6 +114,14 @@ public:
             }
         }
 
+        // adding cemetery
+        locType_h.push_back(generalLocationTypes.rbegin()->first);
+        position_h.push_back(PositionType{ 0, 0 });
+        infectiousness_h.push_back(0.0);
+        areas_h.push_back(std::numeric_limits<unsigned>::max());
+        states_h.push_back(true);
+        capacity_h.push_back(std::numeric_limits<unsigned>::max());
+
         locType = locType_h;
         position = position_h;
         infectiousness = infectiousness_h;
@@ -112,7 +130,7 @@ public:
         capacity = capacity_h;
         quarantineUntil = quarantineUntil_h;
 
-        return IDMapping;
+        return std::make_pair(locType.size() - 1, IDMapping);
     }
 
     void initialize() {
@@ -124,7 +142,9 @@ public:
     }
 
     // TODO optimise randoms for performance
-    static void infectAgents(thrust::device_vector<double>& infectionRatioAtLocations, thrust::device_vector<unsigned>& agentLocations, Timehandler &simTime) {
+    static void infectAgents(thrust::device_vector<double>& infectionRatioAtLocations,
+        thrust::device_vector<unsigned>& agentLocations,
+        Timehandler& simTime) {
         PROFILE_FUNCTION();
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
         auto& agentStats = SimulationType::AgentListType::getInstance()->agentStats;
@@ -133,18 +153,20 @@ public:
         // &ppstate) {return ppstate.getSIRD() == states::SIRD::I;}); DESC: for (int i = 0; i <
         // number_of_agents; i++) {ppstate = ppstates[i]; infectionRatio =
         // infectionRatioAtLocations[agentLocations[i]];...}
-        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(
-                             ppstates.begin(), thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.begin()),
-                             agentStats.begin(),agentLocations.begin())),
-            thrust::make_zip_iterator(
-                thrust::make_tuple(ppstates.end(), thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.end()),
-                agentStats.end(),agentLocations.end())),
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(),
+                             thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.begin()),
+                             agentStats.begin(),
+                             agentLocations.begin())),
+            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(),
+                thrust::make_permutation_iterator(infectionRatioAtLocations.begin(), agentLocations.end()),
+                agentStats.end(),
+                agentLocations.end())),
             [timestamp] HD(thrust::tuple<typename SimulationType::PPState_t&, double&, AgentStats&, unsigned&> tuple) {
                 auto& ppstate = thrust::get<0>(tuple);
                 double& infectionRatio = thrust::get<1>(tuple);
                 auto& agentStat = thrust::get<2>(tuple);
-                unsigned &agentLocation = thrust::get<3>(tuple);
-                if (ppstate.isSusceptible() && RandomGenerator::randomUnit() < infectionRatio) { 
+                unsigned& agentLocation = thrust::get<3>(tuple);
+                if (ppstate.isSusceptible() && RandomGenerator::randomUnit() < infectionRatio) {
                     ppstate.gotInfected();
                     agentStat.infectedTimestamp = timestamp;
                     agentStat.infectedLocation = agentLocation;
