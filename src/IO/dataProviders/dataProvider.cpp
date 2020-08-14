@@ -11,7 +11,7 @@ void DataProvider::readConfigRandom(const std::string& fileName) { configRandom 
 void DataProvider::readAgentTypes(const std::string& fileName) {
     agentTypes = DECODE_JSON_FILE(fileName, decltype(agentTypes));
     for (const auto& aType : agentTypes.types) {
-        std::set<unsigned> locs{ locationTypes.hospital, locationTypes.publicSpace, locationTypes.home, locationTypes.doctor };
+        std::set<unsigned> locs{ locationTypes.hospital, locationTypes.publicSpace, locationTypes.home, locationTypes.doctor}; //, locationTypes.school, locationTypes.work };
         for (const auto& sch : aType.schedulesUnique) {
             for (const auto& event : sch.schedule) { locs.insert(event.type); }
         }
