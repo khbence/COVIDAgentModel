@@ -4,6 +4,7 @@
 
 class CustomErrors : public std::exception {
     std::string error;
+
 public:
     explicit CustomErrors(std::string&& error_p) : error(std::move(error_p)) {}
     [[nodiscard]] const char* what() const noexcept override { return error.c_str(); }
@@ -108,8 +109,7 @@ namespace IOAgents {
 
     class InvalidLocationID : public AgentsInputError {
     public:
-        explicit InvalidLocationID(const std::string& ID)
-            : AgentsInputError("Location ID " + ID + " does not exists in Locations input file.\n") {}
+        explicit InvalidLocationID(const std::string& ID) : AgentsInputError("Location ID " + ID + " does not exists in Locations input file.\n") {}
     };
 
     class UnnecessaryLocType : public AgentsInputError {
