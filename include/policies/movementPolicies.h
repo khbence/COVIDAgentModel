@@ -78,124 +78,130 @@ namespace RealMovementOps {
     }
 
     template<typename PPState>
+    struct MovementArguments {
+        MovementArguments() : simTime(0u) {}
+        unsigned* stepsUntilMovePtr;
+        PPState* agentStatesPtr;
+        unsigned* agentTypesPtr;
+        bool* diagnosedPtr;
+        bool* quarantinedPtr;
+        AgentStats* agentStatsPtr;
+        unsigned* eventOffsetPtr;
+        AgentTypeList::Event* eventsPtr;
+        unsigned* agentLocationsPtr;
+        unsigned long* locationOffsetPtr;
+        unsigned* possibleLocationsPtr;
+        unsigned* possibleTypesPtr;
+        bool* locationStatesPtr;
+        unsigned* locationCapacitiesPtr;
+        unsigned* locationQuarantineUntilPtr;
+        unsigned quarantinePolicy;
+        Days day;
+        unsigned hospitalType;
+        unsigned homeType;
+        unsigned publicPlaceType;
+        unsigned doctorType;
+        TimeDay simTime;
+        unsigned timeStep;
+        unsigned timestamp;
+        unsigned tracked;
+    };
+
+    template<typename PPState>
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     __device__
 #endif
         void
         doMovement(unsigned i,
-            unsigned* stepsUntilMovePtr,
-            PPState* agentStatesPtr,
-            unsigned* agentTypesPtr,
-            bool* diagnosedPtr,
-            bool* quarantinedPtr,
-            AgentStats* agentStatsPtr,
-            unsigned* eventOffsetPtr,
-            AgentTypeList::Event* eventsPtr,
-            unsigned* agentLocationsPtr,
-            unsigned long* locationOffsetPtr,
-            unsigned* possibleLocationsPtr,
-            unsigned* possibleTypesPtr,
-            bool* locationStatesPtr,
-            unsigned* locationCapacitiesPtr,
-            unsigned* locationQuarantineUntilPtr,
-            unsigned quarantinePolicy,
-            Days day,
-            unsigned hospitalType,
-            unsigned homeType,
-            unsigned publicPlaceType,
-            unsigned doctorType,
-            TimeDay simTime,
-            unsigned timeStep,
-            unsigned timestamp,
-            unsigned tracked) {
-        if (stepsUntilMovePtr[i] > 0) {
-            stepsUntilMovePtr[i]--;
+            MovementArguments<PPState> &a) {
+        if (a.stepsUntilMovePtr[i] > 0) {
+            a.stepsUntilMovePtr[i]--;
             return;
         }
 
-        unsigned& agentType = agentTypesPtr[i];
-        states::WBStates wBState = agentStatesPtr[i].getWBState();
+        unsigned& agentType = a.agentTypesPtr[i];
+        states::WBStates wBState = a.agentStatesPtr[i].getWBState();
         if (wBState == states::WBStates::D) {// If dead, do not go anywhere
-            stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
+            a.stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
             return;
         }
         // TODO: during disease progression, move people who just diesd to some specific place
 
         if (wBState == states::WBStates::S) {// go to hospital if in serious condition
-            stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
-            agentLocationsPtr[i] =
-                RealMovementOps::findActualLocationForType(i, hospitalType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+            a.stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
+            a.agentLocationsPtr[i] =
+                RealMovementOps::findActualLocationForType(i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             return;
         }
 
         // Is agent currently in a place under quarantine
-        if (quarantinePolicy > 1 && timestamp < locationQuarantineUntilPtr[agentLocationsPtr[i]]) {
-            if (agentStatsPtr[i].quarantinedTimestamp == 0) {
-                agentStatsPtr[i].quarantinedTimestamp = timestamp;
-                quarantinedPtr[i] = true;
-                if (i == tracked)
+        if (a.quarantinePolicy > 1 && a.timestamp < a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]) {
+            if (a.agentStatsPtr[i].quarantinedTimestamp == 0) {
+                a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
+                a.quarantinedPtr[i] = true;
+                if (i == a.tracked)
                     printf("Agent %d of type %d day %d at %d:%d location %d is quarantined, staying at home until %d\n",
                         i,
                         agentType + 1,
-                        (int)day,
-                        simTime.getMinutes() / 60,
-                        simTime.getMinutes() % 60,
-                        agentLocationsPtr[i],
-                        locationQuarantineUntilPtr[agentLocationsPtr[i]]);
+                        (int)a.day,
+                        a.simTime.getMinutes() / 60,
+                        a.simTime.getMinutes() % 60,
+                        a.agentLocationsPtr[i],
+                        a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]);
             }
-            stepsUntilMovePtr[i] = locationQuarantineUntilPtr[agentLocationsPtr[i]] - timestamp;
+            a.stepsUntilMovePtr[i] = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] - a.timestamp;
 
             // If not home, send home
             unsigned homeLocation =
-                RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
-            if (homeLocation != agentLocationsPtr[i]) {
-                unsigned until = locationQuarantineUntilPtr[agentLocationsPtr[i]];
-                agentLocationsPtr[i] = homeLocation;
+                RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+            if (homeLocation != a.agentLocationsPtr[i]) {
+                unsigned until = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]];
+                a.agentLocationsPtr[i] = homeLocation;
                 // TODO: quarantine whole home??
-                // locationQuarantineUntilPtr[agentLocationsPtr[i]] = until;
+                // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = until;
             }
             return;
         }
 
         // Should agent still be quarantined
-        if ((quarantinePolicy > 0 && (diagnosedPtr[i] || (timestamp - agentStatsPtr[i].diagnosedTimestamp) < 2 * 7 * 24 * 60 / timeStep)) //stay home if diagnosed or quarantine has not expired
-            || (quarantinePolicy > 1 && quarantinedPtr[i]
-                && (timestamp - agentStatsPtr[i].quarantinedTimestamp) < 2 * 7 * 24 * 60 / timeStep)) {// TODO: specify quarantine length
-            if (agentStatesPtr[i].getWBState() == states::WBStates::S)// send to hospital
-                agentLocationsPtr[i] =
-                    RealMovementOps::findActualLocationForType(i, hospitalType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+        if ((a.quarantinePolicy > 0 && (a.diagnosedPtr[i] || (a.timestamp - a.agentStatsPtr[i].diagnosedTimestamp) < 2 * 7 * 24 * 60 / a.timeStep)) //stay home if diagnosed or quarantine has not expired
+            || (a.quarantinePolicy > 1 && a.quarantinedPtr[i]
+                && (a.timestamp - a.agentStatsPtr[i].quarantinedTimestamp) < 2 * 7 * 24 * 60 / a.timeStep)) {// TODO: specify quarantine length
+            if (a.agentStatesPtr[i].getWBState() == states::WBStates::S)// send to hospital
+                a.agentLocationsPtr[i] =
+                    RealMovementOps::findActualLocationForType(i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             else {
                 // Quarantine for 2 weeks at home
-                agentLocationsPtr[i] =
-                    RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                a.agentLocationsPtr[i] =
+                    RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             }
             // if less than 2 weeks since diagnosis/quarantine, stay where agent already is
-            stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
+            a.stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
             return;
         }
 
-        unsigned agentTypeOffset = AgentTypeList::getOffsetIndex(agentType, wBState, day);
-        unsigned eventsBegin = eventOffsetPtr[agentTypeOffset];
-        unsigned eventsEnd = eventOffsetPtr[agentTypeOffset + 1];
+        unsigned agentTypeOffset = AgentTypeList::getOffsetIndex(agentType, wBState, a.day);
+        unsigned eventsBegin = a.eventOffsetPtr[agentTypeOffset];
+        unsigned eventsEnd = a.eventOffsetPtr[agentTypeOffset + 1];
 
         int activeEventsBegin = -1;
         int activeEventsEnd = -1;
 
         // Here we assume if multiple events are given for the same timeslot, they all start & end at the same time
         for (unsigned j = eventsBegin; j < eventsEnd; j++) {
-            if (simTime >= eventsPtr[j].start && simTime < eventsPtr[j].end && activeEventsBegin == -1) activeEventsBegin = j;
-            if (simTime < eventsPtr[j].start) {
+            if (a.simTime >= a.eventsPtr[j].start && a.simTime < a.eventsPtr[j].end && activeEventsBegin == -1) activeEventsBegin = j;
+            if (a.simTime < a.eventsPtr[j].start) {
                 activeEventsEnd = j;
                 break;
             }
         }
-        if (i == tracked)
+        if (i == a.tracked)
             printf("Agent %d of type %d day %d at %d:%d WBState %d activeEvents: %d-%d\n",
                 i,
                 agentType + 1,
-                (int)day,
-                simTime.getMinutes() / 60,
-                simTime.getMinutes() % 60,
+                (int)a.day,
+                a.simTime.getMinutes() / 60,
+                a.simTime.getMinutes() % 60,
                 (int)wBState,
                 activeEventsBegin,
                 activeEventsEnd);
@@ -215,195 +221,146 @@ namespace RealMovementOps {
 
         // Case 1
         if (activeEventsBegin == -1 && activeEventsEnd == -1) {
-            newLocationType = wBState == states::WBStates::S ? hospitalType : homeType;// Hostpital if sick, home otherwise
+            newLocationType = wBState == states::WBStates::S ? a.hospitalType : a.homeType;// Hostpital if sick, home otherwise
             unsigned myHome =
-                RealMovementOps::findActualLocationForType(i, newLocationType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
-            agentLocationsPtr[i] = myHome;
-            stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight(timeStep);
-            if (i == tracked)
+                RealMovementOps::findActualLocationForType(i, newLocationType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+            a.agentLocationsPtr[i] = myHome;
+            a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
+            if (i == a.tracked)
                 printf(
-                    "\tCase 1- moving to locType %d location %d until midnight (for %d steps)\n", newLocationType, myHome, stepsUntilMovePtr[i] - 1);
+                    "\tCase 1- moving to locType %d location %d until midnight (for %d steps)\n", newLocationType, myHome, a.stepsUntilMovePtr[i] - 1);
         }
         // Case 2 and 4
         if (activeEventsBegin != -1) {
             unsigned numPotentialEvents = eventsEnd - activeEventsBegin;
             TimeDayDuration basicDuration(0.0);
             if (numPotentialEvents == 1) {
-                newLocationType = eventsPtr[activeEventsBegin].locationType;
-                basicDuration = eventsPtr[activeEventsBegin].duration;
+                newLocationType = a.eventsPtr[activeEventsBegin].locationType;
+                basicDuration = a.eventsPtr[activeEventsBegin].duration;
             } else {
                 double rand = RandomGenerator::randomReal(1.0);
-                double threshhold = eventsPtr[activeEventsBegin].chance;
+                double threshhold = a.eventsPtr[activeEventsBegin].chance;
                 unsigned i = 0;
                 while (rand > threshhold && i < numPotentialEvents) {
                     i++;
-                    threshhold += eventsPtr[activeEventsBegin + i].chance;
+                    threshhold += a.eventsPtr[activeEventsBegin + i].chance;
                 }
-                newLocationType = eventsPtr[activeEventsBegin + i].locationType;
-                basicDuration = eventsPtr[activeEventsBegin + i].duration;
+                newLocationType = a.eventsPtr[activeEventsBegin + i].locationType;
+                basicDuration = a.eventsPtr[activeEventsBegin + i].duration;
             }
             unsigned newLocation =
-                RealMovementOps::findActualLocationForType(i, newLocationType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                RealMovementOps::findActualLocationForType(i, newLocationType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             // Check if location is open/closed. If closed, go home instead
             unsigned wasClosed = std::numeric_limits<unsigned>::max();
-            if (locationStatesPtr[newLocation] == false) {
+            if (a.locationStatesPtr[newLocation] == false) {
                 wasClosed = newLocation;
-                newLocation = RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                newLocation = RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             }
-            agentLocationsPtr[i] = newLocation;
+            a.agentLocationsPtr[i] = newLocation;
             if (activeEventsEnd == -1) {
-                if ((simTime + basicDuration).isOverMidnight()) {
-                    stepsUntilMovePtr[i] = simTime.getStepsUntilMidnight(timeStep);
+                if ((a.simTime + basicDuration).isOverMidnight()) {
+                    a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
                 } else {
                     // does not last till midnight, but no events afterwards - spend full duration there
-                    stepsUntilMovePtr[i] = basicDuration.steps(timeStep);
+                    a.stepsUntilMovePtr[i] = basicDuration.steps(a.timeStep);
                 }
             } else {
                 // If duration is less then the beginning of the next move window, then spend full duration here
-                if (simTime + basicDuration < eventsPtr[activeEventsEnd].start)
-                    stepsUntilMovePtr[i] = basicDuration.steps(timeStep);
+                if (a.simTime + basicDuration < a.eventsPtr[activeEventsEnd].start)
+                    a.stepsUntilMovePtr[i] = basicDuration.steps(a.timeStep);
                 else {
                     // Otherwise I need to move again randomly between the end of this duration and the end of next movement window
-                    TimeDayDuration window = eventsPtr[activeEventsEnd].end - (simTime + basicDuration);
-                    unsigned randExtra = RandomGenerator::randomUnsigned(window.steps(timeStep));
-                    stepsUntilMovePtr[i] = basicDuration.steps(timeStep) + randExtra;
+                    TimeDayDuration window = a.eventsPtr[activeEventsEnd].end - (a.simTime + basicDuration);
+                    unsigned randExtra = RandomGenerator::randomUnsigned(window.steps(a.timeStep));
+                    a.stepsUntilMovePtr[i] = basicDuration.steps(a.timeStep) + randExtra;
                 }
             }
-            if (i == tracked) {
+            if (i == a.tracked) {
                 if (wasClosed == std::numeric_limits<unsigned>::max())
-                    printf("\tCase 2&4- moving to locType %d location %d for %d steps\n", newLocationType, newLocation, stepsUntilMovePtr[i] - 1);
+                    printf("\tCase 2&4- moving to locType %d location %d for %d steps\n", newLocationType, newLocation, a.stepsUntilMovePtr[i] - 1);
                 else
                     printf("\tCase 2&4- tried moving to locType %d location %d, but was closed, moving home to %d for %d steps\n",
                         newLocationType,
                         wasClosed,
                         newLocation,
-                        stepsUntilMovePtr[i] - 1);
+                        a.stepsUntilMovePtr[i] - 1);
             }
         }
 
         // Case 3
         if (activeEventsBegin == -1 && activeEventsEnd != -1) {
             // Randomly decide when the move will occur in the next window:
-            TimeDayDuration length = eventsPtr[activeEventsEnd].end - eventsPtr[activeEventsEnd].start;
-            unsigned length_steps = length.steps(timeStep);
+            TimeDayDuration length = a.eventsPtr[activeEventsEnd].end - a.eventsPtr[activeEventsEnd].start;
+            unsigned length_steps = length.steps(a.timeStep);
             unsigned randDelay = RandomGenerator::randomUnsigned(length_steps);
-            stepsUntilMovePtr[i] = (eventsPtr[activeEventsEnd].start - simTime).steps(timeStep) + randDelay;
-            unsigned timeLeft = stepsUntilMovePtr[i];
+            a.stepsUntilMovePtr[i] = (a.eventsPtr[activeEventsEnd].start - a.simTime).steps(a.timeStep) + randDelay;
+            unsigned timeLeft = a.stepsUntilMovePtr[i];
             // Case 3.a -- less than 30 mins -> stay here
-            if (timeLeft < TimeDayDuration(0.3).steps(timeStep)) {
-                if (i == tracked) printf("\tCase 3a- staying in place for %d steps\n", stepsUntilMovePtr[i] - 1);
+            if (timeLeft < TimeDayDuration(0.3).steps(a.timeStep)) {
+                if (i == a.tracked) printf("\tCase 3a- staying in place for %d steps\n", a.stepsUntilMovePtr[i] - 1);
                 // Do nothing - location stays the same
-            } else if (timeLeft < TimeDayDuration(1.0).steps(timeStep)) {
-                newLocationType = publicPlaceType;
+            } else if (timeLeft < TimeDayDuration(1.0).steps(a.timeStep)) {
+                newLocationType = a.publicPlaceType;
                 unsigned myPublicPlace =
-                    RealMovementOps::findActualLocationForType(i, publicPlaceType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
-                agentLocationsPtr[i] = myPublicPlace;
-                if (i == tracked)
-                    printf("\tCase 3b- moving to public Place type 1 location %d for %d steps\n", myPublicPlace, stepsUntilMovePtr[i] - 1);
+                    RealMovementOps::findActualLocationForType(i, a.publicPlaceType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+                a.agentLocationsPtr[i] = myPublicPlace;
+                if (i == a.tracked)
+                    printf("\tCase 3b- moving to public Place type 1 location %d for %d steps\n", myPublicPlace, a.stepsUntilMovePtr[i] - 1);
             } else {
-                newLocationType = homeType;
-                unsigned myHome = RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
-                agentLocationsPtr[i] = myHome;
-                if (i == tracked) printf("\tCase 3c- moving to home type 2 location %d for %d steps\n", myHome, stepsUntilMovePtr[i] - 1);
+                newLocationType = a.homeType;
+                unsigned myHome = RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+                a.agentLocationsPtr[i] = myHome;
+                if (i == a.tracked) printf("\tCase 3c- moving to home type 2 location %d for %d steps\n", myHome, a.stepsUntilMovePtr[i] - 1);
             }
         }
 
         // Diagnosis-related operations
-        if (newLocationType == hospitalType || newLocationType == doctorType) {
+        if (newLocationType == a.hospitalType || newLocationType == a.doctorType) {
             // If previously undiagnosed and
-            if (!diagnosedPtr[i] && agentStatesPtr[i].isInfectious()) {
-                diagnosedPtr[i] = true;
-                quarantinedPtr[i] = true;
-                agentStatsPtr[i].diagnosedTimestamp = timestamp;
-                agentStatsPtr[i].quarantinedTimestamp = timestamp;
+            if (!a.diagnosedPtr[i] && a.agentStatesPtr[i].isInfectious()) {
+                a.diagnosedPtr[i] = true;
+                a.quarantinedPtr[i] = true;
+                a.agentStatsPtr[i].diagnosedTimestamp = a.timestamp;
+                a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
 
-                if (agentStatesPtr[i].getWBState() == states::WBStates::S)// send to hospital
-                    agentLocationsPtr[i] =
-                        RealMovementOps::findActualLocationForType(i, hospitalType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                if (a.agentStatesPtr[i].getWBState() == states::WBStates::S)// send to hospital
+                    a.agentLocationsPtr[i] =
+                        RealMovementOps::findActualLocationForType(i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
                 else {
                     // Quarantine for 2 weeks at home
-                    agentLocationsPtr[i] =
-                        RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
-                    if (quarantinePolicy > 0) {
-                        stepsUntilMovePtr[i] = 2*7*24*60/timeStep; //this will be set to 0 at midnight, so need to check
-                        if (i == tracked)
+                    a.agentLocationsPtr[i] =
+                        RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+                    if (a.quarantinePolicy > 0) {
+                        a.stepsUntilMovePtr[i] = 2*7*24*60/a.timeStep; //this will be set to 0 at midnight, so need to check
+                        if (i == a.tracked)
                             printf("\tDiagnosed, going into quarantine in home type 2 location %d for %d steps\n",
-                                agentLocationsPtr[i],
-                                stepsUntilMovePtr[i] - 1);
+                                a.agentLocationsPtr[i],
+                                a.stepsUntilMovePtr[i] - 1);
                     } else {
-                        if (i == tracked)
+                        if (i == a.tracked)
                             printf("\tDiagnosed, going into home type 2 location %d for %d steps\n", 
-                                agentLocationsPtr[i],
-                                stepsUntilMovePtr[i]-1);
+                                a.agentLocationsPtr[i],
+                                a.stepsUntilMovePtr[i]-1);
                     }
                     // TODO: after diagnosis, what locations do we put under quarantine?
                     // Place home under quarantine
-                    if (quarantinePolicy > 1 && locationQuarantineUntilPtr[agentLocationsPtr[i]] < timestamp) {
-                        locationQuarantineUntilPtr[agentLocationsPtr[i]] = timestamp + 2 * 7 * 24 * 60 / timeStep;// TODO: quarantine period
+                    if (a.quarantinePolicy > 1 && a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] < a.timestamp) {
+                        a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = a.timestamp + 2 * 7 * 24 * 60 / a.timeStep;// TODO: quarantine period
                     }
                 }
             }
         }
 
-        stepsUntilMovePtr[i]--;
+        a.stepsUntilMovePtr[i]--;
     }
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     template<typename PPState>
     __global__ void doMovementDriver(unsigned numberOfAgents,
-        unsigned* stepsUntilMovePtr,
-        PPState* agentStatesPtr,
-        unsigned* agentTypesPtr,
-        bool* diagnosedPtr,
-        bool* quarantinedPtr,
-        AgentStats* agentStatsPtr,
-        unsigned* eventOffsetPtr,
-        AgentTypeList::Event* eventsPtr,
-        unsigned* agentLocationsPtr,
-        unsigned long* locationOffsetPtr,
-        unsigned* possibleLocationsPtr,
-        unsigned* possibleTypesPtr,
-        bool* locationStatesPtr,
-        unsigned* locationCapacitiesPtr,
-        unsigned* locationQuarantineUntilPtr,
-        unsigned quarantinePolicy,
-        Days day,
-        unsigned hospitalType,
-        unsigned homeType,
-        unsigned publicPlaceType,
-        unsigned doctorType,
-        TimeDay simTime,
-        unsigned timeStep,
-        unsigned timestamp,
-        unsigned tracked) {
+        MovementArguments<PPState> a) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
         if (i < numberOfAgents) {
-            RealMovementOps::doMovement(i,
-                stepsUntilMovePtr,
-                agentStatesPtr,
-                agentTypesPtr,
-                diagnosedPtr,
-                quarantinedPtr,
-                agentStatsPtr,
-                eventOffsetPtr,
-                eventsPtr,
-                agentLocationsPtr,
-                locationOffsetPtr,
-                possibleLocationsPtr,
-                possibleTypesPtr,
-                locationStatesPtr,
-                locationCapacitiesPtr,
-                locationQuarantineUntilPtr,
-                quarantinePolicy,
-                day,
-                hospitalType,
-                homeType,
-                publicPlaceType,
-                doctorType,
-                simTime,
-                timeStep,
-                timestamp,
-                tracked);
+            RealMovementOps::doMovement(i, a);
         }
     }
 #endif
@@ -454,112 +411,73 @@ public:
         PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
 
+        RealMovementOps::MovementArguments<typename SimulationType::PPState_t> a;
+
+        a.quarantinePolicy = quarantinePolicy;
+        a.tracked = this->tracked;
+        a.hospitalType = hospital;
+        a.homeType = home;
+        a.publicPlaceType = publicSpace;
+        a.doctorType = doctor;
+        a.timeStep = timeStep;
+        a.simTime = TimeDay(simTime);
+
         // Location-based data
         thrust::device_vector<unsigned>& locationAgentList = realThis->locs->locationAgentList;
-        unsigned* locationAgentListPtr = thrust::raw_pointer_cast(locationAgentList.data());
+        unsigned *locationAgentListPtr = thrust::raw_pointer_cast(locationAgentList.data());
         thrust::device_vector<unsigned>& locationListOffsets = realThis->locs->locationListOffsets;
-        unsigned* locationListOffsetsPtr = thrust::raw_pointer_cast(locationListOffsets.data());
+        unsigned *locationListOffsetsPtr = thrust::raw_pointer_cast(locationListOffsets.data());
         thrust::device_vector<unsigned>& locationIdsOfAgents = realThis->locs->locationIdsOfAgents;
-        unsigned* locationIdsOfAgentsPtr = thrust::raw_pointer_cast(locationIdsOfAgents.data());
+        unsigned *locationIdsOfAgentsPtr = thrust::raw_pointer_cast(locationIdsOfAgents.data());
         thrust::device_vector<bool>& locationStates = realThis->locs->states;
-        bool* locationStatesPtr = thrust::raw_pointer_cast(locationStates.data());
+        a.locationStatesPtr = thrust::raw_pointer_cast(locationStates.data());
         thrust::device_vector<unsigned>& locationCapacities = realThis->locs->capacity;
-        unsigned* locationCapacitiesPtr = thrust::raw_pointer_cast(locationCapacities.data());
+        a.locationCapacitiesPtr = thrust::raw_pointer_cast(locationCapacities.data());
         thrust::device_vector<unsigned>& locationQuarantineUntil = realThis->locs->quarantineUntil;
-        unsigned* locationQuarantineUntilPtr = thrust::raw_pointer_cast(locationQuarantineUntil.data());
+        a.locationQuarantineUntilPtr = thrust::raw_pointer_cast(locationQuarantineUntil.data());
 
         // Agent-based data
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
-        unsigned* agentLocationsPtr = thrust::raw_pointer_cast(agentLocations.data());
+        a.agentLocationsPtr = thrust::raw_pointer_cast(agentLocations.data());
         thrust::device_vector<unsigned>& agentTypes = realThis->agents->types;
-        unsigned* agentTypesPtr = thrust::raw_pointer_cast(agentTypes.data());
+        a.agentTypesPtr = thrust::raw_pointer_cast(agentTypes.data());
         thrust::device_vector<typename SimulationType::PPState_t>& agentStates = realThis->agents->PPValues;
-        typename SimulationType::PPState_t* agentStatesPtr = thrust::raw_pointer_cast(agentStates.data());
+        a.agentStatesPtr = thrust::raw_pointer_cast(agentStates.data());
         thrust::device_vector<bool>& diagnosed = realThis->agents->diagnosed;
-        bool* diagnosedPtr = thrust::raw_pointer_cast(diagnosed.data());
+        a.diagnosedPtr = thrust::raw_pointer_cast(diagnosed.data());
         thrust::device_vector<bool>& quarantined = realThis->agents->quarantined;
-        bool* quarantinedPtr = thrust::raw_pointer_cast(quarantined.data());
+        a.quarantinedPtr = thrust::raw_pointer_cast(quarantined.data());
         thrust::device_vector<AgentStats>& agentStats = realThis->agents->agentStats;
-        AgentStats* agentStatsPtr = thrust::raw_pointer_cast(agentStats.data());
-        unsigned* stepsUntilMovePtr = thrust::raw_pointer_cast(this->stepsUntilMove.data());
+        a.agentStatsPtr = thrust::raw_pointer_cast(agentStats.data());
+        a.stepsUntilMovePtr = thrust::raw_pointer_cast(this->stepsUntilMove.data());
 
         // Arrays storing actual location IDs for each agent, for each location type
         thrust::device_vector<unsigned long>& locationOffset = realThis->agents->locationOffset;
-        unsigned long* locationOffsetPtr = thrust::raw_pointer_cast(locationOffset.data());
+        a.locationOffsetPtr = thrust::raw_pointer_cast(locationOffset.data());
         thrust::device_vector<unsigned>& possibleLocations = realThis->agents->possibleLocations;
-        unsigned* possibleLocationsPtr = thrust::raw_pointer_cast(possibleLocations.data());
+        a.possibleLocationsPtr = thrust::raw_pointer_cast(possibleLocations.data());
         thrust::device_vector<unsigned>& possibleTypes = realThis->agents->possibleTypes;
-        unsigned* possibleTypesPtr = thrust::raw_pointer_cast(possibleTypes.data());
+        a.possibleTypesPtr = thrust::raw_pointer_cast(possibleTypes.data());
 
         // Arrays storing movement behaviour with general locationTypes - for each agent type, WB state, and day
         thrust::device_vector<unsigned>& eventOffset = realThis->agents->agentTypes.eventOffset;
-        unsigned* eventOffsetPtr = thrust::raw_pointer_cast(eventOffset.data());
+        a.eventOffsetPtr = thrust::raw_pointer_cast(eventOffset.data());
         thrust::device_vector<AgentTypeList::Event>& events = realThis->agents->agentTypes.events;
-        AgentTypeList::Event* eventsPtr = thrust::raw_pointer_cast(events.data());
+        a.eventsPtr = thrust::raw_pointer_cast(events.data());
 
         unsigned numberOfAgents = agentLocations.size();
         unsigned numberOfLocations = locationListOffsets.size() - 1;
 
-        Days day = simTime.getDay();
-        unsigned timestamp = simTime.getTimestamp();
+        a.day = simTime.getDay();
+        a.timestamp = simTime.getTimestamp();
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
 #pragma omp parallel for
         for (unsigned i = 0; i < numberOfAgents; i++) {
-            RealMovementOps::doMovement(i,
-                stepsUntilMovePtr,
-                agentStatesPtr,
-                agentTypesPtr,
-                diagnosedPtr,
-                quarantinedPtr,
-                agentStatsPtr,
-                eventOffsetPtr,
-                eventsPtr,
-                agentLocationsPtr,
-                locationOffsetPtr,
-                possibleLocationsPtr,
-                possibleTypesPtr,
-                locationStatesPtr,
-                locationCapacitiesPtr,
-                locationQuarantineUntilPtr,
-                quarantinePolicy,
-                day,
-                hospital,
-                home,
-                publicSpace,
-                doctor,
-                TimeDay(simTime),
-                timeStep,
-                timestamp,
-                this->tracked);
+            RealMovementOps::doMovement(i, a);
         }
 #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-        RealMovementOps::doMovementDriver<<<(numberOfAgents - 1) / 256 + 1, 256>>>(numberOfAgents,
-            stepsUntilMovePtr,
-            agentStatesPtr,
-            agentTypesPtr,
-            diagnosedPtr,
-            quarantinedPtr,
-            agentStatsPtr,
-            eventOffsetPtr,
-            eventsPtr,
-            agentLocationsPtr,
-            locationOffsetPtr,
-            possibleLocationsPtr,
-            possibleTypesPtr,
-            locationStatesPtr,
-            locationCapacitiesPtr,
-            locationQuarantineUntilPtr,
-            quarantinePolicy,
-            day,
-            hospital,
-            home,
-            publicSpace,
-            doctor,
-            TimeDay(simTime),
-            timeStep,
-            timestamp,
-            this->tracked);
+        RealMovementOps::doMovementDriver<<<(numberOfAgents - 1) / 256 + 1, 256>>>(numberOfAgents, a);
         cudaDeviceSynchronize();
 #endif
         Util::updatePerLocationAgentLists(agentLocations, locationIdsOfAgents, locationAgentList, locationListOffsets);
