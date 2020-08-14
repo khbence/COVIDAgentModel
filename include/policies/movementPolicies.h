@@ -98,6 +98,7 @@ namespace RealMovementOps {
             bool* locationStatesPtr,
             unsigned* locationCapacitiesPtr,
             unsigned* locationQuarantineUntilPtr,
+            unsigned quarantinePolicy,
             Days day,
             unsigned hospitalType,
             unsigned homeType,
@@ -128,7 +129,7 @@ namespace RealMovementOps {
         }
 
         // Is agent currently in a place under quarantine
-        if (timestamp < locationQuarantineUntilPtr[agentLocationsPtr[i]]) {
+        if (quarantinePolicy > 1 && timestamp < locationQuarantineUntilPtr[agentLocationsPtr[i]]) {
             if (agentStatsPtr[i].quarantinedTimestamp == 0) {
                 agentStatsPtr[i].quarantinedTimestamp = timestamp;
                 quarantinedPtr[i] = true;
@@ -157,8 +158,8 @@ namespace RealMovementOps {
         }
 
         // Should agent still be quarantined
-        if ((diagnosedPtr[i] && (timestamp - agentStatsPtr[i].diagnosedTimestamp) < 2 * 7 * 24 * 60 / timeStep)
-            || (quarantinedPtr[i]
+        if ((quarantinePolicy > 0 && (diagnosedPtr[i] || (timestamp - agentStatsPtr[i].diagnosedTimestamp) < 2 * 7 * 24 * 60 / timeStep)) //stay home if diagnosed or quarantine has not expired
+            || (quarantinePolicy > 1 && quarantinedPtr[i]
                 && (timestamp - agentStatsPtr[i].quarantinedTimestamp) < 2 * 7 * 24 * 60 / timeStep)) {// TODO: specify quarantine length
             if (agentStatesPtr[i].getWBState() == states::WBStates::S)// send to hospital
                 agentLocationsPtr[i] =
@@ -323,14 +324,21 @@ namespace RealMovementOps {
                     // Quarantine for 2 weeks at home
                     agentLocationsPtr[i] =
                         RealMovementOps::findActualLocationForType(i, homeType, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
-                    stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();// this will be set to 0 at midnight, so need to check
-                    if (i == tracked)
-                        printf("\tDiagnosed, going into quarantine in home type 2 location %d for %d steps\n",
-                            agentLocationsPtr[i],
-                            stepsUntilMovePtr[i] - 1);
+                    if (quarantinePolicy > 0) {
+                        stepsUntilMovePtr[i] = 2*7*24*60/timeStep; //this will be set to 0 at midnight, so need to check
+                        if (i == tracked)
+                            printf("\tDiagnosed, going into quarantine in home type 2 location %d for %d steps\n",
+                                agentLocationsPtr[i],
+                                stepsUntilMovePtr[i] - 1);
+                    } else {
+                        if (i == tracked)
+                            printf("\tDiagnosed, going into home type 2 location %d for %d steps\n", 
+                                agentLocationsPtr[i],
+                                stepsUntilMovePtr[i]-1);
+                    }
                     // TODO: after diagnosis, what locations do we put under quarantine?
                     // Place home under quarantine
-                    if (locationQuarantineUntilPtr[agentLocationsPtr[i]] < timestamp) {
+                    if (quarantinePolicy > 1 && locationQuarantineUntilPtr[agentLocationsPtr[i]] < timestamp) {
                         locationQuarantineUntilPtr[agentLocationsPtr[i]] = timestamp + 2 * 7 * 24 * 60 / timeStep;// TODO: quarantine period
                     }
                 }
@@ -358,6 +366,7 @@ namespace RealMovementOps {
         bool* locationStatesPtr,
         unsigned* locationCapacitiesPtr,
         unsigned* locationQuarantineUntilPtr,
+        unsigned quarantinePolicy,
         Days day,
         unsigned hospitalType,
         unsigned homeType,
@@ -385,6 +394,7 @@ namespace RealMovementOps {
                 locationStatesPtr,
                 locationCapacitiesPtr,
                 locationQuarantineUntilPtr,
+                quarantinePolicy,
                 day,
                 hospitalType,
                 homeType,
@@ -408,14 +418,20 @@ class RealMovement {
     unsigned cemeteryLoc;
     unsigned doctor;
     unsigned tracked;
+    unsigned quarantinePolicy;
 
 public:
     // add program parameters if we need any, this function got called already from Simulation
     static void addProgramParameters(cxxopts::Options& options) {
         options.add_options()(
-            "trace", "Trace movements of agent", cxxopts::value<unsigned>()->default_value(std::to_string(std::numeric_limits<unsigned>::max())));
+            "trace", "Trace movements of agent", cxxopts::value<unsigned>()->default_value(std::to_string(std::numeric_limits<unsigned>::max())))
+            ("quarantinePolicy", "Quarantine policy: 0 - None, 1 - Agent only, 2 - Agent and household, 3 - Agent, household, school/work", cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))));
     }
-    void initializeArgs(const cxxopts::ParseResult& result) { tracked = result["trace"].as<unsigned>(); }
+    void initializeArgs(const cxxopts::ParseResult& result) { 
+        tracked = result["trace"].as<unsigned>();
+        quarantinePolicy = result["quarantinePolicy"].as<unsigned>();
+        if (quarantinePolicy==3) throw CustomErrors("school/work quarantine unimplemented");
+    }
     void init(const parser::LocationTypes& data, unsigned cemeteryID) {
         publicSpace = data.publicSpace;
         home = data.home;
@@ -506,6 +522,7 @@ public:
                 locationStatesPtr,
                 locationCapacitiesPtr,
                 locationQuarantineUntilPtr,
+                quarantinePolicy,
                 day,
                 hospital,
                 home,
@@ -533,6 +550,7 @@ public:
             locationStatesPtr,
             locationCapacitiesPtr,
             locationQuarantineUntilPtr,
+            quarantinePolicy,
             day,
             hospital,
             home,

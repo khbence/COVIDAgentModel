@@ -4,11 +4,8 @@
 
 class CustomErrors : public std::exception {
     std::string error;
-
-protected:
-    explicit CustomErrors(std::string&& error_p) : error(std::move(error_p)) {}
-
 public:
+    explicit CustomErrors(std::string&& error_p) : error(std::move(error_p)) {}
     [[nodiscard]] const char* what() const noexcept override { return error.c_str(); }
 };
 
