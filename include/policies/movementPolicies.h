@@ -105,6 +105,7 @@ namespace RealMovementOps {
         unsigned timeStep;
         unsigned timestamp;
         unsigned tracked;
+        unsigned cemeteryLoc;
     };
 
     template<typename PPState>
@@ -123,6 +124,7 @@ namespace RealMovementOps {
         states::WBStates wBState = a.agentStatesPtr[i].getWBState();
         if (wBState == states::WBStates::D) {// If dead, do not go anywhere
             a.stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
+            a.agentLocationsPtr[i] = a.cemeteryLoc;
             return;
         }
         // TODO: during disease progression, move people who just diesd to some specific place
@@ -421,6 +423,7 @@ public:
         a.doctorType = doctor;
         a.timeStep = timeStep;
         a.simTime = TimeDay(simTime);
+        a.cemeteryLoc = cemeteryLoc;
 
         // Location-based data
         thrust::device_vector<unsigned>& locationAgentList = realThis->locs->locationAgentList;
