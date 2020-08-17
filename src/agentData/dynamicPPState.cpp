@@ -153,11 +153,12 @@ void HD DynamicPPState::gotInfected() {
     updateMeta();
 }
 
-void HD DynamicPPState::update(float scalingSymptons, AgentStats& stats, unsigned simTime) {
+bool HD DynamicPPState::update(float scalingSymptons, AgentStats& stats, unsigned simTime, unsigned agentID, unsigned tracked) {
     if (daysBeforeNextState == -2) { daysBeforeNextState = getTransition().calculateJustDays(state); }
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }
     if (daysBeforeNextState == 0) {
         states::WBStates oldWBState = this->getWBState();
+        auto oldState = state;
         auto tmp = getTransition().calculateNextState(state, scalingSymptons);
         state = thrust::get<0>(tmp);
         updateMeta();
@@ -165,10 +166,20 @@ void HD DynamicPPState::update(float scalingSymptons, AgentStats& stats, unsigne
         if (thrust::get<2>(tmp)) {// was a bad progression
             stats.worstState = state;
             stats.worstStateTimestamp = simTime;
+            if (agentID == tracked) {
+                printf("Agent %d bad progression %d->%d WBState: %d->%d for %d days\n",agentID, oldState, state, oldWBState, this->getWBState(), daysBeforeNextState);
+            }
         } else {// if (oldWBState != states::WBStates::W) this will record any good progression!
             stats.worstStateEndTimestamp = simTime;
+            if (agentID == tracked) {
+                printf("Agent %d good progression %d->%d WBState: %d->%d\n",agentID, oldState, state, oldWBState, this->getWBState());
+            }
+            if (this->getWBState() == states::WBStates::W) {//TODO: need isInfected() function!!
+                return true; //recovered
+            }
         }
     }
+    return false;
 }
 
 states::WBStates DynamicPPState::getWBState() const {

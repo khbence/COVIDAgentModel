@@ -28,7 +28,7 @@ public:
 
     explicit DynamicPPState(const std::string& name);
     void HD gotInfected();
-    void HD update(float scalingSymptons, AgentStats& agentStats, unsigned simTime);
+    bool HD update(float scalingSymptons, AgentStats& agentStats, unsigned simTime, unsigned agentID, unsigned tracked);
     [[nodiscard]] char HD getStateIdx() const { return state; }
     [[nodiscard]] states::WBStates HD getWBState() const;
     [[nodiscard]] float HD isInfectious() const { return infectious; }
