@@ -135,6 +135,16 @@ namespace RealMovementOps {
             a.stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
             a.agentLocationsPtr[i] =
                 RealMovementOps::findActualLocationForType(i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+            if (i == a.tracked) {
+                printf("Agent %d of type %d day %d at %d:%d WBState %d going to hospital %d\n",
+                i,
+                agentType + 1,
+                (int)a.day,
+                a.simTime.getMinutes() / 60,
+                a.simTime.getMinutes() % 60,
+                (int)wBState,
+                a.agentLocationsPtr[i]);
+            }
             return;
         }
 
@@ -164,13 +174,22 @@ namespace RealMovementOps {
                 // TODO: quarantine whole home??
                 // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = until;
             }
+            if (i == a.tracked) {
+                printf("Agent %d of type %d day %d at %d:%d WBState %d still quarantined (1)\n",
+                i,
+                agentType + 1,
+                (int)a.day,
+                a.simTime.getMinutes() / 60,
+                a.simTime.getMinutes() % 60,
+                (int)wBState);
+            }
             return;
         }
 
         // Should agent still be quarantined
         if ((a.quarantinePolicy > 0
                 && (a.diagnosedPtr[i]
-                    || (a.timestamp - a.agentStatsPtr[i].diagnosedTimestamp)
+                    && (a.timestamp - a.agentStatsPtr[i].diagnosedTimestamp)
                            < 2 * 7 * 24 * 60 / a.timeStep))// stay home if diagnosed or quarantine has not expired
             || (a.quarantinePolicy > 1 && a.quarantinedPtr[i]
                 && (a.timestamp - a.agentStatsPtr[i].quarantinedTimestamp) < 2 * 7 * 24 * 60 / a.timeStep)) {// TODO: specify quarantine length
@@ -184,6 +203,15 @@ namespace RealMovementOps {
             }
             // if less than 2 weeks since diagnosis/quarantine, stay where agent already is
             a.stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
+            if (i == a.tracked) {
+                printf("Agent %d of type %d day %d at %d:%d WBState %d still quarantined (2)\n",
+                i,
+                agentType + 1,
+                (int)a.day,
+                a.simTime.getMinutes() / 60,
+                a.simTime.getMinutes() % 60,
+                (int)wBState);
+            }
             return;
         }
 
