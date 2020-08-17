@@ -132,7 +132,7 @@ namespace RealMovementOps {
         // TODO: during disease progression, move people who just diesd to some specific place
 
         if (wBState == states::WBStates::S) {// go to hospital if in serious condition
-            a.stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
+            a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
             a.agentLocationsPtr[i] =
                 RealMovementOps::findActualLocationForType(i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             if (i == a.tracked) {
@@ -232,7 +232,7 @@ namespace RealMovementOps {
                     RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             }
             // if less than 2 weeks since diagnosis/quarantine, stay where agent already is
-            a.stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
+            a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
             if (i == a.tracked) {
                 printf("Agent %d of type %d day %d at %d:%d WBState %d still quarantined (2): diagnosed %d diagnosedTimestamp %d, current timestamp %d\n",
                 i,
@@ -325,7 +325,9 @@ namespace RealMovementOps {
                     RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             }
             a.agentLocationsPtr[i] = newLocation;
-            if (activeEventsEnd == -1) {
+            if (basicDuration.getHours()>24) {
+                a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
+            } else if (activeEventsEnd == -1) {
                 if ((a.simTime + basicDuration).isOverMidnight()) {
                     a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
                 } else {

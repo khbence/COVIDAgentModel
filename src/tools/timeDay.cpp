@@ -62,6 +62,8 @@ HD TimeDay::TimeDay(const Timehandler& t) : TimeDay(t.getMinutes()) {}
 
 unsigned HD TimeDay::getMinutes() const { return static_cast<unsigned>((static_cast<unsigned>(hours) * 60) + static_cast<unsigned>(minutes)); }
 
+unsigned HD TimeDay::getHours() const { return static_cast<unsigned>(hours); }
+
 [[nodiscard]] unsigned HD TimeDay::steps(unsigned timeStep) const { return getMinutes() / timeStep; };
 
 [[nodiscard]] unsigned HD TimeDay::getStepsUntilMidnight(unsigned timeStep) const { return (1440 - getMinutes()) / timeStep; };

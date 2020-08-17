@@ -44,6 +44,7 @@ public:
     explicit HD TimeDay(unsigned mins);
     explicit HD TimeDay(const Timehandler& t);
     unsigned HD getMinutes() const;
+    unsigned HD getHours() const;
 
     [[nodiscard]] unsigned HD steps(unsigned timeStep) const;
     [[nodiscard]] unsigned HD getStepsUntilMidnight(unsigned timeStep) const;
