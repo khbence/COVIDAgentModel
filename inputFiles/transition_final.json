@@ -1,0 +1,179 @@
+{
+    "firstInfectedState": "E",
+    "susceptibleStates": [
+        "S"
+    ],
+    "states": [
+        {
+            "stateName": "S",
+            "avgLength": -1,
+            "maxlength": -1,
+            "infectious": 0.0,
+            "WB": "W",
+            "progressions": []
+        },
+		{
+            "stateName": "E",
+            "avgLength": 3.2,
+            "maxlength": 9,
+            "infectious": 0.0,
+            "WB": "W",
+            "progressions": [
+                {
+                    "name": "I1",
+                    "chance": 1,
+                    "isBadProgression": true
+                }
+            ]
+        },
+        {
+            "stateName": "I1",
+            "avgLength": 2,
+            "maxlength": 5,
+            "infectious": 1,
+            "WB": "W",
+            "progressions": [
+                {
+                    "name": "I2",
+                    "chance": 0.5,
+                    "isBadProgression": true
+                },
+				{
+                    "name": "I3",
+                    "chance": 0.25,
+                    "isBadProgression": true
+                },
+				{
+                    "name": "I4",
+                    "chance": 0.25,
+                    "isBadProgression": true
+                }
+            ]
+        },
+        {
+            "stateName": "I2",
+            "avgLength": 3,
+            "maxlength": 10,
+            "infectious": 0.5,
+            "WB": "W",
+            "progressions": [
+                {
+                    "name": "R",
+                    "chance": 1,
+                    "isBadProgression": false
+                }
+            ]
+        },
+        {
+            "stateName": "I3",
+            "avgLength": 3,
+            "maxlength": 10,
+            "infectious": 1,
+            "WB": "N",
+            "progressions": [
+                {
+                    "name": "I5",
+                    "chance": 0.0312052,
+                    "isBadProgression": true
+                },
+                {
+                    "name": "I6",
+                    "chance": 0.0129948,
+                    "isBadProgression": true
+                },
+				                {
+                    "name": "R",
+                    "chance": 0.9558,
+                    "isBadProgression": false
+                }
+            ]
+        },
+        {
+            "stateName": "I4",
+            "avgLength": 3,
+            "maxlength": 10,
+            "infectious": 1,
+            "WB": "M",
+            "progressions": [
+                {
+                    "name": "I5",
+                    "chance": 0.0312052,
+                    "isBadProgression": true
+                },
+                {
+                    "name": "I6",
+                    "chance": 0.0129948,
+                    "isBadProgression": true
+                },
+				                {
+                    "name": "R",
+                    "chance": 0.9558,
+                    "isBadProgression": false
+                }
+            ]
+        },
+        {
+            "stateName": "I5",
+            "avgLength": 10,
+            "maxlength": 20,
+            "infectious": 0.5,
+            "WB": "S",
+            "progressions": [
+                {
+                    "name": "R",
+                    "chance": 1,
+                    "isBadProgression": false
+                }
+            ]
+        },
+        {
+            "stateName": "I6",
+            "avgLength": 10,
+            "maxlength": 20,
+            "infectious": 0.5,
+            "WB": "S",
+            "progressions": [
+                {
+                    "name": "I7",
+                    "chance": 0.7,
+                    "isBadProgression": false
+                },
+                {
+                    "name": "D",
+                    "chance": 0.3,
+                    "isBadProgression": true
+                }
+            ]
+        },
+        {
+            "stateName": "I7",
+            "avgLength": 14,
+            "maxlength": 21,
+            "infectious": 0.0,
+            "WB": "S",
+            "progressions": [
+                {
+                    "name": "R",
+                    "chance": 1,
+                    "isBadProgression": false
+                }
+            ]
+        },
+        {
+            "stateName": "R",
+            "avgLength": 365,
+            "maxlength": 730,
+            "infectious": 0.0,
+            "WB": "W",
+            "progressions": []
+        },
+        {
+            "stateName": "D",
+            "avgLength": -1,
+            "maxlength": -1,
+            "infectious": 0.0,
+            "WB": "D",
+            "progressions": []
+        }
+    ]
+}
