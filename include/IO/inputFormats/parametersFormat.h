@@ -23,7 +23,7 @@ namespace parser {
 
         struct PreCondition : public jsond::JSONDecodable<PreCondition> {
             BEGIN_MEMBER_DECLARATIONS();
-            DECODABLE_MEMBER(int, ID);
+            DECODABLE_MEMBER(std::string, ID);
             DECODABLE_MEMBER(std::string, condition);
             DECODABLE_MEMBER(double, symptoms);
             END_MEMBER_DECLARATIONS();

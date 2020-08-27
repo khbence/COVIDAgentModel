@@ -27,12 +27,12 @@ class BasicAgentMeta {
     // As a good christian I hardcoded that there are only two genders
     static std::array<std::pair<char, float>, 2> sexScaling;
     static std::vector<AgeInterval> ageScaling;
-    static std::map<unsigned, float> preConditionScaling;
+    static std::map<std::string, float> preConditionScaling;
 
 public:
     static void initData(const parser::Parameters& inputData);
 
-    BasicAgentMeta(char gender, unsigned age, unsigned preCondition);
+    BasicAgentMeta(char gender, unsigned age, std::string preCondition);
 
     [[nodiscard]] float HD getScalingSymptoms() const;
     [[nodiscard]] float HD getScalingTransmission() const;

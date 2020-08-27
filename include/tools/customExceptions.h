@@ -92,8 +92,8 @@ namespace IOAgents {
 
     class NotDefinedCondition : public AgentsInputError {
     public:
-        explicit NotDefinedCondition(unsigned conditionID)
-            : AgentsInputError("Condition with ID " + std::to_string(conditionID) + " was not defined in the parameter input file!\n") {}
+        explicit NotDefinedCondition(std::string conditionID)
+            : AgentsInputError("Condition with ID " + conditionID + " was not defined in the parameter input file!\n") {}
     };
 
     class InvalidPPState : public AgentsInputError {

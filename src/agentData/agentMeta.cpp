@@ -23,7 +23,7 @@ float BasicAgentMeta::AgeInterval::getTransmission() const { return transmission
 
 std::array<std::pair<char, float>, 2> BasicAgentMeta::sexScaling;
 std::vector<BasicAgentMeta::AgeInterval> BasicAgentMeta::ageScaling;
-std::map<unsigned, float> BasicAgentMeta::preConditionScaling;
+std::map<std::string, float> BasicAgentMeta::preConditionScaling;
 
 // init the three static variable with the data that coming from parameters json file
 void BasicAgentMeta::initData(const parser::Parameters& inputData) {
@@ -45,7 +45,7 @@ void BasicAgentMeta::initData(const parser::Parameters& inputData) {
     for (const auto& cond : inputData.preCondition) { preConditionScaling.emplace(std::make_pair(cond.ID, cond.symptoms)); }
 }
 
-BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, unsigned preCondition) {
+BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, std::string preCondition) {
     // modify based on gender
     if (gender == 'F') {
         scalingSymptoms *= sexScaling[0].second;
