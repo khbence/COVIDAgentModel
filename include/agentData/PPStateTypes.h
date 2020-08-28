@@ -20,8 +20,12 @@ public:
     [[nodiscard]] HD states::SIRD getSIRD() const;
     [[nodiscard]] HD states::WBStates getWBState() const;
     virtual HD char getStateIdx() const = 0;
-    [[nodiscard]] virtual bool HD isInfectious() const { return state == states::SIRD::I; }
-    [[nodiscard]] virtual bool HD isSusceptible() const { return state == states::SIRD::S; }
+    [[nodiscard]] virtual bool HD isInfectious() const {
+        return state == states::SIRD::I;
+    }
+    [[nodiscard]] virtual bool HD isSusceptible() const {
+        return state == states::SIRD::S;
+    }
 };
 
 class PPStateSIRBasic : public PPStateSIRAbstract {
@@ -36,8 +40,8 @@ class PPStateSIRextended : public PPStateSIRAbstract {
     char subState = 0;// I1, I2, I3 ... R1, R2
     char idx = 0;
 
-    // -1 it will remain in that state until something special event happens, like got infected
-    // -2 has to be calculated during update
+    // -1 it will remain in that state until something special event happens,
+    // like got infected -2 has to be calculated during update
     int daysBeforeNextState = -1;
 
 private:
@@ -58,5 +62,7 @@ public:
     static void initTransitionMatrix(const std::string& inputFile);
     void HD update(float scalingSymptons) override;
     [[nodiscard]] char HD getStateIdx() const override;
-    [[nodiscard]] bool HD isInfectious() const override { return (state == states::SIRD::S) && (subState > 0); }
+    [[nodiscard]] bool HD isInfectious() const override {
+        return (state == states::SIRD::S) && (subState > 0);
+    }
 };

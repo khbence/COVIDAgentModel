@@ -41,18 +41,24 @@ void HD DynamicPPState::updateMeta() {
 #endif
 }
 
-std::string DynamicPPState::initTransitionMatrix(parser::TransitionFormat& inputData) {
+std::string DynamicPPState::initTransitionMatrix(
+    parser::TransitionFormat& inputData) {
     // init global parameters that are used to be static
     detail::DynamicPPState::h_numberOfStates = inputData.states.size();
-    detail::DynamicPPState::h_infectious = new float[detail::DynamicPPState::h_numberOfStates];
-    detail::DynamicPPState::h_WB = new states::WBStates[detail::DynamicPPState::h_numberOfStates];
-    detail::DynamicPPState::h_susceptible = new bool[detail::DynamicPPState::h_numberOfStates];
+    detail::DynamicPPState::h_infectious =
+        new float[detail::DynamicPPState::h_numberOfStates];
+    detail::DynamicPPState::h_WB =
+        new states::WBStates[detail::DynamicPPState::h_numberOfStates];
+    detail::DynamicPPState::h_susceptible =
+        new bool[detail::DynamicPPState::h_numberOfStates];
 
     // state name and its occurence
     std::vector<std::pair<char, char>> mainStates{};
     for (const auto& s : inputData.states) {
         char sChar = s.stateName.front();
-        auto it = std::find_if(mainStates.begin(), mainStates.end(), [sChar](const auto& current) { return current.first == sChar; });
+        auto it = std::find_if(mainStates.begin(),
+            mainStates.end(),
+            [sChar](const auto& current) { return current.first == sChar; });
         if (it == mainStates.end()) {
             mainStates.emplace_back(std::make_pair(sChar, 1));
         } else {
@@ -68,16 +74,26 @@ std::string DynamicPPState::initTransitionMatrix(parser::TransitionFormat& input
             std::string stateName;
             stateName.push_back(s.first);
             if (s.second > 1) { stateName += std::to_string(i); }
-            auto currentIt = std::find_if(it, inputData.states.end(), [stateName](const auto& s) { return s.stateName == stateName; });
-            if (currentIt == inputData.states.end()) { throw IOProgression::MissingStateName(stateName); }
+            auto currentIt = std::find_if(
+                it, inputData.states.end(), [stateName](const auto& s) {
+                    return s.stateName == stateName;
+                });
+            if (currentIt == inputData.states.end()) {
+                throw IOProgression::MissingStateName(stateName);
+            }
             std::iter_swap(it, currentIt);
         }
     }
 
     std::string stateName = inputData.firstInfectedState;
-    auto currentIt = std::find_if(inputData.states.begin(), inputData.states.end(), [&stateName](const auto& s) { return s.stateName == stateName; });
-    if (currentIt == inputData.states.end()) { throw IOProgression::MissingStateName(stateName); }
-    detail::DynamicPPState::h_firstInfectedState = std::distance(inputData.states.begin(), currentIt);
+    auto currentIt = std::find_if(inputData.states.begin(),
+        inputData.states.end(),
+        [&stateName](const auto& s) { return s.stateName == stateName; });
+    if (currentIt == inputData.states.end()) {
+        throw IOProgression::MissingStateName(stateName);
+    }
+    detail::DynamicPPState::h_firstInfectedState =
+        std::distance(inputData.states.begin(), currentIt);
 
     // setup name index mapping for the constructor
     std::string header;
@@ -86,9 +102,13 @@ std::string DynamicPPState::initTransitionMatrix(parser::TransitionFormat& input
         header += s.stateName + "\t";
         detail::DynamicPPState::h_infectious[idx] = s.infectious;
         detail::DynamicPPState::h_WB[idx] = states::parseWBState(s.WB);
-        detail::DynamicPPState::nameIndexMap.emplace(std::make_pair(s.stateName, idx));
+        detail::DynamicPPState::nameIndexMap.emplace(
+            std::make_pair(s.stateName, idx));
         detail::DynamicPPState::h_susceptible[idx] =
-            (std::find(inputData.susceptibleStates.begin(), inputData.susceptibleStates.end(), s.stateName) != inputData.susceptibleStates.end());
+            (std::find(inputData.susceptibleStates.begin(),
+                 inputData.susceptibleStates.end(),
+                 s.stateName)
+                != inputData.susceptibleStates.end());
         ++idx;
     }
     header.pop_back();
@@ -104,24 +124,41 @@ std::string DynamicPPState::initTransitionMatrix(parser::TransitionFormat& input
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     ProgressionMatrix* tmp = detail::DynamicPPState::transition->upload();
-    cudaMemcpyToSymbol(detail::DynamicPPState::transition_gpu, &tmp, sizeof(ProgressionMatrix*));
+    cudaMemcpyToSymbol(detail::DynamicPPState::transition_gpu,
+        &tmp,
+        sizeof(ProgressionMatrix*));
 
     // do I have to make a fancy copy or it's automatic
     float* infTMP;
-    cudaMalloc((void**)&infTMP, detail::DynamicPPState::h_numberOfStates * sizeof(float));
-    cudaMemcpy(infTMP, detail::DynamicPPState::h_infectious, detail::DynamicPPState::h_numberOfStates * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(detail::DynamicPPState::infectious, &infTMP, sizeof(float*));
+    cudaMalloc((void**)&infTMP,
+        detail::DynamicPPState::h_numberOfStates * sizeof(float));
+    cudaMemcpy(infTMP,
+        detail::DynamicPPState::h_infectious,
+        detail::DynamicPPState::h_numberOfStates * sizeof(float),
+        cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(
+        detail::DynamicPPState::infectious, &infTMP, sizeof(float*));
 
     states::SIRD* wbTMP;
-    cudaMalloc((void**)&wbTMP, detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD));
-    cudaMemcpy(wbTMP, detail::DynamicPPState::h_WB, detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD), cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(detail::DynamicPPState::WB, &wbTMP, sizeof(states::SIRD*));
+    cudaMalloc((void**)&wbTMP,
+        detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD));
+    cudaMemcpy(wbTMP,
+        detail::DynamicPPState::h_WB,
+        detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD),
+        cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(
+        detail::DynamicPPState::WB, &wbTMP, sizeof(states::SIRD*));
 
 
     bool* susTMP;
-    cudaMalloc((void**)&susTMP, detail::DynamicPPState::h_numberOfStates * sizeof(bool));
-    cudaMemcpy(susTMP, detail::DynamicPPState::h_susceptible, detail::DynamicPPState::h_numberOfStates * sizeof(bool), cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(detail::DynamicPPState::susceptible, &susTMP, sizeof(bool*));
+    cudaMalloc((void**)&susTMP,
+        detail::DynamicPPState::h_numberOfStates * sizeof(bool));
+    cudaMemcpy(susTMP,
+        detail::DynamicPPState::h_susceptible,
+        detail::DynamicPPState::h_numberOfStates * sizeof(bool),
+        cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(
+        detail::DynamicPPState::susceptible, &susTMP, sizeof(bool*));
 
     cudaMemcpyToSymbol(detail::DynamicPPState::firstInfectedState,
         &detail::DynamicPPState::h_firstInfectedState,
@@ -146,12 +183,15 @@ HD unsigned DynamicPPState::getNumberOfStates() {
 
 std::vector<std::string> DynamicPPState::getStateNames() {
     std::vector<std::string> names(detail::DynamicPPState::h_numberOfStates);
-    for (const auto& e : detail::DynamicPPState::nameIndexMap) { names[e.second] = e.first; }
+    for (const auto& e : detail::DynamicPPState::nameIndexMap) {
+        names[e.second] = e.first;
+    }
     return names;
 }
 
 DynamicPPState::DynamicPPState(const std::string& name)
-    : state(detail::DynamicPPState::nameIndexMap.find(name)->second), daysBeforeNextState(getTransition().calculateJustDays(state)) {
+    : state(detail::DynamicPPState::nameIndexMap.find(name)->second),
+      daysBeforeNextState(getTransition().calculateJustDays(state)) {
     updateMeta();
 }
 
@@ -165,8 +205,14 @@ void HD DynamicPPState::gotInfected() {
     updateMeta();
 }
 
-bool HD DynamicPPState::update(float scalingSymptons, AgentStats& stats, unsigned simTime, unsigned agentID, unsigned tracked) {
-    if (daysBeforeNextState == -2) { daysBeforeNextState = getTransition().calculateJustDays(state); }
+bool HD DynamicPPState::update(float scalingSymptons,
+    AgentStats& stats,
+    unsigned simTime,
+    unsigned agentID,
+    unsigned tracked) {
+    if (daysBeforeNextState == -2) {
+        daysBeforeNextState = getTransition().calculateJustDays(state);
+    }
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }
     if (daysBeforeNextState == 0) {
         states::WBStates oldWBState = this->getWBState();
@@ -179,15 +225,30 @@ bool HD DynamicPPState::update(float scalingSymptons, AgentStats& stats, unsigne
             stats.worstState = state;
             stats.worstStateTimestamp = simTime;
             if (agentID == tracked) {
-                printf("Agent %d bad progression %d->%d WBState: %d->%d for %d days\n",agentID, oldState, state, oldWBState, this->getWBState(), daysBeforeNextState);
+                printf(
+                    "Agent %d bad progression %d->%d WBState: %d->%d for %d "
+                    "days\n",
+                    agentID,
+                    oldState,
+                    state,
+                    oldWBState,
+                    this->getWBState(),
+                    daysBeforeNextState);
             }
-        } else {// if (oldWBState != states::WBStates::W) this will record any good progression!
+        } else {// if (oldWBState != states::WBStates::W) this will record any
+                // good progression!
             stats.worstStateEndTimestamp = simTime;
             if (agentID == tracked) {
-                printf("Agent %d good progression %d->%d WBState: %d->%d\n",agentID, oldState, state, oldWBState, this->getWBState());
+                printf("Agent %d good progression %d->%d WBState: %d->%d\n",
+                    agentID,
+                    oldState,
+                    state,
+                    oldWBState,
+                    this->getWBState());
             }
-            if (this->getWBState() == states::WBStates::W) {//TODO: need isInfected() function!!
-                return true; //recovered
+            if (this->getWBState()
+                == states::WBStates::W) {// TODO: need isInfected() function!!
+                return true;// recovered
             }
         }
     }

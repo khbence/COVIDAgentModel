@@ -11,9 +11,13 @@ class MultiBadMatrix : public BasicLengthAbstract {
         unsigned badCount;
         thrust::pair<unsigned, float>* neutral;
         thrust::pair<unsigned, float>* bad;
-        NextStates(unsigned _badCount, thrust::pair<unsigned, float>* _bad, unsigned _neutralCount, thrust::pair<unsigned, float>* _neutral);
+        NextStates(unsigned _badCount,
+            thrust::pair<unsigned, float>* _bad,
+            unsigned _neutralCount,
+            thrust::pair<unsigned, float>* _neutral);
 
-        [[nodiscard]] thrust::pair<unsigned, bool> HD selectNext(float scalingSypmtons) const;
+        [[nodiscard]] thrust::pair<unsigned, bool> HD selectNext(
+            float scalingSypmtons) const;
     };
 
     class NextStatesInit {
@@ -44,5 +48,7 @@ public:
     MultiBadMatrix* upload();
 #endif
 
-    [[nodiscard]] thrust::tuple<unsigned, int, bool> HD calculateNextState(unsigned currentState, float scalingSymptons) const;
+    [[nodiscard]] thrust::tuple<unsigned, int, bool> HD calculateNextState(
+        unsigned currentState,
+        float scalingSymptons) const;
 };

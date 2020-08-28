@@ -18,7 +18,8 @@ public:
     static void init(unsigned agents);
     static void resize(unsigned agents);
 
-    [[nodiscard]] static __host__ thrust::host_vector<float> fillUnitf(unsigned size) {
+    [[nodiscard]] static __host__ thrust::host_vector<float> fillUnitf(
+        unsigned size) {
         Timing::startTimer("RandomGenerator::fillUnitf");
         thrust::host_vector<float> tmp(size);
         std::uniform_real_distribution<double> dis(0, 1);
@@ -30,7 +31,8 @@ public:
 
     [[nodiscard]] static __host__ __device__ double randomUnit() {
 #ifdef __CUDA_ARCH__
-        return curand_uniform_double(&dstates[threadIdx.x + blockIdx.x * blockDim.x]);
+        return curand_uniform_double(
+            &dstates[threadIdx.x + blockIdx.x * blockDim.x]);
 #else
         std::uniform_real_distribution<double> dis(0, 1);
         return dis(generators[omp_get_thread_num()]);
@@ -45,7 +47,9 @@ public:
 
     [[nodiscard]] static __host__ __device__ double randomReal(double max) {
 #ifdef __CUDA_ARCH__
-        return max * curand_uniform_double(&dstates[threadIdx.x + blockIdx.x * blockDim.x]);
+        return max
+               * curand_uniform_double(
+                   &dstates[threadIdx.x + blockIdx.x * blockDim.x]);
 #else
         std::uniform_real_distribution<double> dis(0, max);
         return dis(generators[omp_get_thread_num()]);
@@ -58,10 +62,12 @@ public:
     }
 #endif
 
-    [[nodiscard]] static __host__ __device__ unsigned randomUnsigned(unsigned max) {
+    [[nodiscard]] static __host__ __device__ unsigned randomUnsigned(
+        unsigned max) {
         --max;
 #ifdef __CUDA_ARCH__
-        return curand(&dstates[threadIdx.x + blockIdx.x * blockDim.x]) % (max + 1);
+        return curand(&dstates[threadIdx.x + blockIdx.x * blockDim.x])
+               % (max + 1);
 #else
         std::uniform_int_distribution<unsigned> dis(0, max);
         return dis(generators[omp_get_thread_num()]);
@@ -82,10 +88,15 @@ public:
         const double __naf = (1 - __DBL_EPSILON__) / 2;
         const double __thr = __INT_MAX__ + __naf;
         // TODO: need geometric here!!!
-        // return curand_uniform_double(&dstates[threadIdx.x+blockIdx.x*blockDim.x]);
+        // return
+        // curand_uniform_double(&dstates[threadIdx.x+blockIdx.x*blockDim.x]);
         double __cand;
         do
-            __cand = floor(log(1.0 - curand_uniform_double(&dstates[threadIdx.x + blockIdx.x * blockDim.x])) / _M_log_1_p);
+            __cand =
+                floor(log(1.0
+                          - curand_uniform_double(
+                              &dstates[threadIdx.x + blockIdx.x * blockDim.x]))
+                      / _M_log_1_p);
         while (__cand >= __thr);
         return int(__cand + __naf);
 #else

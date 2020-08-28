@@ -11,12 +11,8 @@ public:
     DevMemory(std::size_t n) : p(thrust::device_malloc<int>(N);) {}
 
     ~DevMemory() {
-        if(p) {
-            thrust::device_free(p);
-        }
+        if (p) { thrust::device_free(p); }
     }
 
-    operator thrust::device_ptr<T>() const {
-        return p;
-    }
+    operator thrust::device_ptr<T>() const { return p; }
 };

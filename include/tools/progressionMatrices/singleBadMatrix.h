@@ -17,7 +17,10 @@ class SingleBadTransitionMatrix : public BasicLengthAbstract {
     public:
         unsigned neutralCount;
         thrust::pair<unsigned, float>* neutral;
-        NextStates(bool _hasBad, thrust::pair<unsigned, float> _bad, thrust::pair<unsigned, float>* _neutral, unsigned _neutralCount);
+        NextStates(bool _hasBad,
+            thrust::pair<unsigned, float> _bad,
+            thrust::pair<unsigned, float>* _neutral,
+            unsigned _neutralCount);
 
         [[nodiscard]] HD unsigned selectNext(float scalingSypmtons) const;
     };
@@ -41,7 +44,8 @@ public:
 public:
     SingleBadTransitionMatrix() = default;
 
-    explicit SingleBadTransitionMatrix(const parser::TransitionFormat& inputData);
+    explicit SingleBadTransitionMatrix(
+        const parser::TransitionFormat& inputData);
     explicit SingleBadTransitionMatrix(const std::string& fileName);
 
     ~SingleBadTransitionMatrix();
@@ -50,5 +54,7 @@ public:
     SingleBadTransitionMatrix* upload();
 #endif
 
-    [[nodiscard]] thrust::pair<unsigned, int> HD calculateNextState(unsigned currentState, float scalingSymptons) const;
+    [[nodiscard]] thrust::pair<unsigned, int> HD calculateNextState(
+        unsigned currentState,
+        float scalingSymptons) const;
 };

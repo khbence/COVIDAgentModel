@@ -6,7 +6,8 @@
 #include "agentsList.h"
 
 BasicAgentMeta::AgeInterval::AgeInterval(parser::Parameters::Age in)
-    : symptoms(static_cast<float>(in.symptoms)), transmission(static_cast<float>(in.transmission)) {
+    : symptoms(static_cast<float>(in.symptoms)),
+      transmission(static_cast<float>(in.transmission)) {
     if (in.from < 0) { throw IOParameters::NegativeFrom(); }
     from = in.from;
     if (in.to < 0) {
@@ -19,21 +20,29 @@ BasicAgentMeta::AgeInterval::AgeInterval(parser::Parameters::Age in)
 
 float BasicAgentMeta::AgeInterval::getSymptoms() const { return symptoms; }
 
-float BasicAgentMeta::AgeInterval::getTransmission() const { return transmission; }
+float BasicAgentMeta::AgeInterval::getTransmission() const {
+    return transmission;
+}
 
 std::array<std::pair<char, float>, 2> BasicAgentMeta::sexScaling;
 std::vector<BasicAgentMeta::AgeInterval> BasicAgentMeta::ageScaling;
 std::map<std::string, float> BasicAgentMeta::preConditionScaling;
 
-// init the three static variable with the data that coming from parameters json file
+// init the three static variable with the data that coming from parameters json
+// file
 void BasicAgentMeta::initData(const parser::Parameters& inputData) {
     // init the scaling based in sex
     if (inputData.sex.size() != 2) { throw IOParameters::NotBinary(); }
     for (unsigned i = 0; i < sexScaling.size(); ++i) {
-        if (!(inputData.sex[0].name == "F" || inputData.sex[0].name == "M")) { throw IOParameters::WrongGenderName(); }
-        sexScaling[i] = std::make_pair(inputData.sex[i].name[0], inputData.sex[i].symptoms);
+        if (!(inputData.sex[0].name == "F" || inputData.sex[0].name == "M")) {
+            throw IOParameters::WrongGenderName();
+        }
+        sexScaling[i] =
+            std::make_pair(inputData.sex[i].name[0], inputData.sex[i].symptoms);
     }
-    if (sexScaling[0].first == sexScaling[1].first) { throw IOParameters::WrongGenderName(); }
+    if (sexScaling[0].first == sexScaling[1].first) {
+        throw IOParameters::WrongGenderName();
+    }
     if (sexScaling[0].first == 'M') { std::swap(sexScaling[0], sexScaling[1]); }
 
     // init the scalings based on age
@@ -42,10 +51,14 @@ void BasicAgentMeta::initData(const parser::Parameters& inputData) {
     // TODO check intervals
 
     // init the scaling that coming from pre-conditions
-    for (const auto& cond : inputData.preCondition) { preConditionScaling.emplace(std::make_pair(cond.ID, cond.symptoms)); }
+    for (const auto& cond : inputData.preCondition) {
+        preConditionScaling.emplace(std::make_pair(cond.ID, cond.symptoms));
+    }
 }
 
-BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, std::string preCondition) {
+BasicAgentMeta::BasicAgentMeta(char gender,
+    unsigned age,
+    std::string preCondition) {
     // modify based on gender
     if (gender == 'F') {
         scalingSymptoms *= sexScaling[0].second;
@@ -66,13 +79,17 @@ BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, std::string preConditi
 
     // modify based on pre-condition
     auto itMap = preConditionScaling.find(preCondition);
-    if (itMap == preConditionScaling.end()) { throw IOAgents::NotDefinedCondition(preCondition); }
+    if (itMap == preConditionScaling.end()) {
+        throw IOAgents::NotDefinedCondition(preCondition);
+    }
     scalingSymptoms *= itMap->second;
 }
 
 float HD BasicAgentMeta::getScalingSymptoms() const { return scalingSymptoms; }
 
-float HD BasicAgentMeta::getScalingTransmission() const { return scalingTransmission; }
+float HD BasicAgentMeta::getScalingTransmission() const {
+    return scalingTransmission;
+}
 
 uint8_t HD BasicAgentMeta::getAge() const { return age; }
 

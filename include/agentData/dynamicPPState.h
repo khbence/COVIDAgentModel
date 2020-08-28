@@ -22,13 +22,19 @@ class DynamicPPState {
 
 public:
     DynamicPPState() = default;
-    static std::string initTransitionMatrix(parser::TransitionFormat& inputData);
+    static std::string initTransitionMatrix(
+        parser::TransitionFormat& inputData);
     static HD unsigned getNumberOfStates();
     static std::vector<std::string> getStateNames();
 
     explicit DynamicPPState(const std::string& name);
     void HD gotInfected();
-    bool HD update(float scalingSymptons, AgentStats& agentStats, unsigned simTime, unsigned agentID, unsigned tracked);
+    bool HD update(float scalingSymptons,
+        AgentStats& agentStats,
+        unsigned simTime,
+        unsigned agentID,
+        unsigned tracked,
+        unsigned progressionID);
     [[nodiscard]] char HD getStateIdx() const { return state; }
     [[nodiscard]] states::WBStates HD getWBState() const;
     [[nodiscard]] float HD isInfectious() const { return infectious; }

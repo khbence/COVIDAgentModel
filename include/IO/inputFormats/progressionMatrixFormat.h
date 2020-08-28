@@ -32,7 +32,8 @@ namespace parser {
 
         DECODABLE_MEMBER(std::string, firstInfectedState);
         DECODABLE_MEMBER(std::vector<std::string>, susceptibleStates);
-        DECODABLE_MEMBER(std::vector<::parser::TransitionFormat::SingleState>, states);
+        DECODABLE_MEMBER(std::vector<::parser::TransitionFormat::SingleState>,
+            states);
 
         END_MEMBER_DECLARATIONS();
     };
