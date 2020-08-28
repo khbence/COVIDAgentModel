@@ -29,8 +29,7 @@ public:
         --states[state.getStateIdx()];
     }
 
-    const decltype(states)& refreshandGetAfterMidnight(
-        const std::pair<unsigned, unsigned>& agents,
+    const decltype(states)& refreshandGetAfterMidnight(const std::pair<unsigned, unsigned>& agents,
         const thrust::device_vector<unsigned>& locationAgentList) {
         PROFILE_FUNCTION();
         // Extract Idxs
@@ -42,8 +41,8 @@ public:
         // std::ostream_iterator<int>(std::cout, "
         // ")); std::cout << std::endl; DESC: for (unsigned i = agents.first; i
         // < agents.second; i++) {ppstate = ppstates[locationAgentList[i]];}
-        thrust::transform(thrust::make_permutation_iterator(ppstates.begin(),
-                              locationAgentList.begin() + agents.first),
+        thrust::transform(thrust::make_permutation_iterator(
+                              ppstates.begin(), locationAgentList.begin() + agents.first),
             thrust::make_permutation_iterator(
                 ppstates.begin(), locationAgentList.begin() + agents.second),
             idxs.begin(),
@@ -55,14 +54,10 @@ public:
         // std::ostream_iterator<int>(std::cout, " ")); std::cout << std::endl;
 
         thrust::device_vector<char> d_states(PPStateType::getNumberOfStates());
-        thrust::device_vector<unsigned int> offsets(
-            PPStateType::getNumberOfStates());
+        thrust::device_vector<unsigned int> offsets(PPStateType::getNumberOfStates());
         thrust::sequence(d_states.begin(), d_states.end());// 0,1,...
-        thrust::lower_bound(idxs.begin(),
-            idxs.end(),
-            d_states.begin(),
-            d_states.end(),
-            offsets.begin());
+        thrust::lower_bound(
+            idxs.begin(), idxs.end(), d_states.begin(), d_states.end(), offsets.begin());
         thrust::host_vector<unsigned int> h_offsets(offsets);
         if (states.size() != PPStateType::getNumberOfStates())
             states.resize(PPStateType::getNumberOfStates());

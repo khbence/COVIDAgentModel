@@ -44,8 +44,7 @@ public:
 public:
     SingleBadTransitionMatrix() = default;
 
-    explicit SingleBadTransitionMatrix(
-        const parser::TransitionFormat& inputData);
+    explicit SingleBadTransitionMatrix(const parser::TransitionFormat& inputData);
     explicit SingleBadTransitionMatrix(const std::string& fileName);
 
     ~SingleBadTransitionMatrix();
@@ -54,7 +53,6 @@ public:
     SingleBadTransitionMatrix* upload();
 #endif
 
-    [[nodiscard]] thrust::pair<unsigned, int> HD calculateNextState(
-        unsigned currentState,
+    [[nodiscard]] thrust::pair<unsigned, int> HD calculateNextState(unsigned currentState,
         float scalingSymptons) const;
 };

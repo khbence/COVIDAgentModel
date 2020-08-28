@@ -3,6 +3,7 @@
 #include <string>
 #include "progressionMatrices.h"
 #include "progressionMatrixFormat.h"
+#include "dataProvider.h"
 #include "agentsList.h"
 #include <vector>
 #include <map>
@@ -11,6 +12,7 @@ using ProgressionMatrix = MultiBadMatrix;
 
 class DynamicPPState {
     float infectious = 0.0;
+    unsigned progressionID = 0;
 
     char state = 0;// a number
     short daysBeforeNextState = -1;
@@ -23,18 +25,20 @@ class DynamicPPState {
 public:
     DynamicPPState() = default;
     static std::string initTransitionMatrix(
-        parser::TransitionFormat& inputData);
+        std::map<DataProvider::ProgressionType, std::pair<parser::TransitionFormat, unsigned>>&
+            inputData,
+        parser::ProgressionDirectory& config);
     static HD unsigned getNumberOfStates();
     static std::vector<std::string> getStateNames();
 
-    explicit DynamicPPState(const std::string& name);
+    DynamicPPState(const std::string& name, unsigned progressionID_p);
+    DynamicPPState(const std::string& name, unsigned progressionID_p);
     void HD gotInfected();
     bool HD update(float scalingSymptons,
         AgentStats& agentStats,
         unsigned simTime,
         unsigned agentID,
-        unsigned tracked,
-        unsigned progressionID);
+        unsigned tracked);
     [[nodiscard]] char HD getStateIdx() const { return state; }
     [[nodiscard]] states::WBStates HD getWBState() const;
     [[nodiscard]] float HD isInfectious() const { return infectious; }

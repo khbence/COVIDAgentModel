@@ -21,40 +21,32 @@ cxxopts::Options defineProgramParameters() {
         "Length of simulation in weeks",
         cxxopts::value<unsigned>()->default_value("12"))("t,deltat",
         "Length of timestep in minutes",
-        cxxopts::value<unsigned>()->default_value("10"))("n,numagents",
-        "Number of agents",
-        cxxopts::value<int>()->default_value("-1"))("N,numlocs",
+        cxxopts::value<unsigned>()->default_value("10"))(
+        "n,numagents", "Number of agents", cxxopts::value<int>()->default_value("-1"))("N,numlocs",
         "Number of dummy locations",
         cxxopts::value<int>()->default_value("-1"))("P,progression",
         "Path to the progression matrix JSON file",
         cxxopts::value<std::string>()->default_value(
-            ".." + separator() + "inputFiles" + separator()
-            + "progression.json"))("a,agents",
+            ".." + separator() + "inputFiles" + separator() + "progression.json"))("a,agents",
         "Agents file, for all human being in the experiment.",
         cxxopts::value<std::string>()->default_value(
-            ".." + separator() + "inputFiles" + separator() + "agents.json"))(
-        "A,agentTypes",
+            ".." + separator() + "inputFiles" + separator() + "agents.json"))("A,agentTypes",
         "List and schedule of all type fo agents.",
         cxxopts::value<std::string>()->default_value(
-            ".." + separator() + "inputFiles" + separator()
-            + "agentTypes.json"))("l,locations",
+            ".." + separator() + "inputFiles" + separator() + "agentTypes.json"))("l,locations",
         "List of all locations in the simulation.",
         cxxopts::value<std::string>()->default_value(
-            ".." + separator() + "inputFiles" + separator()
-            + "locations.json"))("L,locationTypes",
+            ".." + separator() + "inputFiles" + separator() + "locations.json"))("L,locationTypes",
         "List of all type of locations",
         cxxopts::value<std::string>()->default_value(
-            ".." + separator() + "inputFiles" + separator()
-            + "locationTypes.json"))("p,parameters",
+            ".." + separator() + "inputFiles" + separator() + "locationTypes.json"))("p,parameters",
         "List of all general parameters for the simulation except the "
         "progression data.",
         cxxopts::value<std::string>()->default_value(
-            ".." + separator() + "inputFiles" + separator()
-            + "parameters.json"))("c,configRandom",
+            ".." + separator() + "inputFiles" + separator() + "parameters.json"))("c,configRandom",
         "Config file for random initialization.",
-        cxxopts::value<std::string>()->default_value(
-            ".." + separator() + "inputFiles" + separator()
-            + "configRandom.json"))("r,randomStates",
+        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator()
+                                                     + "configRandom.json"))("r,randomStates",
         "Change the states from the agents file with the configRandom file's "
         "stateDistribution.")("outAgentStat",
         "name of the agent stat output file, if not set there will be no print",

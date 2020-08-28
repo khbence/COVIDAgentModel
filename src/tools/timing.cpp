@@ -8,8 +8,7 @@ void Timing::reportWithParent(int parent, const std::string& indentation) {
     for (const auto& element : loops) {
         const LoopData& l = element.second;
         if (l.parent == parent) {
-            std::cout << indentation + element.first + ": "
-                             + std::to_string(l.time) + " seconds\n";
+            std::cout << indentation + element.first + ": " + std::to_string(l.time) + " seconds\n";
             reportWithParent(l.index, indentation + "  ");
         }
     }
@@ -36,8 +35,7 @@ void Timing::stopTimer(const std::string& _name) {
     int parent = stack.empty() ? -1 : stack.back();
     std::string fullname = _name + "(" + std::to_string(parent) + ")";
     auto now = std::chrono::system_clock::now();
-    loops[fullname].time +=
-        std::chrono::duration<double>(now - loops[fullname].current).count();
+    loops[fullname].time += std::chrono::duration<double>(now - loops[fullname].current).count();
 }
 
 void Timing::report() {
@@ -47,8 +45,7 @@ void Timing::report() {
     for (const auto& element : loops) {
         const LoopData& l = element.second;
         if (l.parent == parent) {
-            std::cout << indentation + element.first + ": "
-                             + std::to_string(l.time) + " seconds\n";
+            std::cout << indentation + element.first + ": " + std::to_string(l.time) + " seconds\n";
             reportWithParent(l.index, indentation + "  ");
         }
     }

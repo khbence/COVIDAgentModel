@@ -140,30 +140,25 @@ public:
         unsigned timestamp = simTime.getTimestamp();
         unsigned tracked = locs->tracked;
         // Update states
-        thrust::for_each(
-            thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(),
-                agentMeta.begin(),
-                agentStats.begin(),
-                diagnosed.begin(),
-                thrust::make_counting_iterator<unsigned>(0))),
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(),
+                             agentMeta.begin(),
+                             agentStats.begin(),
+                             diagnosed.begin(),
+                             thrust::make_counting_iterator<unsigned>(0))),
             thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(),
                 agentMeta.end(),
                 agentStats.end(),
                 diagnosed.end(),
                 thrust::make_counting_iterator<unsigned>(0) + ppstates.size())),
-            [timestamp, tracked] HD(thrust::
-                    tuple<PPState&, AgentMeta&, AgentStats&, bool&, unsigned>
-                        tup) {
+            [timestamp, tracked] HD(
+                thrust::tuple<PPState&, AgentMeta&, AgentStats&, bool&, unsigned> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
                 auto& agentStat = thrust::get<2>(tup);
                 auto& diagnosed = thrust::get<3>(tup);
                 unsigned agentID = thrust::get<4>(tup);
-                bool recovered = ppstate.update(meta.getScalingSymptoms(),
-                    agentStat,
-                    timestamp,
-                    agentID,
-                    tracked);
+                bool recovered = ppstate.update(
+                    meta.getScalingSymptoms(), agentStat, timestamp, agentID, tracked);
                 if (recovered) diagnosed = false;
             });
     }
@@ -181,8 +176,7 @@ public:
 public:
     explicit Simulation(const cxxopts::ParseResult& result)
         : timeStep(result["deltat"].as<decltype(timeStep)>()),
-          lengthOfSimulationWeeks(
-              result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
+          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
         PROFILE_FUNCTION();
         outAgentStat = result["outAgentStat"].as<std::string>();
         InfectionPolicy<Simulation>::initializeArgs(result);
@@ -191,23 +185,21 @@ public:
         enableSuddenDeath = result["suddenDeath"].as<int>();
         DataProvider data{ result };
         try {
-            std::string header = PPState_t::initTransitionMatrix(
-                data.acquireProgressionMatrices());
+            std::string header = PPState_t::initTransitionMatrix(data.acquireProgressionMatrices());
             agents->initAgentMeta(data.acquireParameters());
             locs->initLocationTypes(data.acquireLocationTypes());
             auto tmp = locs->initLocations(data.acquireLocations());
             auto cemeteryID = tmp.first;
             auto locationMapping = tmp.second;
             locs->initializeArgs(result);
-            MovementPolicy<Simulation>::init(
-                data.acquireLocationTypes(), cemeteryID);
-            auto agentTypeMapping =
-                agents->initAgentTypes(data.acquireAgentTypes());
+            MovementPolicy<Simulation>::init(data.acquireLocationTypes(), cemeteryID);
+            auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
             agents->initAgents(data.acquireAgents(),
                 locationMapping,
                 agentTypeMapping,
                 data.getAgentTypeLocTypes(),
-                data.acquireProgressionMatrices());
+                data.acquireProgressionMatrices(),
+                data.acquireProgressionConfig());
             RandomGenerator::resize(agents->PPValues.size());
             std::cout << header << "\tT\tP1\tP2" << '\n';
         } catch (const CustomErrors& e) {
@@ -234,8 +226,7 @@ public:
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
-            InfectionPolicy<Simulation>::infectionsAtLocations(
-                simTime, timeStep);
+            InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep);
             ++simTime;
         }
         // thrust::copy(agents->agentStats.begin(), agents->agentStats.end(),

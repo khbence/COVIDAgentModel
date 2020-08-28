@@ -6,8 +6,7 @@
 namespace parser {
     struct AgentTypes : public jsond::JSONDecodable<AgentTypes> {
         struct Type : public jsond::JSONDecodable<Type> {
-            struct ScheduleUnique
-                : public jsond::JSONDecodable<ScheduleUnique> {
+            struct ScheduleUnique : public jsond::JSONDecodable<ScheduleUnique> {
                 struct Event : public jsond::JSONDecodable<Event> {
                     BEGIN_MEMBER_DECLARATIONS();
                     DECODABLE_MEMBER(int, type);

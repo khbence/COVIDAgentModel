@@ -4,13 +4,9 @@ SingleBadTransitionMatrix::NextStates::NextStates(bool _hasBad,
     thrust::pair<unsigned, float> _bad,
     thrust::pair<unsigned, float>* _neutral,
     unsigned _neutralCount)
-    : hasBad(_hasBad),
-      bad(_bad),
-      neutral(_neutral),
-      neutralCount(_neutralCount) {}
+    : hasBad(_hasBad), bad(_bad), neutral(_neutral), neutralCount(_neutralCount) {}
 
-HD unsigned SingleBadTransitionMatrix::NextStates::selectNext(
-    float scalingSypmtons) const {
+HD unsigned SingleBadTransitionMatrix::NextStates::selectNext(float scalingSypmtons) const {
     double random = RandomGenerator::randomUnit();
     double iterator = 0.0;
     double remainders = 0.0;
@@ -28,14 +24,12 @@ HD unsigned SingleBadTransitionMatrix::NextStates::selectNext(
     return neutral[idx].first;
 }
 
-void SingleBadTransitionMatrix::NextStatesInit::addBad(
-    std::pair<unsigned, float> bad_p) {
+void SingleBadTransitionMatrix::NextStatesInit::addBad(std::pair<unsigned, float> bad_p) {
     if (bad) { throw(IOProgression::TooMuchBad(bad_p.first)); }
     bad = bad_p;
 }
 
-void SingleBadTransitionMatrix::NextStatesInit::addNeutral(
-    std::pair<unsigned, float> newNeutral) {
+void SingleBadTransitionMatrix::NextStatesInit::addNeutral(std::pair<unsigned, float> newNeutral) {
     neutral.push_back(newNeutral);
 }
 
@@ -50,22 +44,15 @@ void SingleBadTransitionMatrix::NextStatesInit::cleanUp(unsigned ownIndex) {
     }
 }
 
-SingleBadTransitionMatrix::SingleBadTransitionMatrix(
-    const parser::TransitionFormat& inputData)
+SingleBadTransitionMatrix::SingleBadTransitionMatrix(const parser::TransitionFormat& inputData)
     : BasicLengthAbstract(inputData.states.size()) {
     std::vector<NextStatesInit> initTransitions(inputData.states.size());
-    transitions =
-        (NextStates*)malloc(sizeof(NextStates) * inputData.states.size());
+    transitions = (NextStates*)malloc(sizeof(NextStates) * inputData.states.size());
 
     auto getStateIndex = [&inputData](const std::string& name) {
         unsigned idx = 0;
-        while (inputData.states[idx].stateName != name
-               && idx < inputData.states.size()) {
-            ++idx;
-        }
-        if (idx == inputData.states.size()) {
-            throw(IOProgression::WrongStateName(name));
-        }
+        while (inputData.states[idx].stateName != name && idx < inputData.states.size()) { ++idx; }
+        if (idx == inputData.states.size()) { throw(IOProgression::WrongStateName(name)); }
         return idx;
     };
 
@@ -86,13 +73,11 @@ SingleBadTransitionMatrix::SingleBadTransitionMatrix(
         if (sumChance != 1.0 && !s.progressions.empty()) {
             throw(IOProgression::BadChances(s.stateName));
         }
-        thrust::pair<unsigned, float> badVal =
-            initTransitions[i].bad ? initTransitions[i].bad.value()
-                                   : thrust::pair<unsigned, float>(0, 0.0f);
-        thrust::pair<unsigned, float>* neutrals =
-            (thrust::pair<unsigned, float>*)malloc(
-                initTransitions[i].neutral.size()
-                * sizeof(thrust::pair<unsigned, float>));
+        thrust::pair<unsigned, float> badVal = initTransitions[i].bad
+                                                   ? initTransitions[i].bad.value()
+                                                   : thrust::pair<unsigned, float>(0, 0.0f);
+        thrust::pair<unsigned, float>* neutrals = (thrust::pair<unsigned, float>*)malloc(
+            initTransitions[i].neutral.size() * sizeof(thrust::pair<unsigned, float>));
         for (int j = 0; j < initTransitions[i].neutral.size(); j++)
             neutrals[j] = initTransitions[i].neutral[j];
         transitions[i] = NextStates(initTransitions[i].bad ? true : false,
@@ -103,10 +88,8 @@ SingleBadTransitionMatrix::SingleBadTransitionMatrix(
     }
 }
 
-SingleBadTransitionMatrix::SingleBadTransitionMatrix(
-    const std::string& fileName)
-    : SingleBadTransitionMatrix(
-        DECODE_JSON_FILE(fileName, parser::TransitionFormat)) {}
+SingleBadTransitionMatrix::SingleBadTransitionMatrix(const std::string& fileName)
+    : SingleBadTransitionMatrix(DECODE_JSON_FILE(fileName, parser::TransitionFormat)) {}
 
 SingleBadTransitionMatrix::~SingleBadTransitionMatrix() {
     for (unsigned i = 0; i < numStates; i++) { free(transitions[i].neutral); }
@@ -120,38 +103,29 @@ SingleBadTransitionMatrix* SingleBadTransitionMatrix::upload() {
         (SingleBadTransitionMatrix*)malloc(sizeof(SingleBadTransitionMatrix));
     tmp->numStates = numStates;
     cudaMalloc((void**)&tmp->lengths, numStates * sizeof(LengthOfState));
-    cudaMemcpy(tmp->lengths,
-        lengths,
-        numStates * sizeof(LengthOfState),
-        cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp->lengths, lengths, numStates * sizeof(LengthOfState), cudaMemcpyHostToDevice);
     NextStates* tmp2 = (NextStates*)malloc(numStates * sizeof(NextStates));
     memcpy(tmp2, transitions, numStates * sizeof(NextStates));
     for (unsigned i = 0; i < numStates; i++) {
         cudaMalloc((void**)&tmp2[i].neutral,
-            transitions[i].neutralCount
-                * sizeof(thrust::pair<unsigned, float>));
+            transitions[i].neutralCount * sizeof(thrust::pair<unsigned, float>));
         cudaMemcpy(tmp2[i].neutral,
             transitions[i].neutral,
             transitions[i].neutralCount * sizeof(thrust::pair<unsigned, float>),
             cudaMemcpyHostToDevice);
     }
     cudaMalloc((void**)&tmp->transitions, numStates * sizeof(NextStates));
-    cudaMemcpy(tmp->transitions,
-        tmp2,
-        numStates * sizeof(NextStates),
-        cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp->transitions, tmp2, numStates * sizeof(NextStates), cudaMemcpyHostToDevice);
     free(tmp2);
     SingleBadTransitionMatrix* dev;
     cudaMalloc((void**)&dev, sizeof(SingleBadTransitionMatrix));
-    cudaMemcpy(
-        dev, tmp, sizeof(SingleBadTransitionMatrix), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev, tmp, sizeof(SingleBadTransitionMatrix), cudaMemcpyHostToDevice);
     free(tmp);
     return dev;
 }
 #endif
 
-thrust::pair<unsigned, int> HD SingleBadTransitionMatrix::calculateNextState(
-    unsigned currentState,
+thrust::pair<unsigned, int> HD SingleBadTransitionMatrix::calculateNextState(unsigned currentState,
     float scalingSymptons) const {
     unsigned nextState = transitions[currentState].selectNext(scalingSymptons);
     int days = lengths[nextState].calculateDays();

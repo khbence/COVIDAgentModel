@@ -5,9 +5,7 @@
 // standard custom, to replace the used c++17 features
 namespace stc {
     class bad_optional_access : public std::exception {
-        [[nodiscard]] const char* what() const noexcept override {
-            return "Bad optional access!";
-        }
+        [[nodiscard]] const char* what() const noexcept override { return "Bad optional access!"; }
     };
 
     template<typename T>

@@ -22,9 +22,7 @@ class Timing {
     static void reportWithParent(int parent, const std::string& indentation);
 
 public:
-    explicit Timing(std::string&& name_p) : name(std::move(name_p)) {
-        startTimer(name);
-    }
+    explicit Timing(std::string&& name_p) : name(std::move(name_p)) { startTimer(name); }
     ~Timing() { stopTimer(name); }
 
     static void startTimer(const std::string& _name);

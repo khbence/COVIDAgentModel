@@ -6,17 +6,11 @@ bool HD operator==(const Timehandler& lhs, const TimeDay& rhs) {
     return ((minutes / 60) == rhs.hours) && ((minutes % 60) == rhs.minutes);
 }
 
-bool HD operator==(const TimeDay& lhs, const Timehandler& rhs) {
-    return rhs == lhs;
-}
+bool HD operator==(const TimeDay& lhs, const Timehandler& rhs) { return rhs == lhs; }
 
-bool HD operator!=(const Timehandler& lhs, const TimeDay& rhs) {
-    return !(lhs == rhs);
-}
+bool HD operator!=(const Timehandler& lhs, const TimeDay& rhs) { return !(lhs == rhs); }
 
-bool HD operator!=(const TimeDay& lhs, const Timehandler& rhs) {
-    return !(lhs == rhs);
-}
+bool HD operator!=(const TimeDay& lhs, const Timehandler& rhs) { return !(lhs == rhs); }
 
 bool HD operator<(const Timehandler& lhs, const TimeDay& rhs) {
     unsigned minutes = lhs.getMinutes();
@@ -25,9 +19,7 @@ bool HD operator<(const Timehandler& lhs, const TimeDay& rhs) {
     return std::tie(hours, mins) < std::tie(rhs.hours, rhs.minutes);
 }
 
-bool HD operator<=(const Timehandler& lhs, const TimeDay& rhs) {
-    return !(lhs > rhs);
-}
+bool HD operator<=(const Timehandler& lhs, const TimeDay& rhs) { return !(lhs > rhs); }
 
 bool HD operator<(const TimeDay& lhs, const Timehandler& rhs) {
     unsigned minutes = rhs.getMinutes();
@@ -36,9 +28,7 @@ bool HD operator<(const TimeDay& lhs, const Timehandler& rhs) {
     return std::tie(lhs.hours, lhs.minutes) < std::tie(hours, mins);
 }
 
-bool HD operator<=(const TimeDay& lhs, const Timehandler& rhs) {
-    return !(lhs > rhs);
-}
+bool HD operator<=(const TimeDay& lhs, const Timehandler& rhs) { return !(lhs > rhs); }
 
 bool HD operator>(const Timehandler& lhs, const TimeDay& rhs) {
     unsigned minutes = lhs.getMinutes();
@@ -47,9 +37,7 @@ bool HD operator>(const Timehandler& lhs, const TimeDay& rhs) {
     return std::tie(hours, mins) > std::tie(rhs.hours, rhs.minutes);
 }
 
-bool HD operator>=(const Timehandler& lhs, const TimeDay& rhs) {
-    return !(lhs < rhs);
-}
+bool HD operator>=(const Timehandler& lhs, const TimeDay& rhs) { return !(lhs < rhs); }
 
 bool HD operator>(const TimeDay& lhs, const Timehandler& rhs) {
     unsigned minutes = rhs.getMinutes();
@@ -58,9 +46,7 @@ bool HD operator>(const TimeDay& lhs, const Timehandler& rhs) {
     return std::tie(lhs.hours, lhs.minutes) > std::tie(hours, mins);
 }
 
-bool HD operator>=(const TimeDay& lhs, const Timehandler& rhs) {
-    return !(lhs < rhs);
-}
+bool HD operator>=(const TimeDay& lhs, const Timehandler& rhs) { return !(lhs < rhs); }
 
 TimeDayDuration HD operator-(const TimeDay& lhs, const Timehandler& rhs) {
     auto minslhs = lhs.getMinutes();

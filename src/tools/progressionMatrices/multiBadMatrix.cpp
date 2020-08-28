@@ -4,10 +4,7 @@ MultiBadMatrix::NextStates::NextStates(unsigned _badCount,
     thrust::pair<unsigned, float>* _bad,
     unsigned _neutralCount,
     thrust::pair<unsigned, float>* _neutral)
-    : badCount(_badCount),
-      bad(_bad),
-      neutralCount(_neutralCount),
-      neutral(_neutral) {}
+    : badCount(_badCount), bad(_bad), neutralCount(_neutralCount), neutral(_neutral) {}
 
 thrust::pair<unsigned, bool> HD MultiBadMatrix::NextStates::selectNext(
     float scalingSypmtons) const {
@@ -17,9 +14,7 @@ thrust::pair<unsigned, bool> HD MultiBadMatrix::NextStates::selectNext(
     double badSum = 0.0;
     for (unsigned i = 0; i < badCount; ++i) {
         preSum += bad[i].second * scalingSypmtons;
-        if (random < preSum) {
-            return thrust::make_pair<unsigned, bool>(bad[i].first, true);
-        }
+        if (random < preSum) { return thrust::make_pair<unsigned, bool>(bad[i].first, true); }
         badSum += bad[i].second;
     }
 
@@ -40,15 +35,12 @@ void MultiBadMatrix::NextStatesInit::addBad(std::pair<unsigned, float> bad_p) {
     bad.push_back(bad_p);
 }
 
-void MultiBadMatrix::NextStatesInit::addNeutral(
-    std::pair<unsigned, float> newNeutral) {
+void MultiBadMatrix::NextStatesInit::addNeutral(std::pair<unsigned, float> newNeutral) {
     neutral.push_back(newNeutral);
 }
 
 void MultiBadMatrix::NextStatesInit::cleanUp(unsigned ownIndex) {
-    if (neutral.empty() && bad.empty()) {
-        neutral.emplace_back(ownIndex, 1.0F);
-    }
+    if (neutral.empty() && bad.empty()) { neutral.emplace_back(ownIndex, 1.0F); }
 }
 
 MultiBadMatrix::MultiBadMatrix(const parser::TransitionFormat& inputData)
@@ -57,18 +49,12 @@ MultiBadMatrix::MultiBadMatrix(const parser::TransitionFormat& inputData)
 
     // malloc instead of new, because this way we can use free in both CPU and
     // GPU code
-    transitions =
-        (NextStates*)malloc(sizeof(NextStates) * inputData.states.size());
+    transitions = (NextStates*)malloc(sizeof(NextStates) * inputData.states.size());
 
     auto getStateIndex = [&inputData](const std::string& name) {
         unsigned idx = 0;
-        while (inputData.states[idx].stateName != name
-               && idx < inputData.states.size()) {
-            ++idx;
-        }
-        if (idx == inputData.states.size()) {
-            throw(IOProgression::WrongStateName(name));
-        }
+        while (inputData.states[idx].stateName != name && idx < inputData.states.size()) { ++idx; }
+        if (idx == inputData.states.size()) { throw(IOProgression::WrongStateName(name)); }
         return idx;
     };
 
@@ -90,14 +76,10 @@ MultiBadMatrix::MultiBadMatrix(const parser::TransitionFormat& inputData)
             throw(IOProgression::BadChances(s.stateName));
         }
 
-        thrust::pair<unsigned, float>* bads =
-            (thrust::pair<unsigned, float>*)malloc(
-                initTransitions[i].bad.size()
-                * sizeof(thrust::pair<unsigned, float>));
-        thrust::pair<unsigned, float>* neutrals =
-            (thrust::pair<unsigned, float>*)malloc(
-                initTransitions[i].neutral.size()
-                * sizeof(thrust::pair<unsigned, float>));
+        thrust::pair<unsigned, float>* bads = (thrust::pair<unsigned, float>*)malloc(
+            initTransitions[i].bad.size() * sizeof(thrust::pair<unsigned, float>));
+        thrust::pair<unsigned, float>* neutrals = (thrust::pair<unsigned, float>*)malloc(
+            initTransitions[i].neutral.size() * sizeof(thrust::pair<unsigned, float>));
 
         for (int j = 0; j < initTransitions[i].neutral.size(); ++j) {
             neutrals[j] = initTransitions[i].neutral[j];
@@ -106,10 +88,8 @@ MultiBadMatrix::MultiBadMatrix(const parser::TransitionFormat& inputData)
             bads[j] = initTransitions[i].bad[j];
         }
 
-        transitions[i] = NextStates(initTransitions[i].bad.size(),
-            bads,
-            initTransitions[i].neutral.size(),
-            neutrals);
+        transitions[i] = NextStates(
+            initTransitions[i].bad.size(), bads, initTransitions[i].neutral.size(), neutrals);
         ++i;
     }
 }
@@ -122,33 +102,26 @@ MultiBadMatrix* MultiBadMatrix::upload() {
     MultiBadMatrix* tmp = (MultiBadMatrix*)malloc(sizeof(MultiBadMatrix));
     tmp->numStates = numStates;
     cudaMalloc((void**)&tmp->lengths, numStates * sizeof(LengthOfState));
-    cudaMemcpy(tmp->lengths,
-        lengths,
-        numStates * sizeof(LengthOfState),
-        cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp->lengths, lengths, numStates * sizeof(LengthOfState), cudaMemcpyHostToDevice);
     NextStates* tmp2 = (NextStates*)malloc(numStates * sizeof(NextStates));
     memcpy(tmp2, transitions, numStates * sizeof(NextStates));
     for (unsigned i = 0; i < numStates; i++) {
         cudaMalloc((void**)&tmp2[i].neutral,
-            transitions[i].neutralCount
-                * sizeof(thrust::pair<unsigned, float>));
+            transitions[i].neutralCount * sizeof(thrust::pair<unsigned, float>));
         cudaMemcpy(tmp2[i].neutral,
             transitions[i].neutral,
             transitions[i].neutralCount * sizeof(thrust::pair<unsigned, float>),
             cudaMemcpyHostToDevice);
 
-        cudaMalloc((void**)&tmp2[i].bad,
-            transitions[i].badCount * sizeof(thrust::pair<unsigned, float>));
+        cudaMalloc(
+            (void**)&tmp2[i].bad, transitions[i].badCount * sizeof(thrust::pair<unsigned, float>));
         cudaMemcpy(tmp2[i].bad,
             transitions[i].bad,
             transitions[i].badCount * sizeof(thrust::pair<unsigned, float>),
             cudaMemcpyHostToDevice);
     }
     cudaMalloc((void**)&tmp->transitions, numStates * sizeof(NextStates));
-    cudaMemcpy(tmp->transitions,
-        tmp2,
-        numStates * sizeof(NextStates),
-        cudaMemcpyHostToDevice);
+    cudaMemcpy(tmp->transitions, tmp2, numStates * sizeof(NextStates), cudaMemcpyHostToDevice);
     free(tmp2);
     MultiBadMatrix* dev;
     cudaMalloc((void**)&dev, sizeof(MultiBadMatrix));
@@ -158,11 +131,9 @@ MultiBadMatrix* MultiBadMatrix::upload() {
 }
 #endif
 
-thrust::tuple<unsigned, int, bool> HD MultiBadMatrix::calculateNextState(
-    unsigned currentState,
+thrust::tuple<unsigned, int, bool> HD MultiBadMatrix::calculateNextState(unsigned currentState,
     float scalingSymptons) const {
-    thrust::pair<unsigned, bool> ret =
-        transitions[currentState].selectNext(scalingSymptons);
+    thrust::pair<unsigned, bool> ret = transitions[currentState].selectNext(scalingSymptons);
     unsigned nextState = ret.first;
     int days = lengths[nextState].calculateDays();
     return thrust::make_tuple<unsigned, int, bool>(nextState, days, ret.second);
