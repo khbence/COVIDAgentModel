@@ -7,9 +7,7 @@ namespace states {
     }
 
     [[nodiscard]] states::WBStates parseWBState(const std::string& rawState) {
-        if (rawState.length() != 1) {
-            throw IOAgentTypes::InvalidWBStateInSchedule(rawState);
-        }
+        if (rawState.length() != 1) { throw IOAgentTypes::InvalidWBStateInSchedule(rawState); }
         char s = static_cast<char>(std::toupper(rawState.front()));
         switch (s) {
         case 'W':

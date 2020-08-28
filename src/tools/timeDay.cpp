@@ -43,30 +43,24 @@ bool HD TimeDay::operator<(const TimeDay& other) const {
     return std::tie(hours, minutes) < std::tie(other.hours, other.minutes);
 }
 
-bool HD TimeDay::operator<=(const TimeDay& other) const {
-    return !(*this > other);
-}
+bool HD TimeDay::operator<=(const TimeDay& other) const { return !(*this > other); }
 
 bool HD TimeDay::operator>(const TimeDay& other) const {
     return std::tie(hours, minutes) > std::tie(other.hours, other.minutes);
 }
 
-bool HD TimeDay::operator>=(const TimeDay& other) const {
-    return !(*this < other);
-}
+bool HD TimeDay::operator>=(const TimeDay& other) const { return !(*this < other); }
 
 bool HD TimeDay::operator==(const TimeDay& other) const {
     return (hours == other.hours) && (minutes == other.minutes);
 }
 
-bool HD TimeDay::operator!=(const TimeDay& other) const {
-    return !((*this) == other);
-}
+bool HD TimeDay::operator!=(const TimeDay& other) const { return !((*this) == other); }
 
 HD TimeDay::TimeDay(double raw)
     : hours(static_cast<decltype(hours)>(raw)),
-      minutes(static_cast<decltype(minutes)>(
-          std::round(((raw - static_cast<int>(raw)) / 0.6) * 60))) {
+      minutes(
+          static_cast<decltype(minutes)>(std::round(((raw - static_cast<int>(raw)) / 0.6) * 60))) {
     if (raw == -1.0) { hours = std::numeric_limits<decltype(hours)>::max(); }
 }
 
@@ -85,8 +79,7 @@ unsigned HD TimeDay::getHours() const { return static_cast<unsigned>(hours); }
     return getMinutes() / timeStep;
 };
 
-[[nodiscard]] unsigned HD TimeDay::getStepsUntilMidnight(
-    unsigned timeStep) const {
+[[nodiscard]] unsigned HD TimeDay::getStepsUntilMidnight(unsigned timeStep) const {
     return (1440 - getMinutes()) / timeStep;
 };
 

@@ -6,11 +6,7 @@ namespace detail {
     namespace PPStateSIRextended {
         __device__ unsigned numberOfStates = 1 + 6 + 3 + 1;// S + I + R + D
         unsigned h_numberOfStates = 1 + 6 + 3 + 1;// S + I + R + D
-        __device__ unsigned startingIdx[5] = { 0,
-            1,
-            7,
-            10,
-            11 };// to convert from idx to state
+        __device__ unsigned startingIdx[5] = { 0, 1, 7, 10, 11 };// to convert from idx to state
         unsigned h_startingIdx[5] = { 0, 1, 7, 10, 11 };
         SingleBadTransitionMatrix* transition;
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
@@ -41,9 +37,7 @@ states::SIRD PPStateSIRAbstract::parseState(const std::string& input) {
 
 void PPStateSIRAbstract::gotInfected() { this->state = states::SIRD::I; }
 
-[[nodiscard]] HD states::SIRD PPStateSIRAbstract::getSIRD() const {
-    return state;
-}
+[[nodiscard]] HD states::SIRD PPStateSIRAbstract::getSIRD() const { return state; }
 
 [[nodiscard]] HD states::WBStates PPStateSIRAbstract::getWBState() const {
     switch (state) {
@@ -98,10 +92,8 @@ void PPStateSIRextended::printHeader() {
     std::cout << "S, I1, I2, I3, I4, I5, I6, R1, R2, R3, D\n";
 }
 
-HD PPStateSIRextended::PPStateSIRextended()
-    : PPStateSIRAbstract(states::SIRD::S) {}
-HD PPStateSIRextended::PPStateSIRextended(states::SIRD s)
-    : PPStateSIRAbstract(s) {
+HD PPStateSIRextended::PPStateSIRextended() : PPStateSIRAbstract(states::SIRD::S) {}
+HD PPStateSIRextended::PPStateSIRextended(states::SIRD s) : PPStateSIRAbstract(s) {
     idx = static_cast<char>(state);
     daysBeforeNextState = getTransition().calculateJustDays(idx);
 }
@@ -121,9 +113,7 @@ HD void PPStateSIRextended::gotInfected() {
 
 HD void PPStateSIRextended::update(float scalingSymptons) {
     // the order of the first two is intentional
-    if (daysBeforeNextState == -2) {
-        daysBeforeNextState = getTransition().calculateJustDays(idx);
-    }
+    if (daysBeforeNextState == -2) { daysBeforeNextState = getTransition().calculateJustDays(idx); }
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }
     if (daysBeforeNextState == 0) {
         auto tmp = getTransition().calculateNextState(idx, scalingSymptons);
@@ -136,14 +126,11 @@ HD void PPStateSIRextended::update(float scalingSymptons) {
 }
 
 void PPStateSIRextended::initTransitionMatrix(const std::string& inputFile) {
-    detail::PPStateSIRextended::transition =
-        new SingleBadTransitionMatrix(inputFile);
+    detail::PPStateSIRextended::transition = new SingleBadTransitionMatrix(inputFile);
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-    SingleBadTransitionMatrix* tmp =
-        detail::PPStateSIRextended::transition->upload();
-    cudaMemcpyToSymbol(detail::PPStateSIRextended::transition_gpu,
-        &tmp,
-        sizeof(SingleBadTransitionMatrix*));
+    SingleBadTransitionMatrix* tmp = detail::PPStateSIRextended::transition->upload();
+    cudaMemcpyToSymbol(
+        detail::PPStateSIRextended::transition_gpu, &tmp, sizeof(SingleBadTransitionMatrix*));
 #endif
     printHeader();
 }

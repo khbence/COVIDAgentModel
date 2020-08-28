@@ -37,10 +37,8 @@ void RandomGenerator::resize(unsigned agents) {
         cudaMalloc((void**)&devStates, agents * sizeof(curandState));
         curandState* devStates_old;
         cudaMemcpyFromSymbol(&devStates_old, dstates, sizeof(curandState*));
-        cudaMemcpy(devStates,
-            devStates_old,
-            dstates_size * sizeof(curandState),
-            cudaMemcpyDeviceToDevice);
+        cudaMemcpy(
+            devStates, devStates_old, dstates_size * sizeof(curandState), cudaMemcpyDeviceToDevice);
         cudaMemcpyToSymbol(dstates, &devStates, sizeof(curandState*));
         setup_kernel<<<(agents - dstates_size - 1) / 128 + 1, 128>>>(
             agents - dstates_size, devStates + dstates_size);
@@ -52,8 +50,6 @@ void RandomGenerator::resize(unsigned agents) {
         unsigned threads = omp_get_max_threads();
         generators.reserve(threads);
         std::random_device rd;
-        for (unsigned i = generators.size(); i < threads; ++i) {
-            generators.emplace_back(rd());
-        }
+        for (unsigned i = generators.size(); i < threads; ++i) { generators.emplace_back(rd()); }
     }
 }

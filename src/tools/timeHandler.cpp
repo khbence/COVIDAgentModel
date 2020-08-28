@@ -50,14 +50,12 @@ Timehandler& Timehandler::operator-=(const TimeDayDuration& dur) {
 }
 
 
-[[nodiscard]] std::vector<Days> Timehandler::parseDays(
-    const std::string& rawDays) {
+[[nodiscard]] std::vector<Days> Timehandler::parseDays(const std::string& rawDays) {
     std::string day;
     std::vector<Days> result;
-    std::transform(
-        rawDays.begin(), rawDays.end(), std::back_inserter(day), [](char c) {
-            return std::toupper(c);
-        });
+    std::transform(rawDays.begin(), rawDays.end(), std::back_inserter(day), [](char c) {
+        return std::toupper(c);
+    });
     if (day == "ALL") {
         result = decltype(result){ Days::MONDAY,
             Days::TUESDAY,
@@ -98,8 +96,7 @@ Timehandler& Timehandler::operator-=(const TimeDayDuration& dur) {
 
 Timehandler::Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture)
     : timeStep(std::chrono::minutes(timeStep_p)),
-      current(
-          nextMidnight() + std::chrono::hours(hoursPerWeek * weeksInTheFuture)),
+      current(nextMidnight() + std::chrono::hours(hoursPerWeek * weeksInTheFuture)),
       stepsPerDay(minsPerDay / timeStep_p) {
     if (minsPerDay % timeStep_p != 0) { throw init::BadTimeStep(timeStep_p); }
 }
@@ -115,9 +112,7 @@ Timehandler Timehandler::getNextMidnight() const {
     return ret;
 }
 
-unsigned HD Timehandler::getMinutes() const {
-    return (counter % stepsPerDay) * timeStep.count();
-}
+unsigned HD Timehandler::getMinutes() const { return (counter % stepsPerDay) * timeStep.count(); }
 
 unsigned HD Timehandler::getTimestamp() const { return counter; }
 

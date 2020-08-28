@@ -22,27 +22,22 @@ public:
         unsigned ageEnd;
         std::string preCond;
 
-        ProgressionType(
-            const parser::ProgressionDirectory::ProgressionFile& file);
-        
+        ProgressionType(const parser::ProgressionDirectory::ProgressionFile& file);
+
         friend bool operator<(const ProgressionType& lhs, const ProgressionType rhs) {
-            if(lhs.ageBegin < rhs.ageBegin) {
-                return lhs.preCond < rhs.preCond;
-            }
+            if (lhs.ageBegin < rhs.ageBegin) { return lhs.preCond < rhs.preCond; }
             return false;
         }
 
-        friend bool operator<(const ProgressionType& lhs, const std::pair<unsigned, std::string> rhs) {
-            if(lhs.ageBegin < rhs.first) {
-                return lhs.preCond < rhs.second;
-            }
+        friend bool operator<(const ProgressionType& lhs,
+            const std::pair<unsigned, std::string> rhs) {
+            if (lhs.ageBegin < rhs.first) { return lhs.preCond < rhs.second; }
             return false;
         }
 
-        friend bool operator<(const std::pair<unsigned, std::string> lhs, const ProgressionType& rhs) {
-            if(lhs.first < rhs.ageBegin) {
-                return lhs.second < rhs.preCond;
-            }
+        friend bool operator<(const std::pair<unsigned, std::string> lhs,
+            const ProgressionType& rhs) {
+            if (lhs.first < rhs.ageBegin) { return lhs.second < rhs.preCond; }
             return false;
         }
     };
@@ -53,8 +48,8 @@ private:
     parser::Locations locations;
     parser::LocationTypes locationTypes;
     parser::Parameters parameters;
-    std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>>
-        progressionDirectory;
+    std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>> progressionDirectory;
+    parser::ProgressionDirectory progressionConfig;
 
     // only for random generations and checking
     parser::ConfigRandom configRandom;
@@ -62,8 +57,7 @@ private:
     std::map<unsigned, std::vector<std::string>> typeToLocationMapping;
 
     void readParameters(const std::string& fileName);
-    std::map<ProgressionType, std::string> readProgressionConfig(
-        const std::string& fileName);
+    std::map<ProgressionType, std::string> readProgressionConfig(const std::string& fileName);
     void readProgressionMatrices(const std::string& fileName);
     void readConfigRandom(const std::string& fileName);
     void readLocationTypes(const std::string& fileName);
@@ -94,10 +88,9 @@ public:
     [[nodiscard]] parser::Locations& acquireLocations();
     [[nodiscard]] parser::LocationTypes& acquireLocationTypes();
     [[nodiscard]] parser::Parameters& acquireParameters();
-    [[nodiscard]] const std::map<ProgressionType,
-        std::pair<parser::TransitionFormat, unsigned>>&
+    [[nodiscard]] std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>>&
         acquireProgressionMatrices();
+    [[nodiscard]] parser::ProgressionDirectory& acquireProgressionConfig();
 
-    [[nodiscard]] const std::map<unsigned, std::vector<unsigned>>&
-        getAgentTypeLocTypes() const;
+    [[nodiscard]] const std::map<unsigned, std::vector<unsigned>>& getAgentTypeLocTypes() const;
 };

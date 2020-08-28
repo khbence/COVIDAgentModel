@@ -16,9 +16,7 @@ class BasicAgentMeta {
 
     public:
         explicit AgeInterval(parser::Parameters::Age in);
-        bool operator==(unsigned age) const {
-            return (from <= age) && (age < to);
-        }
+        bool operator==(unsigned age) const { return (from <= age) && (age < to); }
         [[nodiscard]] float getSymptoms() const;
         [[nodiscard]] float getTransmission() const;
     };
