@@ -16,7 +16,9 @@ class BasicAgentMeta {
 
     public:
         explicit AgeInterval(parser::Parameters::Age in);
-        bool operator==(unsigned age) const { return (from <= age) && (age < to); }
+        bool operator==(unsigned age) const {
+            return (from <= age) && (age < to);
+        }
         [[nodiscard]] float getSymptoms() const;
         [[nodiscard]] float getTransmission() const;
     };
@@ -26,7 +28,6 @@ class BasicAgentMeta {
     uint8_t age;
     bool sex;
 
-    // As a good christian I hardcoded that there are only two genders
     static std::array<std::pair<char, float>, 2> sexScaling;
     static std::vector<AgeInterval> ageScaling;
     static std::map<std::string, float> preConditionScaling;

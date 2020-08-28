@@ -20,17 +20,22 @@ public:
 
     public:
         Event();
-        explicit Event(const parser::AgentTypes::Type::ScheduleUnique::Event& in);
+        explicit Event(
+            const parser::AgentTypes::Type::ScheduleUnique::Event& in);
     };
 
 public:
-    // use the getOffsetIndex function to get the position for this vector, and use this value to search in events
+    // use the getOffsetIndex function to get the position for this vector, and
+    // use this value to search in events
     thrust::device_vector<unsigned> eventOffset;
     thrust::device_vector<Event> events;
 
-    [[nodiscard]] static HD unsigned getOffsetIndex(unsigned ID, states::WBStates state, Days day);
+    [[nodiscard]] static HD unsigned
+        getOffsetIndex(unsigned ID, states::WBStates state, Days day);
 
     AgentTypeList() = default;
     AgentTypeList(std::size_t n);
-    void addSchedule(unsigned ID, std::pair<states::WBStates, Days> state, const std::vector<Event>& schedule);
+    void addSchedule(unsigned ID,
+        std::pair<states::WBStates, Days> state,
+        const std::vector<Event>& schedule);
 };

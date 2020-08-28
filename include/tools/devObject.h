@@ -14,8 +14,8 @@ namespace detail {
         __global__ void DeleteObject(thrust::device_ptr<T> p) {
             p->~T();
         }
-    }
-}
+    }// namespace DevObject
+}// namespace detail
 
 template<typename T>
 class DevObject {
@@ -28,7 +28,7 @@ class DevObject {
     }
 
     ~DevObject() {
-        if(p) {
+        if (p) {
             detail::DevObject::DeleteObject<T><<<1, 1>>>(p);
             cudaDeviceSyncronize();
         }
