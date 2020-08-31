@@ -10,6 +10,7 @@ public:
     unsigned worstStateEndTimestamp = 0;
     unsigned diagnosedTimestamp = 0;
     unsigned quarantinedTimestamp = 0;
+    unsigned quarantinedUntilTimestamp = 0;
     char worstState = 0;
     friend std::ostream& operator<<(std::ostream& os, const AgentStats& s);
 };

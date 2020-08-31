@@ -148,14 +148,17 @@ namespace RealMovementOps {
             //If not diagnosed before, diagnose & quarantine
             if (!a.diagnosedPtr[i] && a.agentStatesPtr[i].isInfectious()) {
                 a.diagnosedPtr[i] = true;
-                a.quarantinedPtr[i] = true;
                 a.agentStatsPtr[i].diagnosedTimestamp = a.timestamp;
-                a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
+                if (a.quarantinePolicy>0) {
+                    a.quarantinedPtr[i] = true;
+                    a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
+                    a.agentStatsPtr[i].quarantinedUntilTimestamp = a.timestamp + 2 * 7 * 24 * 60 / a.timeStep;
+                }
 
                 // Place home under quarantine
                 unsigned myHome =
                     RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-                if (a.quarantinePolicy > 1 && a.locationQuarantineUntilPtr[myHome] < a.timestamp) {
+                if (a.quarantinePolicy > 1) { //Home under quarantine for 2 weeks from now
                     a.locationQuarantineUntilPtr[myHome] = a.timestamp + 2 * 7 * 24 * 60 / a.timeStep;// TODO: quarantine period
                     if (i == a.tracked) printf("\tFlagging home as quarantined: %d\n", myHome);
                     //if (myHome==2149) printf("LOCATION 2149 quarantined until %d because agent %d got hospitalized\n",a.locationQuarantineUntilPtr[myHome],i);
@@ -179,9 +182,13 @@ namespace RealMovementOps {
         }
 
         // Is agent currently in a place under quarantine
-        if (a.quarantinePolicy > 1 && a.timestamp < a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]) {
+        if (a.quarantinePolicy > 1 && a.timestamp < a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]
+            && (a.locationTypePtr[a.agentLocationsPtr[i]] == a.homeType 
+            || a.locationTypePtr[a.agentLocationsPtr[i]] == a.schoolType //Only send agent to quarantine if this is home, work or school
+            || a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType)) {
             if (a.agentStatsPtr[i].quarantinedTimestamp == 0) {
                 a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
+                a.agentStatsPtr[i].quarantinedUntilTimestamp = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]];
                 a.quarantinedPtr[i] = true;
                 if (i == a.tracked)
                     printf("Agent %d of type %d day %d at %d:%d location %d is quarantined, staying at home until %d\n",
@@ -193,25 +200,27 @@ namespace RealMovementOps {
                         a.agentLocationsPtr[i],
                         a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]);
             }
-            a.stepsUntilMovePtr[i] = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] - a.timestamp;
+            a.stepsUntilMovePtr[i] = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] - a.timestamp - 1;
 
-            // If not home, send home
-            unsigned homeLocation =
-                RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-            if (homeLocation != a.agentLocationsPtr[i]) {
-                unsigned until = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]];
-                a.agentLocationsPtr[i] = homeLocation;
-                // TODO: quarantine whole home??
-                // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = until;
-            }
             if (i == a.tracked) {
-                printf("Agent %d of type %d day %d at %d:%d WBState %d still quarantined (1), quarantinedTimestamp %d locationQuarantineUntil %d timestamp %d\n",
+                printf("Agent %d of type %d day %d at %d:%d WBState %d at location %d under quarantine (1), quarantined %d-%d locationQuarantineUntil %d timestamp %d\n",
                 i,
                 agentType + 1,
                 (int)a.day,
                 a.simTime.getMinutes() / 60,
                 a.simTime.getMinutes() % 60,
-                (int)wBState, a.agentStatsPtr[i].quarantinedTimestamp, a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]], a.timestamp);
+                (int)wBState, a.agentLocationsPtr[i], a.agentStatsPtr[i].quarantinedTimestamp, a.agentStatsPtr[i].quarantinedUntilTimestamp,
+                a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]], a.timestamp);
+            }
+
+            // If not home, send home
+            unsigned homeLocation =
+                RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+            if (homeLocation != a.agentLocationsPtr[i]) {
+                a.agentLocationsPtr[i] = homeLocation;
+                // TODO: quarantine whole home??
+                // unsigned until = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]];
+                // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = until;
             }
             return;
         }
@@ -222,7 +231,7 @@ namespace RealMovementOps {
                     || (a.agentStatsPtr[i].diagnosedTimestamp > 0 && (a.timestamp - a.agentStatsPtr[i].diagnosedTimestamp)
                            < 2 * 7 * 24 * 60 / a.timeStep)))// stay home if diagnosed or quarantine has not expired
             || (a.quarantinePolicy > 1 && a.quarantinedPtr[i]
-                && (a.timestamp - a.agentStatsPtr[i].quarantinedTimestamp) < 2 * 7 * 24 * 60 / a.timeStep)) {// TODO: specify quarantine length
+                && (a.timestamp < a.agentStatsPtr[i].quarantinedUntilTimestamp))) {// TODO: specify quarantine length
             if (a.agentStatesPtr[i].getWBState() == states::WBStates::S)// send to hospital
                 a.agentLocationsPtr[i] =
                     RealMovementOps::findActualLocationForType(i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
@@ -234,13 +243,16 @@ namespace RealMovementOps {
             // if less than 2 weeks since diagnosis/quarantine, stay where agent already is
             a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
             if (i == a.tracked) {
-                printf("Agent %d of type %d day %d at %d:%d WBState %d still quarantined (2): diagnosed %d diagnosedTimestamp %d, current timestamp %d\n",
+                printf("Agent %d of type %d day %d at %d:%d WBState %d still quarantined (2): diagnosed %d diagnosedTimestamp %d, personal quarantine until %d, current timestamp %d\n",
                 i,
                 agentType + 1,
                 (int)a.day,
                 a.simTime.getMinutes() / 60,
                 a.simTime.getMinutes() % 60,
-                (int)wBState, a.diagnosedPtr[i], a.agentStatsPtr[i].diagnosedTimestamp, a.timestamp);
+                (int)wBState, a.diagnosedPtr[i], a.agentStatsPtr[i].diagnosedTimestamp,
+                a.agentStatsPtr[i].quarantinedUntilTimestamp,
+                a.timestamp
+                );
             }
             return;
         }
@@ -385,19 +397,69 @@ namespace RealMovementOps {
             }
         }
 
+        // Has agent just gone someplace currently under quarantine
+        if (a.quarantinePolicy > 1 && a.timestamp < a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]
+            && (a.locationTypePtr[a.agentLocationsPtr[i]] == a.homeType 
+            || a.locationTypePtr[a.agentLocationsPtr[i]] == a.schoolType //Only send agent to quarantine if this is home, work or school
+            || a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType)) {
+            if (a.agentStatsPtr[i].quarantinedTimestamp == 0) {
+                a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
+                a.quarantinedPtr[i] = true;
+                if (i == a.tracked)
+                    printf("Agent %d of type %d day %d at %d:%d location %d is quarantined, staying at home until %d\n",
+                        i,
+                        agentType + 1,
+                        (int)a.day,
+                        a.simTime.getMinutes() / 60,
+                        a.simTime.getMinutes() % 60,
+                        a.agentLocationsPtr[i],
+                        a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]);
+            }
+            a.stepsUntilMovePtr[i] = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] - a.timestamp - 1;
+
+            if (i == a.tracked) {
+                printf("Agent %d of type %d day %d at %d:%d WBState %d at location %d under quarantine (1), quarantined %d-%d locationQuarantineUntil %d timestamp %d\n",
+                i,
+                agentType + 1,
+                (int)a.day,
+                a.simTime.getMinutes() / 60,
+                a.simTime.getMinutes() % 60,
+                (int)wBState, a.agentLocationsPtr[i], a.agentStatsPtr[i].quarantinedTimestamp, a.agentStatsPtr[i].quarantinedUntilTimestamp,
+                a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]], a.timestamp);
+            }
+
+            // If not home, send home
+            unsigned homeLocation =
+                RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+            if (homeLocation != a.agentLocationsPtr[i]) {
+                unsigned until = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]];
+                a.agentLocationsPtr[i] = homeLocation;
+                // TODO: quarantine whole home??
+                // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = until;
+            }
+            return;
+        }
+
+
         // Diagnosis-related operations
         if (newLocationType == a.hospitalType || newLocationType == a.doctorType) {
             // If previously undiagnosed and
             if (!a.diagnosedPtr[i] && a.agentStatesPtr[i].isInfectious()) {
                 a.diagnosedPtr[i] = true;
-                a.quarantinedPtr[i] = true;
                 a.agentStatsPtr[i].diagnosedTimestamp = a.timestamp;
-                a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
+                if (a.quarantinePolicy>0) {
+                    a.quarantinedPtr[i] = true;
+                    a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
+                    a.agentStatsPtr[i].quarantinedUntilTimestamp = a.timestamp+2 * 7 * 24 * 60 / a.timeStep;
+                }
+
+                if (i == a.tracked)
+                    printf("\tDiagnosed at location %d\n", a.agentLocationsPtr[i]);
 
                 // Place home under quarantine
                 unsigned myHome =
                     RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-                if (a.quarantinePolicy > 1 && a.locationQuarantineUntilPtr[myHome] < a.timestamp) {
+                if (a.quarantinePolicy > 1) { //Quarantine home for 2 weeks from now
                     a.locationQuarantineUntilPtr[myHome] = a.timestamp + 2 * 7 * 24 * 60 / a.timeStep;// TODO: quarantine period
                     if (i == a.tracked) printf("\tFlagging home as quarantined: %d\n", myHome);
                     //if (myHome==2149) printf("LOCATION 2149 quarantined until %d because agent %d got diagnosed at doctor/hospital\n",a.locationQuarantineUntilPtr[myHome],i);
@@ -417,25 +479,8 @@ namespace RealMovementOps {
                     }
                 }
                 
-                if (a.agentStatesPtr[i].getWBState() == states::WBStates::S)// send to hospital
-                    a.agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(
-                        i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-                else {
-                    // Quarantine for 2 weeks at home
-                    a.agentLocationsPtr[i] =
-                        RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-                    if (a.quarantinePolicy > 0) {
-                        a.stepsUntilMovePtr[i] = 2 * 7 * 24 * 60 / a.timeStep;// this will be set to 0 at midnight, so need to check
-                        if (i == a.tracked)
-                            printf("\tDiagnosed, going into quarantine in home type 2 location %d for %d steps\n",
-                                a.agentLocationsPtr[i],
-                                a.stepsUntilMovePtr[i] - 1);
-                    } else {
-                        if (i == a.tracked)
-                            printf(
-                                "\tDiagnosed, going into home type 2 location %d for %d steps\n", a.agentLocationsPtr[i], a.stepsUntilMovePtr[i] - 1);
-                    }
-                }
+                //We are not moving the agent - stay here for full duration, potentially infect others
+                //when moving next, he will go into quarantine anyway (if enabled)
             }
         }
 
