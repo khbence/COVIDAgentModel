@@ -14,6 +14,9 @@
 #include "agentMeta.h"
 #include "agentStats.h"
 #include "agentStatOutput.h"
+#include "progressionMatrixFormat.h"
+#include "dataProvider.h"
+#include "progressionType.h"
 
 template<typename T>
 class Agent;
@@ -88,7 +91,7 @@ public:
         const std::map<std::string, unsigned>& locMap,
         const std::map<unsigned, unsigned>& typeMap,
         const std::map<unsigned, std::vector<unsigned>>& agentTypeLocType,
-        const std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>>&
+        const std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
             progressionMatrices) {
         auto n = inputData.people.size();
         reserve(n);
@@ -119,15 +122,15 @@ public:
         agentStats_h.reserve(n);
 
         for (auto& person : inputData.people) {
-            PPState state = PPState{ person.state };
-            auto it = progressionMatrices.find(std::make_pair(person.age, person.preCond));
-            PPValues_h.push_back(state, it->second->second);
+            auto tmp = std::make_pair(static_cast<unsigned>(person.age), static_cast<std::string>(person.preCond));
+            auto it = progressionMatrices.find(tmp);
+            PPValues_h.push_back(PPState(person.state, it->second.second));
             AgentStats stat;
             // TODO: how do I tell that agent is infected (even if not
             // infectious)
-            if (state.getStateIdx() > 0) {// Is infected at the beginning
+            if (PPValues_h.back().getStateIdx() > 0) {// Is infected at the beginning
                 stat.infectedTimestamp = 0;
-                stat.worstState = state.getStateIdx();
+                stat.worstState = PPValues_h.back().getStateIdx();
                 stat.worstStateTimestamp = 0;
             }
             agentStats_h.push_back(stat);

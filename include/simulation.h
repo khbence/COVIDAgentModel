@@ -185,7 +185,7 @@ public:
         enableSuddenDeath = result["suddenDeath"].as<int>();
         DataProvider data{ result };
         try {
-            std::string header = PPState_t::initTransitionMatrix(data.acquireProgressionMatrices());
+            std::string header = PPState_t::initTransitionMatrix(data.acquireProgressionMatrices(), data.acquireProgressionConfig());
             agents->initAgentMeta(data.acquireParameters());
             locs->initLocationTypes(data.acquireLocationTypes());
             auto tmp = locs->initLocations(data.acquireLocations());
@@ -198,8 +198,7 @@ public:
                 locationMapping,
                 agentTypeMapping,
                 data.getAgentTypeLocTypes(),
-                data.acquireProgressionMatrices(),
-                data.acquireProgressionConfig());
+                data.acquireProgressionMatrices());
             RandomGenerator::resize(agents->PPValues.size());
             std::cout << header << "\tT\tP1\tP2" << '\n';
         } catch (const CustomErrors& e) {

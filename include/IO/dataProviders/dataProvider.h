@@ -7,6 +7,7 @@
 #include "progressionConfigFormat.h"
 #include "progressionMatrixFormat.h"
 #include "configRandomFormat.h"
+#include "progressionType.h"
 #include "cxxopts.hpp"
 
 #include "randomGenerator.h"
@@ -16,39 +17,12 @@
 #include <utility>
 
 class DataProvider {
-public:
-    struct ProgressionType {
-        unsigned ageBegin;
-        unsigned ageEnd;
-        std::string preCond;
-
-        ProgressionType(const parser::ProgressionDirectory::ProgressionFile& file);
-
-        friend bool operator<(const ProgressionType& lhs, const ProgressionType rhs) {
-            if (lhs.ageBegin < rhs.ageBegin) { return lhs.preCond < rhs.preCond; }
-            return false;
-        }
-
-        friend bool operator<(const ProgressionType& lhs,
-            const std::pair<unsigned, std::string> rhs) {
-            if (lhs.ageBegin < rhs.first) { return lhs.preCond < rhs.second; }
-            return false;
-        }
-
-        friend bool operator<(const std::pair<unsigned, std::string> lhs,
-            const ProgressionType& rhs) {
-            if (lhs.first < rhs.ageBegin) { return lhs.second < rhs.preCond; }
-            return false;
-        }
-    };
-
-private:
     parser::Agents agents;
     parser::AgentTypes agentTypes;
     parser::Locations locations;
     parser::LocationTypes locationTypes;
     parser::Parameters parameters;
-    std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>> progressionDirectory;
+    std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>> progressionDirectory;
     parser::ProgressionDirectory progressionConfig;
 
     // only for random generations and checking
@@ -88,7 +62,7 @@ public:
     [[nodiscard]] parser::Locations& acquireLocations();
     [[nodiscard]] parser::LocationTypes& acquireLocationTypes();
     [[nodiscard]] parser::Parameters& acquireParameters();
-    [[nodiscard]] std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>>&
+    [[nodiscard]] std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
         acquireProgressionMatrices();
     [[nodiscard]] parser::ProgressionDirectory& acquireProgressionConfig();
 

@@ -3,12 +3,12 @@
 #include <string>
 #include "progressionMatrices.h"
 #include "progressionMatrixFormat.h"
-#include "dataProvider.h"
 #include "agentsList.h"
 #include <vector>
 #include <map>
+#include "progressionType.h"
 
-using ProgressionMatrix = MultiBadMatrix;
+using ProgressionMatrix = MultiBadMatrix; 
 
 class DynamicPPState {
     float infectious = 0.0;
@@ -25,13 +25,12 @@ class DynamicPPState {
 public:
     DynamicPPState() = default;
     static std::string initTransitionMatrix(
-        std::map<DataProvider::ProgressionType, std::pair<parser::TransitionFormat, unsigned>>&
+        std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
             inputData,
         parser::ProgressionDirectory& config);
     static HD unsigned getNumberOfStates();
     static std::vector<std::string> getStateNames();
 
-    DynamicPPState(const std::string& name, unsigned progressionID_p);
     DynamicPPState(const std::string& name, unsigned progressionID_p);
     void HD gotInfected();
     bool HD update(float scalingSymptons,
