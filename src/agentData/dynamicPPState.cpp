@@ -44,27 +44,45 @@ void HD DynamicPPState::updateMeta() {
 }
 
 std::string DynamicPPState::initTransitionMatrix(
-    std::map<DataProvider::ProgressionType, std::pair<parser::TransitionFormat, unsigned>>&
+    std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
         inputData,
     parser::ProgressionDirectory& config) {
     // init global parameters that are used to be static
     detail::DynamicPPState::h_numberOfStates = config.stateInformation.stateNames.size();
     detail::DynamicPPState::h_infectious =
         decltype(detail::DynamicPPState::h_infectious)(detail::DynamicPPState::h_numberOfStates);
-    detail::DynamicPPState::h_WB(detail::DynamicPPState::h_numberOfStates);
-    detail::DynamicPPState::h_susceptible = new bool[detail::DynamicPPState::h_numberOfStates];
+    detail::DynamicPPState::h_WB =
+        decltype(detail::DynamicPPState::h_WB)(detail::DynamicPPState::h_numberOfStates);
+    detail::DynamicPPState::h_susceptible = decltype(detail::DynamicPPState::h_susceptible)(
+        detail::DynamicPPState::h_numberOfStates, false);
     detail::DynamicPPState::h_transition.reserve(inputData.size());
 
     char idx = 0;
+    std::string header;
     for (const auto& e : config.stateInformation.stateNames) {
+        header += e + '\t';
         detail::DynamicPPState::nameIndexMap.emplace(std::make_pair(e, idx));
         ++idx;
     }
 
-    const auto& sample = inputData.begin()->second.first;
-    for (const auto& e : sample.states) {
-        detail::DynamicPPState::h_WB[detail::DynamicPPState::nameIndexMap.at(e.stateName)] =
-            states::parseWBState(e.WB);
+    for (const auto& e : config.states) {
+        auto idx = detail::DynamicPPState::nameIndexMap.at(e.name);
+        detail::DynamicPPState::h_WB[idx] = states::parseWBState(e.WB);
+        detail::DynamicPPState::h_infectious[idx] = e.infectious;
+    }
+
+    for (unsigned i = 0; i < inputData.size(); ++i) {
+        auto it = std::find_if(inputData.begin(), inputData.end(), [i](const auto& e) {
+            return e.second.second == i;
+        });
+        detail::DynamicPPState::h_transition.emplace_back(it->second.first);
+    }
+
+    for (unsigned i = 0; i < detail::DynamicPPState::h_numberOfStates; i++) {
+        if (detail::DynamicPPState::h_WB[i] == states::WBStates::D) {
+            detail::DynamicPPState::h_deadState = i;
+            break;
+        }
     }
 
 
@@ -124,13 +142,6 @@ std::string DynamicPPState::initTransitionMatrix(
         ++idx;
     }
     header.pop_back();
-
-    for (unsigned i = 0; i < detail::DynamicPPState::h_numberOfStates; i++) {
-        if (detail::DynamicPPState::h_WB[i] == states::WBStates::D) {
-            detail::DynamicPPState::h_deadState = i;
-            break;
-        }
-    }
 
     detail::DynamicPPState::transition = new ProgressionMatrix(inputData);
 */

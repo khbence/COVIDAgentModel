@@ -1,0 +1,27 @@
+{
+    "stateInformation":
+    {
+        "stateNames": [
+            
+        ],
+        "firstInfectedState": "E",
+        "susceptibleStates": [
+            "S"
+        ],
+        "infectedStates": [
+            "E", "I1", "I2", "I3", "I4", "I5"
+        ]
+    },
+    "transitionMatrices": [
+        {
+            "fileName": "name1.json",
+            "age": [10, 20],
+            "preCond": "kecske"
+        },
+        {
+            "fileName": "name2.json",
+            "age": [10, 20],
+            "preCond": "beka"
+        }
+    ]
+} 

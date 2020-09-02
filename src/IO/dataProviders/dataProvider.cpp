@@ -3,15 +3,11 @@
 #include <set>
 #include <algorithm>
 
-DataProvider::ProgressionType::ProgressionType(
-    const parser::ProgressionDirectory::ProgressionFile& file)
-    : ageBegin(file.age[0]), ageEnd(file.age[1]), preCond(file.preCond) {}
-
 void DataProvider::readParameters(const std::string& fileName) {
     parameters = DECODE_JSON_FILE(fileName, decltype(parameters));
 }
 
-std::map<DataProvider::ProgressionType, std::string> DataProvider::readProgressionConfig(
+std::map<ProgressionType, std::string> DataProvider::readProgressionConfig(
     const std::string& fileName) {
     progressionConfig = DECODE_JSON_FILE(fileName, parser::ProgressionDirectory);
     std::map<ProgressionType, std::string> progressions;
@@ -38,7 +34,7 @@ void DataProvider::readProgressionMatrices(const std::string& fileName) {
         auto currentPreCond = kv.first.preCond;
         auto ageIndex = std::distance(ageInters.begin(),
             std::find_if(ageInters.begin(), ageInters.end(), [currentAgeBegin](const auto& e) {
-                return e.first == kv.first.ageBegin;
+                return e.first == currentAgeBegin;
             }));
 
         auto condIndex = std::distance(parameters.preCondition.begin(),
@@ -170,8 +166,8 @@ DataProvider::DataProvider(const cxxopts::ParseResult& result) {
 
 [[nodiscard]] parser::Parameters& DataProvider::acquireParameters() { return parameters; }
 
-[[nodiscard]] std::map<DataProvider::ProgressionType,
-    std::pair<parser::TransitionFormat, unsigned>>&
+[[nodiscard]] std::map<ProgressionType,
+    std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
     DataProvider::acquireProgressionMatrices() {
     return progressionDirectory;
 }

@@ -21,9 +21,19 @@ namespace parser {
             DECODABLE_MEMBER(std::string, preCond);
             END_MEMBER_DECLARATIONS();
         };
+
+        struct SingleState : public jsond::JSONDecodable<SingleState> {
+            BEGIN_MEMBER_DECLARATIONS();
+            DECODABLE_MEMBER(std::string, name);
+            DECODABLE_MEMBER(std::string, WB);
+            DECODABLE_MEMBER(float, infectious);
+            END_MEMBER_DECLARATIONS();
+        };
+
         BEGIN_MEMBER_DECLARATIONS();
         DECODABLE_MEMBER(StateInformation, stateInformation);
         DECODABLE_MEMBER(std::vector<ProgressionFile>, transitionMatrices);
+        DECODABLE_MEMBER(std::vector<SingleState>, states);
         END_MEMBER_DECLARATIONS();
     };
 
