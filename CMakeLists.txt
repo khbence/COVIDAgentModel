@@ -111,6 +111,14 @@ set_property(
            RealMovement
            DummyMovement
            NoMovement)
+set(TestingPolicy
+    "DetailedTesting"
+    CACHE STRING "Type of the testing policy.")
+set_property(
+  CACHE TestingPolicy
+  PROPERTY STRINGS
+           NoTesting
+           DetailedTesting)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/in/configTypes.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/out/configTypes.h @ONLY)

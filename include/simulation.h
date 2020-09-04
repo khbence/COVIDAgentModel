@@ -18,10 +18,13 @@ template<typename PositionType,
     template<typename>
     typename MovementPolicy,
     template<typename>
-    typename InfectionPolicy>
+    typename InfectionPolicy,
+    template<typename>
+    typename TestingPolicy>
 class Simulation
-    : private MovementPolicy<Simulation<PositionType, TypeOfLocation, PPState, AgentMeta, MovementPolicy, InfectionPolicy>>
-    , InfectionPolicy<Simulation<PositionType, TypeOfLocation, PPState, AgentMeta, MovementPolicy, InfectionPolicy>> {
+    : private MovementPolicy<Simulation<PositionType, TypeOfLocation, PPState, AgentMeta, MovementPolicy, InfectionPolicy, TestingPolicy>>
+    , InfectionPolicy<Simulation<PositionType, TypeOfLocation, PPState, AgentMeta, MovementPolicy, InfectionPolicy, TestingPolicy>>
+    , TestingPolicy<Simulation<PositionType, TypeOfLocation, PPState, AgentMeta, MovementPolicy, InfectionPolicy, TestingPolicy>> {
 
 public:
     using PPState_t = PPState;
@@ -41,10 +44,12 @@ public:
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
+    friend class TestingPolicy<Simulation>;
 
     static void addProgramParameters(cxxopts::Options& options) {
         InfectionPolicy<Simulation>::addProgramParameters(options);
         MovementPolicy<Simulation>::addProgramParameters(options);
+        TestingPolicy<Simulation>::addProgramParameters(options);
     }
 
     void updateAgents(Timehandler& simTime) {
@@ -83,6 +88,7 @@ public:
         outAgentStat = result["outAgentStat"].as<std::string>();
         InfectionPolicy<Simulation>::initializeArgs(result);
         MovementPolicy<Simulation>::initializeArgs(result);
+        TestingPolicy<Simulation>::initializeArgs(result);
         DataProvider data{ result };
         try {
             std::string header = PPState_t::initTransitionMatrix(data.acquireProgressionMatrix());
@@ -93,6 +99,7 @@ public:
             auto locationMapping = tmp.second;
             locs->initializeArgs(result);
             MovementPolicy<Simulation>::init(data.acquireLocationTypes(), cemeteryID);
+            TestingPolicy<Simulation>::init(data.acquireLocationTypes());
             auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
             agents->initAgents(data.acquireAgents(), locationMapping, agentTypeMapping, data.getAgentTypeLocTypes());
             RandomGenerator::resize(agents->PPValues.size());
@@ -113,6 +120,7 @@ public:
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
+                if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 refreshAndPrintStatistics();
             }
