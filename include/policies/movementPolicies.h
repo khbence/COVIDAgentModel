@@ -187,6 +187,8 @@ namespace RealMovementOps {
             if (!a.diagnosedPtr[i] && a.agentStatesPtr[i].isInfectious()) {
                 a.diagnosedPtr[i] = true;
                 a.agentStatsPtr[i].diagnosedTimestamp = a.timestamp;
+                if (a.simTime.getStepsUntilMidnight(a.timeStep) == 24*60/a.timeStep) //is it midnight, and agent got S due to disease progression?
+                    a.agentStatsPtr[i].diagnosedTimestamp++; //shift timestamp by 1 to avoid being counted as random test in TestingPolicy
 
                 RealMovementOps::quarantineAgent(i,a, a.timestamp + 2 * 7 * 24 * 60 / a.timeStep);
             }
@@ -468,6 +470,8 @@ namespace RealMovementOps {
             if (!a.diagnosedPtr[i] && a.agentStatesPtr[i].isInfectious()) {
                 a.diagnosedPtr[i] = true;
                 a.agentStatsPtr[i].diagnosedTimestamp = a.timestamp;
+                if (a.simTime.getStepsUntilMidnight(a.timeStep) == 24*60/a.timeStep) //is it midnight, and agent got S due to disease progression?
+                    a.agentStatsPtr[i].diagnosedTimestamp++; //shift timestamp by 1 to avoid being counted as random test in TestingPolicy
 
                 if (i == a.tracked)
                     printf("\tDiagnosed at location %d\n", a.agentLocationsPtr[i]);

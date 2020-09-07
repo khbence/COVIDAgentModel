@@ -78,6 +78,8 @@ public:
         PROFILE_FUNCTION();
         auto result = locs->refreshAndGetStatistic();
         for (auto val : result) { std::cout << val << "\t"; }
+        auto tests = TestingPolicy<Simulation>::getStats();
+        std::cout << thrust::get<0>(tests) << "\t" << thrust::get<1>(tests) << "\t" << thrust::get<2>(tests) << "\t";
         std::cout << '\n';
     }
 
@@ -103,7 +105,7 @@ public:
             auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
             agents->initAgents(data.acquireAgents(), locationMapping, agentTypeMapping, data.getAgentTypeLocTypes());
             RandomGenerator::resize(agents->PPValues.size());
-            std::cout << header << '\n';
+            std::cout << header << "\tT\tP1\tP2" << '\n';
         } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;

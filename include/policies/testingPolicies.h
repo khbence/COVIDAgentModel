@@ -15,6 +15,7 @@ public:
     void init(const parser::LocationTypes& data) {}
 
     void performTests(Timehandler simTime, unsigned timeStep) {}
+    auto getStats() {return thrust::make_tuple(0u,0u,0u);}
 };
 
 
@@ -57,11 +58,19 @@ namespace DetailedTestingOps {
             a.locationFlagsPtr[home] = true;
             //Mark work
             unsigned work = RealMovementOps::findActualLocationForType(i, a.workType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-            if (work != std::numeric_limits<unsigned>::max() && a.locationQuarantineUntilPtr[work] < a.timestamp)
+            if (work != std::numeric_limits<unsigned>::max() &&
+                (a.locationQuarantineUntilPtr[work] == 0 || //Should test if it was not quarantined, OR
+                    (a.locationQuarantineUntilPtr[work] != 0 && //It has been quarantined - either in last 24 hours, OR it's already over
+                     (a.locationQuarantineUntilPtr[work] - 2 * 7 * 24 * 60 / a.timeStep >= a.timestamp - 24 * 60/a.timeStep ||
+                      a.locationQuarantineUntilPtr[work] < a.timestamp))))
                 a.locationFlagsPtr[work] = true;
             //Mark school
             unsigned school = RealMovementOps::findActualLocationForType(i, a.schoolType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-            if (school != std::numeric_limits<unsigned>::max() && a.locationQuarantineUntilPtr[school] < a.timestamp)
+            if (school != std::numeric_limits<unsigned>::max() &&
+                (a.locationQuarantineUntilPtr[school] == 0 || //Should test if it was not quarantined, OR
+                    (a.locationQuarantineUntilPtr[school] != 0 && //It has been quarantined - either in last 24 hours, OR it's already over
+                     (a.locationQuarantineUntilPtr[school] - 2 * 7 * 24 * 60 / a.timeStep >= a.timestamp - 24 * 60/a.timeStep ||
+                      a.locationQuarantineUntilPtr[school] < a.timestamp))))
                 a.locationFlagsPtr[school] = true;
 
             if (a.tracked == i) {
@@ -105,7 +114,7 @@ template<typename PPState, typename LocationType>
         if (school != std::numeric_limits<unsigned>::max())
             schoolFlag = a.locationFlagsPtr[school];
 
-        double testingProbability = 0.0;
+        double testingProbability = 0.005;
         testingProbability += homeFlag * 0.2;
         testingProbability += workFlag * 0.1;
         testingProbability += schoolFlag * 0.1;
@@ -155,11 +164,6 @@ template<typename PPState, typename LocationType>
 
 template<typename SimulationType>
 class DetailedTesting {
-public:
-    // add program parameters if we need any, this function got called already from Simulation
-    static void addProgramParameters(cxxopts::Options& options) {}
-    void initializeArgs(const cxxopts::ParseResult& result) {}
-
     unsigned publicSpace;
     unsigned home;
     unsigned hospital;
@@ -168,7 +172,14 @@ public:
     unsigned quarantinePolicy;
     unsigned school;
     unsigned work;
-
+    thrust::tuple<unsigned, unsigned, unsigned> stats;
+    thrust::device_vector<unsigned> lastTest;
+    thrust::device_vector<bool> locationFlags;
+public:
+    // add program parameters if we need any, this function got called already from Simulation
+    static void addProgramParameters(cxxopts::Options& options) {}
+    void initializeArgs(const cxxopts::ParseResult& result) {}
+    auto getStats() {return stats;}
 
     void init(const parser::LocationTypes& data) {
         publicSpace = data.publicSpace;
@@ -178,9 +189,6 @@ public:
         school = data.school;
         work = data.work;
     }
-
-    thrust::device_vector<unsigned> lastTest;
-    thrust::device_vector<bool> locationFlags;
 
     void performTests(Timehandler simTime, unsigned timeStep) {
         PROFILE_FUNCTION();
@@ -257,5 +265,19 @@ public:
         cudaDeviceSynchronize();
 #endif
 
+        //
+        // Step 3 - calculate statistics
+        //
+
+        unsigned timestamp = simTime.getTimestamp();
+        //Count up those who were tested just now
+        unsigned tests = thrust::count(lastTest.begin(), lastTest.end(),timestamp);
+        //TODO: count up tests performed in movementPolicy
+        //...
+        //Count up those who have just been diagnosed because of this testing policy
+        unsigned positive1 = thrust::count_if(agentStats.begin(), agentStats.end(), [timestamp] HD (const AgentStats &s){return s.diagnosedTimestamp==timestamp;});
+        //Count up those who were diagnosed yesterday, because of a doctor/hospital visit
+        unsigned positive2 = thrust::count_if(agentStats.begin(), agentStats.end(), [timestamp,timeStep] HD (const AgentStats &s){return s.diagnosedTimestamp<timestamp && s.diagnosedTimestamp>timestamp-24*60/timeStep;});
+        stats = thrust::make_tuple(tests, positive1, positive2);
     }
 };
