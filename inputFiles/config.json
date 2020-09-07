@@ -23,5 +23,17 @@
             "age": [10, 20],
             "preCond": "beka"
         }
+    ],
+    "states": [
+        {
+            "name": "E1",
+            "WB": "W",
+            "infectious": 0.5
+        },
+        {
+            "name": "E2",
+            "WB": "W",
+            "infectious": 0.5
+        }
     ]
-} 
+}

@@ -2,6 +2,7 @@
 #include "JSONDecoder.h"
 #include <set>
 #include <algorithm>
+#include "smallTools.h"
 
 void DataProvider::readParameters(const std::string& fileName) {
     parameters = DECODE_JSON_FILE(fileName, decltype(parameters));
@@ -11,8 +12,9 @@ std::map<ProgressionType, std::string> DataProvider::readProgressionConfig(
     const std::string& fileName) {
     progressionConfig = DECODE_JSON_FILE(fileName, parser::ProgressionDirectory);
     std::map<ProgressionType, std::string> progressions;
+    auto path = fileName.substr(0, fileName.find_last_of(separator()));
     for (const auto& f : progressionConfig.transitionMatrices) {
-        progressions.emplace(std::make_pair(f, f.fileName));
+        progressions.emplace(std::make_pair(f, path + f.fileName));
     }
     return progressions;
 }

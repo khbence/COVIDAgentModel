@@ -146,6 +146,9 @@ std::string DynamicPPState::initTransitionMatrix(
     detail::DynamicPPState::transition = new ProgressionMatrix(inputData);
 */
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+    for(const auto& e : detail::DynamicPPState::h_transition) {
+        
+    }
     ProgressionMatrix* tmp = detail::DynamicPPState::transition->upload();
     cudaMemcpyToSymbol(detail::DynamicPPState::transition_gpu, &tmp, sizeof(ProgressionMatrix*));
 
