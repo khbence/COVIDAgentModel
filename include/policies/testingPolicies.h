@@ -28,6 +28,7 @@ namespace DetailedTestingOps {
         unsigned long* locationOffsetPtr;
         unsigned* possibleLocationsPtr;
         unsigned* possibleTypesPtr;
+        unsigned* locationQuarantineUntilPtr;
         unsigned hospitalType;
         unsigned homeType;
         unsigned publicPlaceType;
@@ -56,11 +57,11 @@ namespace DetailedTestingOps {
             a.locationFlagsPtr[home] = true;
             //Mark work
             unsigned work = RealMovementOps::findActualLocationForType(i, a.workType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-            if (work != std::numeric_limits<unsigned>::max())
+            if (work != std::numeric_limits<unsigned>::max() && a.locationQuarantineUntilPtr[work] < a.timestamp)
                 a.locationFlagsPtr[work] = true;
             //Mark school
             unsigned school = RealMovementOps::findActualLocationForType(i, a.schoolType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-            if (school != std::numeric_limits<unsigned>::max())
+            if (school != std::numeric_limits<unsigned>::max() && a.locationQuarantineUntilPtr[school] < a.timestamp)
                 a.locationFlagsPtr[school] = true;
 
             if (a.tracked == i) {
@@ -87,8 +88,8 @@ template<typename PPState, typename LocationType>
     void
     doTesting(unsigned i,  TestingArguments<PPState, LocationType> &a) {
         //if recently tested, don't test again
-        if (a.timestamp > 3*24*60/a.timeStep && a.lastTestPtr[i] != std::numeric_limits<unsigned>::max() &&
-            a.lastTestPtr[i] > a.timestamp - 3*24*60/a.timeStep) return; //TODO: how many days?
+        if (a.timestamp > 5*24*60/a.timeStep && a.lastTestPtr[i] != std::numeric_limits<unsigned>::max() &&
+            a.lastTestPtr[i] > a.timestamp - 5*24*60/a.timeStep) return; //TODO: how many days?
     
         //Check home
         unsigned home = RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
@@ -229,6 +230,8 @@ public:
         a.possibleLocationsPtr = thrust::raw_pointer_cast(possibleLocations.data());
         thrust::device_vector<unsigned>& possibleTypes = realThis->agents->possibleTypes;
         a.possibleTypesPtr = thrust::raw_pointer_cast(possibleTypes.data());
+        thrust::device_vector<unsigned>& locationQuarantineUntil = realThis->locs->quarantineUntil;
+        a.locationQuarantineUntilPtr = thrust::raw_pointer_cast(locationQuarantineUntil.data());
 
         //
         //Step 1 - flag locations of anyone diagnosed yesterday
