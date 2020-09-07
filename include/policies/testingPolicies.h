@@ -77,7 +77,7 @@ namespace DetailedTestingOps {
     template<typename PPState, typename LocationType>
     __global__ void flagLocationsDriver(TestingArguments<PPState, LocationType> &a, unsigned numberOfAgents ) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
-        if (i < numberOfAgents) { RealMovementOps::flagLocations(i, TestingArguments<PPState, LocationType> &a); }
+        if (i < numberOfAgents) { DetailedTestingOps::flagLocations(i, a); }
     }
 #endif
 
@@ -147,7 +147,7 @@ template<typename PPState, typename LocationType>
     template<typename PPState, typename LocationType>
     __global__ void doTestingDriver(TestingArguments<PPState, LocationType> &a, unsigned numberOfAgents ) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
-        if (i < numberOfAgents) { RealMovementOps::doTesting(i, TestingArguments<PPState, LocationType> &a); }
+        if (i < numberOfAgents) { DetailedTestingOps::doTesting(i, a); }
     }
 #endif
 }// namespace DetailedTestingOps

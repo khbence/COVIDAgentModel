@@ -453,7 +453,7 @@ namespace RealMovementOps {
             unsigned homeLocation =
                 RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             if (homeLocation != a.agentLocationsPtr[i]) {
-                unsigned until = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]];
+                //unsigned until = a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]];
                 a.agentLocationsPtr[i] = homeLocation;
                 // TODO: quarantine whole home??
                 // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = until;
