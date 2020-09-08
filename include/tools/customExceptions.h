@@ -40,9 +40,9 @@ namespace IOProgression {
 
     class BadChances : public TransitionInputError {
     public:
-        explicit BadChances(const std::string& state)
-            : TransitionInputError("Sum of transition chances of state " + state + " is not 1.\n") {
-        }
+        explicit BadChances(const std::string& state, double value)
+            : TransitionInputError("Sum of transition chances of state " + state
+                                   + " is not 1 it is " + std::to_string(value) + ".\n") {}
     };
 
     class MissingStateName : public TransitionInputError {

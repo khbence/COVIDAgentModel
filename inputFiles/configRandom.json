@@ -60,7 +60,7 @@
     ],
     "preCondDistibution": [
         {
-            "value": 3,
+            "value": "3",
             "chance": 1
         }
     ],

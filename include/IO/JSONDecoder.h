@@ -372,7 +372,8 @@ namespace jsond {
         struct __decode_member<::jsond::impl::JSONDecodableMemberPrimitive<T, ID>> {
             static void decode(const rapidjson::Value::Object& obj) {
                 typedef ::jsond::impl::JSONDecodableMemberPrimitive<T, ID> member_t;
-                auto it = obj.FindMember(member_t::member_name.c_str());
+                auto tmpMemberName = member_t::member_name;
+                auto it = obj.FindMember(tmpMemberName.c_str());
                 assert(it != obj.end());
                 *member_t::member_ptr =
                     ::jsond::impl::__primitive_value_decoder<typename member_t::member_type>::get(
