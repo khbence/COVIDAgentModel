@@ -276,7 +276,7 @@ public:
         //...
         //Count up those who have just been diagnosed because of this testing policy
         unsigned positive1 = thrust::count_if(agentStats.begin(), agentStats.end(), [timestamp] HD (const AgentStats &s){return s.diagnosedTimestamp==timestamp;});
-        //Count up those who were diagnosed yesterday, because of a doctor/hospital visit
+        //Count up those who were diagnosed yesterday, because of a doctor/hospital visit (in movementPolicy)
         unsigned positive2 = thrust::count_if(agentStats.begin(), agentStats.end(), [timestamp,timeStep] HD (const AgentStats &s){return s.diagnosedTimestamp<timestamp && s.diagnosedTimestamp>timestamp-24*60/timeStep;});
         stats = thrust::make_tuple(tests, positive1, positive2);
     }

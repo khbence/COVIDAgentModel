@@ -18,6 +18,8 @@ private:
     Parameters par;
     unsigned dumpToFile = 0;
     thrust::device_vector<unsigned> newInfectionsAtLocationsAccumulator;
+    std::ofstream file;
+    thrust::device_vector<unsigned> susceptible1;
 
 public:
     static void addProgramParameters(cxxopts::Options& options) {
@@ -43,31 +45,22 @@ protected:
         dumpToFile = result["dumpLocationInfections"].as<unsigned>();
     }
 
-public:
-    void infectionsAtLocations(Timehandler& simTime, unsigned timeStep) {
-        PROFILE_FUNCTION();
-        auto realThis = static_cast<SimulationType*>(this);
-        thrust::device_vector<unsigned>& locationListOffsets =
-            realThis->locs->locationListOffsets;// offsets into locationAgentList and locationIdsOfAgents
-        thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
-
-        auto& ppstates = realThis->agents->PPValues;
-        auto& infectiousness = realThis->locs->infectiousness;
-
-        thrust::device_vector<double> infectionRatios(locationListOffsets.size() - 1, 0.0);
-        thrust::device_vector<float> fullInfectedCounts(locationListOffsets.size() - 1, 0);
-        // Count up infectious people - those who are Infected, and Infected state is >1
-        reduce_by_location(locationListOffsets, fullInfectedCounts, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> float {
-            return ppstate.isInfectious();
-        });
-        std::ofstream file;
+    template <typename PPState_t>
+    void dumpToFileStep1(thrust::device_vector<unsigned>& locationListOffsets,
+                         thrust::device_vector<PPState_t>& ppstates,
+                         thrust::device_vector<float> &fullInfectedCounts,
+                         Timehandler& simTime) {
+        if (susceptible1.size()==0) {
+            susceptible1.resize(locationListOffsets.size() - 1, 0);
+        } else {
+            thrust::fill(susceptible1.begin(), susceptible1.end(),0u);
+        }
+        
         if (newInfectionsAtLocationsAccumulator.size() == 0) {
             newInfectionsAtLocationsAccumulator.resize(locationListOffsets.size() - 1);
             thrust::fill(newInfectionsAtLocationsAccumulator.begin(), newInfectionsAtLocationsAccumulator.end(), (unsigned)0);
         }
-        thrust::device_vector<unsigned> susceptible1;
         if (dumpToFile>0) { //Aggregate new infected counts
-            susceptible1.resize(locationListOffsets.size() - 1, 0);
             reduce_by_location(locationListOffsets, susceptible1, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> unsigned {
                 return ppstate.isSusceptible();
             });
@@ -93,6 +86,54 @@ public:
             thrust::copy(fullInfectedCounts.begin(), fullInfectedCounts.end(), std::ostream_iterator<float>(file, " "));
             file << "\n";
         }
+    }
+
+    template <typename PPState_t>
+    void dumpToFileStep2(thrust::device_vector<unsigned>& locationListOffsets,
+                         thrust::device_vector<PPState_t>& ppstates,
+                         Timehandler& simTime) {
+        if (dumpToFile>0) { //Finish aggregating number of new infections
+            thrust::device_vector<unsigned> susceptible2(locationListOffsets.size() - 1, 0);
+            reduce_by_location(locationListOffsets, susceptible2, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> unsigned {
+                return ppstate.isSusceptible();
+            });
+            thrust::transform(susceptible1.begin(), susceptible1.end(), susceptible2.begin(), susceptible1.begin(), thrust::minus<unsigned>());
+            thrust::transform(susceptible1.begin(), susceptible1.end(), newInfectionsAtLocationsAccumulator.begin(), newInfectionsAtLocationsAccumulator.begin(), thrust::plus<unsigned>());
+        }
+        if (dumpToFile>0 && simTime.getTimestamp()%dumpToFile==0) {
+            //Print new infections at location since last timestep
+            thrust::copy(newInfectionsAtLocationsAccumulator.begin(), newInfectionsAtLocationsAccumulator.end(), std::ostream_iterator<unsigned>(file, " "));
+            file << "\n";
+            file.close();
+            thrust::fill(newInfectionsAtLocationsAccumulator.begin(), newInfectionsAtLocationsAccumulator.end(), (unsigned)0);
+        }
+    }
+
+public:
+    void infectionsAtLocations(Timehandler& simTime, unsigned timeStep) {
+        PROFILE_FUNCTION();
+        auto realThis = static_cast<SimulationType*>(this);
+        thrust::device_vector<unsigned>& locationListOffsets =
+            realThis->locs->locationListOffsets;// offsets into locationAgentList and locationIdsOfAgents
+        thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
+
+        auto& ppstates = realThis->agents->PPValues;
+        auto& infectiousness = realThis->locs->infectiousness;
+
+        thrust::device_vector<double> infectionRatios(locationListOffsets.size() - 1, 0.0);
+        thrust::device_vector<float> fullInfectedCounts(locationListOffsets.size() - 1, 0);
+        //
+        // Step 1 - Count up infectious people - those who are Infectious
+        //
+        reduce_by_location(locationListOffsets, fullInfectedCounts, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> float {
+            return ppstate.isInfectious();
+        });
+
+        dumpToFileStep1(locationListOffsets, ppstates, fullInfectedCounts, simTime);
+
+        //
+        // Step 2 - calculate infection ratios, based on density of infected people
+        //
         auto parTMP = par;
         thrust::transform(thrust::make_zip_iterator(thrust::make_tuple(
                               fullInfectedCounts.begin(), locationListOffsets.begin(), locationListOffsets.begin() + 1, infectiousness.begin())),
@@ -112,21 +153,11 @@ public:
                 return y / (60.0 * 24.0 / static_cast<double>(timeStep));
             });
 
+        //
+        // Step 3 - randomly infect susceptible people
+        //
         LocationsList<SimulationType>::infectAgents(infectionRatios, agentLocations, simTime);
-        if (dumpToFile>0) { //Finish aggregating number of new infections
-            thrust::device_vector<unsigned> susceptible2(locationListOffsets.size() - 1, 0);
-            reduce_by_location(locationListOffsets, susceptible2, ppstates, [] HD(const typename SimulationType::PPState_t& ppstate) -> unsigned {
-                return ppstate.isSusceptible();
-            });
-            thrust::transform(susceptible1.begin(), susceptible1.end(), susceptible2.begin(), susceptible1.begin(), thrust::minus<unsigned>());
-            thrust::transform(susceptible1.begin(), susceptible1.end(), newInfectionsAtLocationsAccumulator.begin(), newInfectionsAtLocationsAccumulator.begin(), thrust::plus<unsigned>());
-        }
-        if (dumpToFile>0 && simTime.getTimestamp()%dumpToFile==0) {
-            //Print new infections at location since last timestep
-            thrust::copy(newInfectionsAtLocationsAccumulator.begin(), newInfectionsAtLocationsAccumulator.end(), std::ostream_iterator<unsigned>(file, " "));
-            file << "\n";
-            file.close();
-            thrust::fill(newInfectionsAtLocationsAccumulator.begin(), newInfectionsAtLocationsAccumulator.end(), (unsigned)0);
-        }
+
+        dumpToFileStep2(locationListOffsets, ppstates, simTime);
     }
 };
