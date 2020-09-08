@@ -71,7 +71,7 @@ SingleBadTransitionMatrix::SingleBadTransitionMatrix(const parser::TransitionFor
         }
         initTransitions[i].cleanUp(i);
         if (sumChance != 1.0 && !s.progressions.empty()) {
-            throw(IOProgression::BadChances(s.stateName));
+            throw(IOProgression::BadChances(s.stateName, sumChance));
         }
         thrust::pair<unsigned, float> badVal = initTransitions[i].bad
                                                    ? initTransitions[i].bad.value()

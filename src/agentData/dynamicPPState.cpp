@@ -1,4 +1,6 @@
 #include "dynamicPPState.h"
+#include <cassert>
+#include "customExceptions.h"
 
 // static stuff
 namespace detail {
@@ -75,7 +77,17 @@ std::string DynamicPPState::initTransitionMatrix(
         auto it = std::find_if(inputData.begin(), inputData.end(), [i](const auto& e) {
             return e.second.second == i;
         });
-        detail::DynamicPPState::h_transition.emplace_back(it->second.first);
+        assert(it != inputData.end());
+        try {
+            detail::DynamicPPState::h_transition.emplace_back(it->second.first);
+        } catch (const IOProgression::BadChances& e) {
+            std::cerr << "Error in progression matrix with age interval: "
+                      << std::to_string(it->first.ageBegin) << " - "
+                      << std::to_string(it->first.ageEnd)
+                      << " with pre-condition: " << it->first.preCond << ":\n";
+#warning Throw the exception instead of printing
+            std::cout << e.what();
+        }
     }
 
     for (unsigned i = 0; i < detail::DynamicPPState::h_numberOfStates; i++) {
@@ -84,7 +96,6 @@ std::string DynamicPPState::initTransitionMatrix(
             break;
         }
     }
-
 
 /*
     // state name and its occurence
@@ -146,9 +157,7 @@ std::string DynamicPPState::initTransitionMatrix(
     detail::DynamicPPState::transition = new ProgressionMatrix(inputData);
 */
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-    for(const auto& e : detail::DynamicPPState::h_transition) {
-        
-    }
+    for (const auto& e : detail::DynamicPPState::h_transition) {}
     ProgressionMatrix* tmp = detail::DynamicPPState::transition->upload();
     cudaMemcpyToSymbol(detail::DynamicPPState::transition_gpu, &tmp, sizeof(ProgressionMatrix*));
 

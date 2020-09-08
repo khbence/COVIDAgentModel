@@ -3,6 +3,7 @@
 #include <set>
 #include <algorithm>
 #include "smallTools.h"
+#include <list>
 
 void DataProvider::readParameters(const std::string& fileName) {
     parameters = DECODE_JSON_FILE(fileName, decltype(parameters));
@@ -14,21 +15,27 @@ std::map<ProgressionType, std::string> DataProvider::readProgressionConfig(
     std::map<ProgressionType, std::string> progressions;
     auto path = fileName.substr(0, fileName.find_last_of(separator()));
     for (const auto& f : progressionConfig.transitionMatrices) {
-        progressions.emplace(std::make_pair(f, path + f.fileName));
+        progressions.emplace(std::make_pair(f, path + separator() + f.fileName));
     }
     return progressions;
 }
 
 void DataProvider::readProgressionMatrices(const std::string& fileName) {
     auto rawProgressions = readProgressionConfig(fileName);
-    std::vector<std::pair<unsigned, unsigned>> ageInters;
+    std::list<std::pair<unsigned, unsigned>> ageInters;
     for (const auto& kv : rawProgressions) {
-        for (auto it = ageInters.begin(); it < ageInters.end(); ++it) {
-            if (it->first == kv.first.ageEnd) {
+        bool inserted = false;
+        for (auto it = ageInters.begin(); it != ageInters.end(); ++it) {
+            if (kv.first.ageEnd < it->first) {
                 ageInters.insert(it, std::make_pair(kv.first.ageBegin, kv.first.ageEnd));
+                inserted = true;
+                break;
+            } else if ((it->first == kv.first.ageBegin) && (it->second == kv.first.ageEnd)) {
+                inserted = true;
                 break;
             }
         }
+        if (!inserted) { ageInters.push_back(std::make_pair(kv.first.ageBegin, kv.first.ageEnd)); }
     }
     auto numberCond = parameters.preCondition.size();
     for (const auto& kv : rawProgressions) {
@@ -42,8 +49,8 @@ void DataProvider::readProgressionMatrices(const std::string& fileName) {
         auto condIndex = std::distance(parameters.preCondition.begin(),
             std::find_if(parameters.preCondition.begin(),
                 parameters.preCondition.end(),
-                [currentPreCond](const auto& e) { return e.condition == currentPreCond; }));
-        unsigned index = ageIndex * numberCond + numberCond;
+                [currentPreCond](const auto& e) { return e.ID == currentPreCond; }));
+        unsigned index = ageIndex * numberCond + condIndex;
 
         progressionDirectory.emplace(std::make_pair(kv.first,
             std::make_pair(DECODE_JSON_FILE(kv.second, parser::TransitionFormat), index)));
@@ -168,8 +175,7 @@ DataProvider::DataProvider(const cxxopts::ParseResult& result) {
 
 [[nodiscard]] parser::Parameters& DataProvider::acquireParameters() { return parameters; }
 
-[[nodiscard]] std::map<ProgressionType,
-    std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
+[[nodiscard]] std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
     DataProvider::acquireProgressionMatrices() {
     return progressionDirectory;
 }

@@ -43,6 +43,8 @@ void MultiBadMatrix::NextStatesInit::cleanUp(unsigned ownIndex) {
     if (neutral.empty() && bad.empty()) { neutral.emplace_back(ownIndex, 1.0F); }
 }
 
+bool doubleIsZero(double value) { return (0.9999 < value) && (value < 1.0001); }
+
 MultiBadMatrix::MultiBadMatrix(const parser::TransitionFormat& inputData)
     : BasicLengthAbstract(inputData.states.size()) {
     std::vector<NextStatesInit> initTransitions(inputData.states.size());
@@ -72,8 +74,8 @@ MultiBadMatrix::MultiBadMatrix(const parser::TransitionFormat& inputData)
             }
         }
         initTransitions[i].cleanUp(i);
-        if (sumChance != 1.0 && !s.progressions.empty()) {
-            throw(IOProgression::BadChances(s.stateName));
+        if (!doubleIsZero(sumChance) && !s.progressions.empty()) {
+            throw(IOProgression::BadChances(s.stateName, sumChance));
         }
 
         thrust::pair<unsigned, float>* bads = (thrust::pair<unsigned, float>*)malloc(

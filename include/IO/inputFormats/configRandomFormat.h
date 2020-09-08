@@ -14,7 +14,7 @@ namespace parser {
 
         struct PreCondChance : public jsond::JSONDecodable<PreCondChance> {
             BEGIN_MEMBER_DECLARATIONS();
-            DECODABLE_MEMBER(unsigned, value);
+            DECODABLE_MEMBER(std::string, value);
             DECODABLE_MEMBER(double, chance);
             END_MEMBER_DECLARATIONS();
         };
