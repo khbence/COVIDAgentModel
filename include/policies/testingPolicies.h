@@ -43,6 +43,12 @@ namespace DetailedTestingOps {
         unsigned *lastTestPtr;
         bool *locationFlagsPtr;
         bool* diagnosedPtr;
+        double testingRandom;
+        double testingHome;
+        double testingWork;
+        double testingSchool;
+        double testingRandomHospital;
+        unsigned testingDelay;
     };
 
     template<typename PPState, typename LocationType>
@@ -97,8 +103,9 @@ template<typename PPState, typename LocationType>
     void
     doTesting(unsigned i,  TestingArguments<PPState, LocationType> &a) {
         //if recently tested, don't test again
-        if (a.timestamp > 5*24*60/a.timeStep && a.lastTestPtr[i] != std::numeric_limits<unsigned>::max() &&
-            a.lastTestPtr[i] > a.timestamp - 5*24*60/a.timeStep) return; //TODO: how many days?
+        if (a.timestamp > a.testingDelay*24*60/a.timeStep && 
+            a.lastTestPtr[i] != std::numeric_limits<unsigned>::max() &&
+            a.lastTestPtr[i] > a.timestamp - a.testingDelay*24*60/a.timeStep) return;
     
         //Check home
         unsigned home = RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
@@ -114,16 +121,16 @@ template<typename PPState, typename LocationType>
         if (school != std::numeric_limits<unsigned>::max())
             schoolFlag = a.locationFlagsPtr[school];
 
-        double testingProbability = 0.005;
-        testingProbability += homeFlag * 0.2;
-        testingProbability += workFlag * 0.1;
-        testingProbability += schoolFlag * 0.1;
+        double testingProbability = a.testingRandom;
+        testingProbability += homeFlag * a.testingHome;
+        testingProbability += workFlag * a.testingWork;
+        testingProbability += schoolFlag * a.testingSchool;
 
         //If agent works in hospital or doctor's office
         if (work != std::numeric_limits<unsigned>::max() &&
             (a.locationTypePtr[work] ==  a.doctorType || 
             a.locationTypePtr[work] ==  a.hospitalType)) {
-            testingProbability += 0.2;
+            testingProbability += a.testingRandomHospital;
         }
 
         if (a.tracked == i && testingProbability>0.0) 
@@ -175,10 +182,50 @@ class DetailedTesting {
     thrust::tuple<unsigned, unsigned, unsigned> stats;
     thrust::device_vector<unsigned> lastTest;
     thrust::device_vector<bool> locationFlags;
+    double testingRandom = 0.005;
+    double testingHome = 0.2;
+    double testingWork = 0.1;
+    double testingSchool = 0.1;
+    double testingRandomHospital = 0.2;
+    unsigned testingDelay = 5;
+
 public:
     // add program parameters if we need any, this function got called already from Simulation
-    static void addProgramParameters(cxxopts::Options& options) {}
-    void initializeArgs(const cxxopts::ParseResult& result) {}
+    static void addProgramParameters(cxxopts::Options& options) {
+        options.add_options()("testingProbabilities",
+            "Testing probabilities for random, if someone else was diagnosed at home/work/school, and random for hospital workers: comma-delimited string random,home,work,school,hospital",
+            cxxopts::value<std::string>()->default_value("0.005,0.2,0.1,0.1,0.2"))
+            ("testingRepeatDelay",
+            "Minimum number of days between taking tests",
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(5))));
+    }
+    void initializeArgs(const cxxopts::ParseResult& result) {
+        testingDelay = result["testingRepeatDelay"].as<unsigned>();
+        std::string probsString = result["testingProbabilities"].as<std::string>();
+        std::stringstream ss(probsString);
+        std::string arg;
+        std::vector<double> params;
+        for (char i; ss >> i;) {
+            arg.push_back(i);    
+            if (ss.peek() == ',') {
+                if (arg.length()>0 && isdigit(arg[0])) {
+                    params.push_back(atof(arg.c_str()));
+                    arg.clear();
+                }
+                ss.ignore();
+            }
+        }
+        if (arg.length()>0 && isdigit(arg[0])) {
+            params.push_back(atof(arg.c_str()));
+            arg.clear();
+        }
+        if (params.size()>0) testingRandom = params[0];
+        if (params.size()>1) testingHome = params[1];
+        if (params.size()>2) testingWork = params[2];
+        if (params.size()>3) testingSchool = params[3];
+        if (params.size()>4) testingRandomHospital = params[4];
+        //printf("testing probabilities: %g %g %g %g %g\n", testingRandom, testingHome, testingWork, testingSchool, testingRandomHospital);
+    }
     auto getStats() {return stats;}
 
     void init(const parser::LocationTypes& data) {
@@ -220,6 +267,11 @@ public:
         a.timeStep = timeStep;
         a.schoolType = school;
         a.workType = work;
+        a.testingHome = testingHome;
+        a.testingWork = testingWork;
+        a.testingSchool = testingSchool;
+        a.testingRandomHospital = testingRandomHospital;
+        a.testingDelay = testingDelay;
 
         //agent data
         thrust::device_vector<AgentStats>& agentStats = realThis->agents->agentStats;
