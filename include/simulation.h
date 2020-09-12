@@ -41,15 +41,64 @@ public:
     unsigned lengthOfSimulationWeeks;
     bool succesfullyInitialized = true;
     std::string outAgentStat;
+    int enableSuddenDeath = 1;
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
     friend class TestingPolicy<Simulation>;
 
     static void addProgramParameters(cxxopts::Options& options) {
+        options.add_options()("suddenDeath", "Enable (1) or disable (2) non-COVID sudden death ", cxxopts::value<int>()->default_value("1"));
         InfectionPolicy<Simulation>::addProgramParameters(options);
         MovementPolicy<Simulation>::addProgramParameters(options);
         TestingPolicy<Simulation>::addProgramParameters(options);
+    }
+
+    void suddenDeath(Timehandler& simTime) {
+        PROFILE_FUNCTION();
+        auto& ppstates = agents->PPValues;
+        auto& agentStats = agents->agentStats;
+        auto& agentMeta = agents->agentMetaData;
+        unsigned timestamp = simTime.getTimestamp();
+        unsigned tracked = locs->tracked;
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentMeta.begin(), agentStats.begin(), thrust::make_counting_iterator<unsigned>(0))),
+            thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentMeta.end(), agentStats.end(), thrust::make_counting_iterator<unsigned>(0)+ppstates.size())),
+            [timestamp,tracked] HD(thrust::tuple<PPState&, AgentMeta&, AgentStats&, unsigned> tup) {
+                auto& ppstate = thrust::get<0>(tup);
+                auto& meta = thrust::get<1>(tup);
+                auto& agentStat = thrust::get<2>(tup);
+                unsigned agentID = thrust::get<3>(tup);
+                uint8_t age = meta.getAge();
+                bool sex = meta.getSex();
+                double probability = 0.0;
+                //If already dead, or in hospital, return
+                if (ppstate.getWBState() == states::WBStates::D || 
+                    ppstate.getWBState() == states::WBStates::S) return;
+                if (age < 5) {
+                    probability = sex ? 0.000138636206246181 : 0.0000742144645456176;
+                } else if (age < 15) {
+                    probability = sex ? 0.000138636206246181 : 0.0000742144645456176;
+                } else if (age < 30) {
+                    probability = sex ? 0.000138636206246181 : 0.0000742144645456176;
+                } else if (age < 60) {
+                    probability = sex ? 0.00140203198030386 : 0.000435754402861572;
+                } else if (age < 70) {
+                    probability = sex ? 0.00731842791450156 : 0.00323823204036677;
+                } else if (age < 80) {
+                    probability = sex ? 0.0127014602887186 : 0.00719076352220422;
+                } else {
+                    probability = sex ? 0.0384859186350238 : 0.0355438319317952;
+                }
+                probability /= 100.0;
+                if (RandomGenerator::randomReal(1.0) < probability) {
+                    agentStat.worstState = ppstate.die();
+                    agentStat.worstStateTimestamp = timestamp;
+                    //printf("Agent %d died of sudden death, %d, timestamp %d\n", agentID, (int)agentStat.worstState,timestamp);
+                    if (agentID == tracked) {
+                        printf("Agent %d died of sudden death, timestamp %d\n", tracked, timestamp);
+                    }
+                }
+            });
     }
 
     void updateAgents(Timehandler& simTime) {
@@ -91,6 +140,7 @@ public:
         InfectionPolicy<Simulation>::initializeArgs(result);
         MovementPolicy<Simulation>::initializeArgs(result);
         TestingPolicy<Simulation>::initializeArgs(result);
+        enableSuddenDeath = result["suddenDeath"].as<int>();
         DataProvider data{ result };
         try {
             std::string header = PPState_t::initTransitionMatrix(data.acquireProgressionMatrix());
@@ -124,6 +174,7 @@ public:
                 MovementPolicy<Simulation>::planLocations();
                 if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
+                if (enableSuddenDeath) suddenDeath(simTime);
                 refreshAndPrintStatistics();
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);

@@ -8,6 +8,7 @@ namespace detail {
         float* h_infectious;
         bool* h_susceptible;
         states::WBStates* h_WB;
+        char h_deadState;
         std::map<std::string, char> nameIndexMap;
         ProgressionMatrix* transition;
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
@@ -16,6 +17,7 @@ namespace detail {
         __constant__ float* infectious;
         __constant__ bool* susceptible;
         __constant__ states::WBStates* WB;
+        __constant__ char deadState;
         __constant__ ProgressionMatrix* transition_gpu;
 #endif
     }// namespace DynamicPPState
@@ -91,6 +93,13 @@ std::string DynamicPPState::initTransitionMatrix(parser::TransitionFormat& input
     }
     header.pop_back();
 
+    for (unsigned i = 0; i < detail::DynamicPPState::h_numberOfStates; i++) {
+        if (detail::DynamicPPState::h_WB[i] == states::WBStates::D) {
+            detail::DynamicPPState::h_deadState = i;
+            break;
+        }
+    }
+
     detail::DynamicPPState::transition = new ProgressionMatrix(inputData);
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
@@ -120,6 +129,9 @@ std::string DynamicPPState::initTransitionMatrix(parser::TransitionFormat& input
     cudaMemcpyToSymbol(detail::DynamicPPState::firstInfectedState,
         &detail::DynamicPPState::h_firstInfectedState,
         sizeof(detail::DynamicPPState::h_firstInfectedState));
+    cudaMemcpyToSymbol(detail::DynamicPPState::deadState,
+        &detail::DynamicPPState::h_deadState,
+        sizeof(detail::DynamicPPState::h_deadState));
 #endif
     return header;
 }
@@ -187,5 +199,18 @@ states::WBStates DynamicPPState::getWBState() const {
     return detail::DynamicPPState::WB[state];
 #else
     return detail::DynamicPPState::h_WB[state];
+#endif
+}
+
+HD char DynamicPPState::die() {
+    daysBeforeNextState = -1;
+#ifdef __CUDA_ARCH__
+    state = detail::DynamicPPState::deadState; 
+    updateMeta();
+    return detail::DynamicPPState::deadState;
+#else
+    state = detail::DynamicPPState::h_deadState; 
+    updateMeta();
+    return detail::DynamicPPState::h_deadState;
 #endif
 }

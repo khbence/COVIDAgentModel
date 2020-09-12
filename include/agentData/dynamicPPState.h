@@ -33,4 +33,5 @@ public:
     [[nodiscard]] states::WBStates HD getWBState() const;
     [[nodiscard]] float HD isInfectious() const { return infectious; }
     [[nodiscard]] bool HD isSusceptible() const { return susceptible; }
+    [[nodiscard]] char HD die();
 };

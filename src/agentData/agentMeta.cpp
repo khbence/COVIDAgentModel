@@ -49,12 +49,15 @@ BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, std::string preConditi
     // modify based on gender
     if (gender == 'F') {
         scalingSymptoms *= sexScaling[0].second;
+        this->sex = 0;
     } else if (gender == 'M') {
         scalingSymptoms *= sexScaling[1].second;
+        this->sex = 1;
     } else {
         throw IOAgents::InvalidGender(std::to_string(gender));
     }
 
+    this->age = (uint8_t)age;
     // modify based on age
     auto it = std::find(ageScaling.begin(), ageScaling.end(), age);
     if (it == ageScaling.end()) { throw IOAgents::NotDefinedAge(age); }
@@ -70,3 +73,7 @@ BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, std::string preConditi
 float HD BasicAgentMeta::getScalingSymptoms() const { return scalingSymptoms; }
 
 float HD BasicAgentMeta::getScalingTransmission() const { return scalingTransmission; }
+
+uint8_t HD BasicAgentMeta::getAge() const { return age; }
+
+bool HD BasicAgentMeta::getSex() const { return sex; }

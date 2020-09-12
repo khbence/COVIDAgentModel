@@ -23,6 +23,8 @@ class BasicAgentMeta {
 
     float scalingSymptoms = 1.0;
     float scalingTransmission = 1.0;
+    uint8_t age;
+    bool sex;
 
     // As a good christian I hardcoded that there are only two genders
     static std::array<std::pair<char, float>, 2> sexScaling;
@@ -36,4 +38,7 @@ public:
 
     [[nodiscard]] float HD getScalingSymptoms() const;
     [[nodiscard]] float HD getScalingTransmission() const;
+
+    [[nodiscard]] uint8_t HD getAge() const;
+    [[nodiscard]] bool HD getSex() const;
 };
