@@ -185,7 +185,8 @@ namespace RealMovementOps {
         
         //if non-COVID hospitalization, go to hospital
         if (a.agentStatsPtr[i].hospitalizedTimestamp <= a.timestamp && 
-            a.agentStatsPtr[i].hospitalizedUntilTimestamp > a.timestamp) {
+            a.agentStatsPtr[i].hospitalizedUntilTimestamp > a.timestamp &&
+            wBState != states::WBStates::S && wBState != states::WBStates::D) {
 
             a.stepsUntilMovePtr[i] = a.agentStatsPtr[i].hospitalizedUntilTimestamp - a.timestamp - 1;
             a.agentLocationsPtr[i] =
