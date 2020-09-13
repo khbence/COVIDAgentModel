@@ -101,16 +101,16 @@ public:
                 //
                 if (timestamp>0 && agentStat.hospitalizedUntilTimestamp <= timestamp &&
                                    agentStat.hospitalizedUntilTimestamp + 24*60/timeStep > timestamp) { //TODO: this will only decide at midnight after patient is released from hospital
-                    if (RandomGenerator::randomReal(1.0) < 0.031628835/100) { //TODO check this number
+                    if (RandomGenerator::randomReal(1.0) < 0.031628835) {
                         agentStat.worstState = ppstate.die(false); //not COVID-related
                         agentStat.worstStateTimestamp = timestamp;
-                        //printf("Agent %d died at the end of hospital stay %d\n", agentID, timestamp);
+                        printf("Agent %d died at the end of hospital stay %d\n", agentID, timestamp);
                         if (agentID == tracked) {
                             printf("Agent %d died at the end of hospital stay %d\n", tracked, timestamp);
                         }
                         return;
                     } else {
-                        //printf("Agent %d recovered at the end of hospital stay %d\n", agentID, timestamp);
+                        printf("Agent %d recovered at the end of hospital stay %d\n", agentID, timestamp);
                         if (agentID == tracked) {
                             printf("Agent %d recovered at the end of hospital stay %d\n", tracked, timestamp);
                         }
@@ -157,7 +157,7 @@ public:
                 //
                 // Random hospitalization
                 //
-                probability = 0.088813815360319/100.0/100.0;
+                probability = 0.088813815360319/100.0;
                 if (RandomGenerator::randomReal(1.0) < probability) {
                     //Got hospitalized
                     //Length;
