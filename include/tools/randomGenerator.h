@@ -81,9 +81,6 @@ public:
         double _M_log_1_p = log(1.0 - _M_p);
         const double __naf = (1 - __DBL_EPSILON__) / 2;
         const double __thr = __INT_MAX__ + __naf;
-        // TODO: need geometric here!!!
-        // return
-        // curand_uniform_double(&dstates[threadIdx.x+blockIdx.x*blockDim.x]);
         double __cand;
         do
             __cand = floor(

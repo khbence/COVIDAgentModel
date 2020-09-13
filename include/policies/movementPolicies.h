@@ -182,8 +182,29 @@ namespace RealMovementOps {
             a.agentLocationsPtr[i] = a.cemeteryLoc;
             return;
         }
-        // TODO: during disease progression, move people who just diesd to some
-        // specific place
+        
+        //if non-COVID hospitalization, go to hospital
+        if (a.agentStatsPtr[i].hospitalizedTimestamp <= a.timestamp && 
+            a.agentStatsPtr[i].hospitalizedUntilTimestamp > a.timestamp) {
+
+            a.stepsUntilMovePtr[i] = a.agentStatsPtr[i].hospitalizedUntilTimestamp - a.timestamp - 1;
+            a.agentLocationsPtr[i] =
+                RealMovementOps::findActualLocationForType(i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+            if (i == a.tracked) {
+                printf("Agent %d of type %d day %d at %d:%d WBState %d in hospital %d due to non-COVID hospitalization between %d-%d\n",
+                i,
+                agentType + 1,
+                (int)a.day,
+                a.simTime.getMinutes() / 60,
+                a.simTime.getMinutes() % 60,
+                (int)wBState,
+                a.agentLocationsPtr[i],
+                a.agentStatsPtr[i].hospitalizedTimestamp,
+                a.agentStatsPtr[i].hospitalizedUntilTimestamp
+                );
+            }
+            return;
+        }
 
         if (wBState == states::WBStates::S) {// go to hospital if in serious condition
             a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);

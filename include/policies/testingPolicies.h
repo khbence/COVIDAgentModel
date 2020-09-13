@@ -133,6 +133,13 @@ template<typename PPState, typename LocationType>
             testingProbability += a.testingRandomHospital;
         }
 
+        //If agent is hospitalized for non-COVID
+        if (a.agentStatsPtr[i].hospitalizedTimestamp <= a.timestamp &&
+            a.agentStatsPtr[i].hospitalizedUntilTimestamp > a.timestamp) {
+                
+            testingProbability += a.testingRandomHospital;
+        }
+
         if (a.tracked == i && testingProbability>0.0) 
             printf("Testing: Agent %d testing probability: %g\n",
                     i, testingProbability);
