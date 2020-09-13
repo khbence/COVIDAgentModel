@@ -11,9 +11,11 @@
             "I6_hospital",
             "R_hospital",
             "R",
-            "D"
+            "D1",
+            "D2"
         ],
         "firstInfectedState": "E",
+        "nonCOVIDDeadState": "D2",
         "susceptibleStates": [
             "S"
         ],
@@ -361,7 +363,12 @@
             "infectious": 0
         },
         {
-            "stateName": "D",
+            "stateName": "D1",
+            "WB": "D",
+            "infectious": 0
+        },
+        {
+            "stateName": "D2",
             "WB": "D",
             "infectious": 0
         }

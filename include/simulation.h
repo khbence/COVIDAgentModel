@@ -119,7 +119,7 @@ public:
                 }
                 probability /= 100.0;
                 if (RandomGenerator::randomReal(1.0) < probability) {
-                    agentStat.worstState = ppstate.die();
+                    agentStat.worstState = ppstate.die(false); //not COVID-related
                     agentStat.worstStateTimestamp = timestamp;
                     // printf("Agent %d died of sudden death, %d, timestamp
                     // %d\n", agentID, (int)agentStat.worstState,timestamp);
