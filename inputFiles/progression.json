@@ -135,7 +135,7 @@
                     "isBadProgression": false
                 },
                 {
-                    "name": "D",
+                    "name": "D1",
                     "chance": 0.3,
                     "isBadProgression": true
                 }
@@ -164,7 +164,15 @@
             "progressions": []
         },
         {
-            "stateName": "D",
+            "stateName": "D1",
+            "avgLength": -1,
+            "maxlength": -1,
+            "infectious": 0.0,
+            "WB": "D",
+            "progressions": []
+        },
+        {
+            "stateName": "D2",
             "avgLength": -1,
             "maxlength": -1,
             "infectious": 0.0,

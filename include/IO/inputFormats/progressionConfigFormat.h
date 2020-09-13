@@ -9,6 +9,7 @@ namespace parser {
             BEGIN_MEMBER_DECLARATIONS();
             DECODABLE_MEMBER(std::vector<std::string>, stateNames);
             DECODABLE_MEMBER(std::string, firstInfectedState);
+            DECODABLE_MEMBER(std::string, nonCOVIDDeadState);
             DECODABLE_MEMBER(std::vector<std::string>, susceptibleStates);
             DECODABLE_MEMBER(std::vector<std::string>, infectedStates);
             END_MEMBER_DECLARATIONS();

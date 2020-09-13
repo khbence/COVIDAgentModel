@@ -7,6 +7,7 @@ namespace detail {
     namespace DynamicPPState {
         unsigned h_numberOfStates = 0;
         char h_firstInfectedState = 0;
+        char h_nonCOVIDDeadState = 0;
         char h_deadState;
         std::vector<float> h_infectious;
         std::vector<bool> h_susceptible;
@@ -17,6 +18,7 @@ namespace detail {
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
         __constant__ unsigned numberOfStates = 0;
         __constant__ char firstInfectedState = 0;
+        __constant__ char nonCOVIDDeadState = 0;
         __constant__ float* infectious;
         __constant__ bool* susceptible;
         __constant__ bool* infected;
@@ -87,6 +89,8 @@ std::string DynamicPPState::initTransitionMatrix(
 
     detail::DynamicPPState::h_firstInfectedState =
         detail::DynamicPPState::nameIndexMap.at(config.stateInformation.firstInfectedState);
+    detail::DynamicPPState::h_nonCOVIDDeadState =
+        detail::DynamicPPState::nameIndexMap.at(config.stateInformation.nonCOVIDDeadState);
 
     for (unsigned i = 0; i < inputData.size(); ++i) {
         auto it = std::find_if(inputData.begin(), inputData.end(), [i](const auto& e) {
@@ -96,6 +100,8 @@ std::string DynamicPPState::initTransitionMatrix(
         detail::DynamicPPState::h_transition.emplace_back(it->second.first);
     }
 
+    //Find which state is dead due to COVID
+    //TODO: have a flag so we can distinguish properly
     for (unsigned i = 0; i < detail::DynamicPPState::h_numberOfStates; i++) {
         if (detail::DynamicPPState::h_WB[i] == states::WBStates::D) {
             detail::DynamicPPState::h_deadState = i;
@@ -159,9 +165,9 @@ std::string DynamicPPState::initTransitionMatrix(
     cudaMemcpyToSymbol(detail::DynamicPPState::firstInfectedState,
         &detail::DynamicPPState::h_firstInfectedState,
         sizeof(detail::DynamicPPState::h_firstInfectedState));
-    cudaMemcpyToSymbol(detail::DynamicPPState::firstInfectedState,
-        &detail::DynamicPPState::h_firstInfectedState,
-        sizeof(detail::DynamicPPState::h_firstInfectedState));
+    cudaMemcpyToSymbol(detail::DynamicPPState::nonCOVIDDeadState,
+        &detail::DynamicPPState::h_nonCOVIDDeadState,
+        sizeof(detail::DynamicPPState::h_nonCOVIDDeadState));
     cudaMemcpyToSymbol(detail::DynamicPPState::deadState,
         &detail::DynamicPPState::h_deadState,
         sizeof(detail::DynamicPPState::h_deadState));
@@ -257,16 +263,16 @@ states::WBStates DynamicPPState::getWBState() const {
 #endif
 }
 
-HD char DynamicPPState::die() {
+HD char DynamicPPState::die(bool covid) {
     daysBeforeNextState = -1;
 #ifdef __CUDA_ARCH__
-    state = detail::DynamicPPState::deadState;
+    state = covid ? detail::DynamicPPState::deadState : detail::DynamicPPState::nonCOVIDDeadState; 
     updateMeta();
-    return detail::DynamicPPState::deadState;
+    return state;
 #else
-    state = detail::DynamicPPState::h_deadState;
+    state = covid ? detail::DynamicPPState::h_deadState : detail::DynamicPPState::h_nonCOVIDDeadState; ; 
     updateMeta();
-    return detail::DynamicPPState::h_deadState;
+    return state;
 #endif
 }
 bool HD DynamicPPState::isInfected() const {

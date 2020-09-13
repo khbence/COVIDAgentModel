@@ -5,6 +5,7 @@
             
         ],
         "firstInfectedState": "E",
+        "nonCOVIDDeadState": "D2",
         "susceptibleStates": [
             "S"
         ],
