@@ -127,9 +127,7 @@ public:
             auto it = progressionMatrices.find(tmp);
             PPValues_h.push_back(PPState(person.state, it->second.second));
             AgentStats stat;
-            // TODO: how do I tell that agent is infected (even if not
-            // infectious)
-            if (PPValues_h.back().getStateIdx() > 0) {// Is infected at the beginning
+            if (PPValues_h.back().isInfected() > 0) {// Is infected at the beginning
                 stat.infectedTimestamp = 0;
                 stat.worstState = PPValues_h.back().getStateIdx();
                 stat.worstStateTimestamp = 0;
