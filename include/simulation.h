@@ -99,18 +99,17 @@ public:
                 //
                 // non-COVID hospitalization - ended, see if dies or lives
                 //
-                if (timestamp>0 && agentStat.hospitalizedUntilTimestamp <= timestamp &&
-                                   agentStat.hospitalizedUntilTimestamp + 24*60/timeStep > timestamp) { //TODO: this will only decide at midnight after patient is released from hospital
+                if (timestamp>0 && agentStat.hospitalizedUntilTimestamp == timestamp) {
                     if (RandomGenerator::randomReal(1.0) < 0.031628835) {
                         agentStat.worstState = ppstate.die(false); //not COVID-related
                         agentStat.worstStateTimestamp = timestamp;
-                        printf("Agent %d died at the end of hospital stay %d\n", agentID, timestamp);
+                        //printf("Agent %d died at the end of hospital stay %d\n", agentID, timestamp);
                         if (agentID == tracked) {
                             printf("Agent %d died at the end of hospital stay %d\n", tracked, timestamp);
                         }
                         return;
                     } else {
-                        printf("Agent %d recovered at the end of hospital stay %d\n", agentID, timestamp);
+                        //printf("Agent %d recovered at the end of hospital stay %d\n", agentID, timestamp);
                         if (agentID == tracked) {
                             printf("Agent %d recovered at the end of hospital stay %d\n", tracked, timestamp);
                         }
@@ -128,19 +127,19 @@ public:
                     ppstate.getWBState() == states::WBStates::S ||
                     timestamp < agentStat.hospitalizedUntilTimestamp) return;
                 if (age < 5) {
-                    probability = sex ? 0.000138636206246181 : 0.0000742144645456176;
+                    probability = sex ? 3.79825E-07 : 2.03327E-07;
                 } else if (age < 15) {
-                    probability = sex ? 0.000138636206246181 : 0.0000742144645456176;
+                    probability = sex ? 3.79825E-07 : 2.03327E-07;
                 } else if (age < 30) {
-                    probability = sex ? 0.000138636206246181 : 0.0000742144645456176;
+                    probability = sex ? 3.79825E-07 : 2.03327E-07;
                 } else if (age < 60) {
-                    probability = sex ? 0.00140203198030386 : 0.000435754402861572;
+                    probability = sex ? 3.84118E-06 : 1.19385E-06;
                 } else if (age < 70) {
-                    probability = sex ? 0.00731842791450156 : 0.00323823204036677;
+                    probability = sex ? 2.00505E-05 : 8.87187E-06;
                 } else if (age < 80) {
-                    probability = sex ? 0.0127014602887186 : 0.00719076352220422;
+                    probability = sex ? 3.47985E-05 : 1.97007E-05;
                 } else {
-                    probability = sex ? 0.0384859186350238 : 0.0355438319317952;
+                    probability = sex ? 0.000105441 : 9.73804E-05;
                 }
                 probability /= 100.0;
                 if (RandomGenerator::randomReal(1.0) < probability) {
@@ -157,18 +156,19 @@ public:
                 //
                 // Random hospitalization
                 //
-                probability = 0.088813815360319/100.0;
+                probability = 0.000888138;
                 if (RandomGenerator::randomReal(1.0) < probability) {
                     //Got hospitalized
                     //Length;
-                    unsigned avgLength = 5.55*24*60/timeStep; //In minutes
+                    unsigned avgLength = 5.55; //In days
                     double p = 1.0 / (double) avgLength;
                     unsigned length = RandomGenerator::geometric(p);
+                    if (length == 0) length = 1; // At least one day
                     agentStat.hospitalizedTimestamp = timestamp;
-                    agentStat.hospitalizedUntilTimestamp = timestamp + length;
-                    printf("Agent %d hospitalized for non-COVID disease, timestamp %d-%d\n", agentID, timestamp, timestamp+length);
+                    agentStat.hospitalizedUntilTimestamp = timestamp + length*24*60/timeStep;
+                    //printf("Agent %d hospitalized for non-COVID disease, timestamp %d-%d\n", agentID, timestamp, agentStat.hospitalizedUntilTimestamp);
                     if (agentID == tracked) {
-                        printf("Agent %d hospitalized for non-COVID disease, timestamp %d-%d\n", agentID, timestamp, timestamp+length);
+                        printf("Agent %d hospitalized for non-COVID disease, timestamp %d-%d\n", agentID, timestamp, agentStat.hospitalizedUntilTimestamp);
                     }
                 }
             });
@@ -206,10 +206,31 @@ public:
             });
     }
 
-    void refreshAndPrintStatistics() {
+    void refreshAndPrintStatistics(Timehandler& simTime) {
         PROFILE_FUNCTION();
+        //COVID
         auto result = locs->refreshAndGetStatistic();
         for (auto val : result) { std::cout << val << "\t"; }
+        //non-COVID hospitalization
+        auto& ppstates = agents->PPValues;
+        auto& diagnosed = agents->diagnosed;
+        auto& agentStats = agents->agentStats;
+        unsigned timestamp = simTime.getTimestamp();
+        unsigned hospitalized = 
+            thrust::count_if(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(), agentStats.begin(), diagnosed.begin())),
+                             thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(), agentStats.end(), diagnosed.end())),
+                         [timestamp] HD (thrust::tuple<PPState, AgentStats, bool> tup) {
+                             auto ppstate = thrust::get<0>(tup);
+                             auto agentStat = thrust::get<1>(tup);
+                             auto diagnosed = thrust::get<2>(tup);
+                             if (ppstate.getWBState() != states::WBStates::D &&  //avoid double-counting with COVID
+                                 ppstate.getWBState() != states::WBStates::S &&
+                                 diagnosed == false &&
+                                 timestamp < agentStat.hospitalizedUntilTimestamp) return true;
+                             else return false;
+                         });
+        std::cout << hospitalized << "\t";
+        //Testing
         auto tests = TestingPolicy<Simulation>::getStats();
         std::cout << thrust::get<0>(tests) << "\t" << thrust::get<1>(tests) << "\t"
                   << thrust::get<2>(tests) << "\t";
@@ -245,7 +266,7 @@ public:
                 data.getAgentTypeLocTypes(),
                 data.acquireProgressionMatrices());
             RandomGenerator::resize(agents->PPValues.size());
-            std::cout << header << "\tT\tP1\tP2" << '\n';
+            std::cout << header << "\tH\tT\tP1\tP2" << '\n';
         } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;
@@ -258,14 +279,14 @@ public:
         PROFILE_FUNCTION();
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
-        refreshAndPrintStatistics();
+        refreshAndPrintStatistics(simTime);
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
                 if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 if (enableOtherDisease) otherDisease(simTime,timeStep);
-                refreshAndPrintStatistics();
+                refreshAndPrintStatistics(simTime);
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
             InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep);
