@@ -141,8 +141,7 @@ template<typename PPState, typename LocationType>
         if (testingProbability>1.0 ||
             RandomGenerator::randomReal(1.0) < testingProbability) { 
             a.lastTestPtr[i] = a.timestamp;
-#warning Should check for infected, not infectious!
-            if (a.agentStatesPtr[i].isInfectious()) {
+            if (a.agentStatesPtr[i].isInfected()) {
                 a.diagnosedPtr[i] = true;
                 a.agentStatsPtr[i].diagnosedTimestamp = a.timestamp;
                 if (a.tracked == i) 

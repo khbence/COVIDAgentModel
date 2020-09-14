@@ -193,6 +193,7 @@ public:
             auto locationMapping = tmp.second;
             locs->initializeArgs(result);
             MovementPolicy<Simulation>::init(data.acquireLocationTypes(), cemeteryID);
+            TestingPolicy<Simulation>::init(data.acquireLocationTypes());
             auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
             agents->initAgents(data.acquireAgents(),
                 locationMapping,
