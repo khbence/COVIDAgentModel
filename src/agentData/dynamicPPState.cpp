@@ -99,31 +99,18 @@ std::string DynamicPPState::initTransitionMatrix(
         }
     }
 
-    /*
-    // state name and its occurence
-    std::vector<std::pair<char, char>> mainStates{};
-    for (const auto& s : inputData.states) {
-        char sChar = s.stateName.front();
-        auto it = std::find_if(mainStates.begin(), mainStates.end(), [sChar](const auto& current) {
-            return current.first == sChar;
-        });
-        if (it == mainStates.end()) {
-            mainStates.emplace_back(std::make_pair(sChar, 1));
-        } else {
-            ++it->second;
-        }
-    }
-
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     ProgressionMatrix* tmpDevice;
-    cudaMalloc((void**) &tmpDevice, detail::DynamicPPState::h_transition.size() * sizeof(decltype(detail::DynamicPPState::d_transition)));
+    cudaMalloc((void**)&tmpDevice,
+        detail::DynamicPPState::h_transition.size()
+            * sizeof(decltype(detail::DynamicPPState::d_transition)));
 
     std::vector<ProgressionMatrix*> tmp;
-    for (auto& e : detail::DynamicPPState::h_transition) {
-        tmp.push_back(e.upload());
-    }
-    cudaMemcpy(tmpDevice, tmp.data(), tmp.size() * sizeof(ProgressionMatrix*), cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(detail::DynamicPPState::d_transition, &tmpDevice, sizeof(decltype(tmpDevice)));
+    for (auto& e : detail::DynamicPPState::h_transition) { tmp.push_back(e.upload()); }
+    cudaMemcpy(
+        tmpDevice, tmp.data(), tmp.size() * sizeof(ProgressionMatrix*), cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(
+        detail::DynamicPPState::d_transition, &tmpDevice, sizeof(decltype(tmpDevice)));
     kecske<<<1, 1>>>();
 
     float* infTMP;
@@ -143,7 +130,9 @@ std::string DynamicPPState::initTransitionMatrix(
     cudaMemcpyToSymbol(detail::DynamicPPState::WB, &wbTMP, sizeof(states::SIRD*));
 
     bool* tmpSusceptible = new bool[detail::DynamicPPState::h_susceptible.size()];
-    std::copy(detail::DynamicPPState::h_susceptible.begin(), detail::DynamicPPState::h_susceptible.end(), tmpSusceptible);
+    std::copy(detail::DynamicPPState::h_susceptible.begin(),
+        detail::DynamicPPState::h_susceptible.end(),
+        tmpSusceptible);
     bool* susTMP;
     cudaMalloc((void**)&susTMP, detail::DynamicPPState::h_numberOfStates * sizeof(bool));
     cudaMemcpy(susTMP,
@@ -263,5 +252,12 @@ HD char DynamicPPState::die() {
     state = detail::DynamicPPState::h_deadState;
     updateMeta();
     return detail::DynamicPPState::h_deadState;
+#endif
+}
+bool HD DynamicPPState::isInfected() const {
+#ifdef __CUDA_ARCH__
+    return detail::DynamicPPState::infected[state];
+#else
+    return detail::DynamicPPState::h_infected[state];
 #endif
 }
