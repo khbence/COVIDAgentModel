@@ -98,7 +98,7 @@ SingleBadTransitionMatrix::~SingleBadTransitionMatrix() {
 }
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-SingleBadTransitionMatrix* SingleBadTransitionMatrix::upload() {
+SingleBadTransitionMatrix* SingleBadTransitionMatrix::upload() const {
     SingleBadTransitionMatrix* tmp =
         (SingleBadTransitionMatrix*)malloc(sizeof(SingleBadTransitionMatrix));
     tmp->numStates = numStates;

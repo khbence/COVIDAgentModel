@@ -50,7 +50,7 @@ public:
     ~SingleBadTransitionMatrix();
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-    SingleBadTransitionMatrix* upload();
+    SingleBadTransitionMatrix* upload() const;
 #endif
 
     [[nodiscard]] thrust::pair<unsigned, int> HD calculateNextState(unsigned currentState,

@@ -77,7 +77,6 @@ MultiBadMatrix::MultiBadMatrix(const parser::TransitionFormat& inputData)
         if (!doubleIsZero(sumChance) && !s.progressions.empty()) {
             throw(IOProgression::BadChances(s.stateName, sumChance));
         }
-
         thrust::pair<unsigned, float>* bads = (thrust::pair<unsigned, float>*)malloc(
             initTransitions[i].bad.size() * sizeof(thrust::pair<unsigned, float>));
         thrust::pair<unsigned, float>* neutrals = (thrust::pair<unsigned, float>*)malloc(
@@ -100,7 +99,7 @@ MultiBadMatrix::MultiBadMatrix(const std::string& fileName)
     : MultiBadMatrix(DECODE_JSON_FILE(fileName, parser::TransitionFormat)) {}
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-MultiBadMatrix* MultiBadMatrix::upload() {
+MultiBadMatrix* MultiBadMatrix::upload() const {
     MultiBadMatrix* tmp = (MultiBadMatrix*)malloc(sizeof(MultiBadMatrix));
     tmp->numStates = numStates;
     cudaMalloc((void**)&tmp->lengths, numStates * sizeof(LengthOfState));

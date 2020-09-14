@@ -18,7 +18,7 @@ class DynamicPPState {
     short daysBeforeNextState = -1;
     bool susceptible = true;
 
-    static HD ProgressionMatrix& getTransition();
+    static HD ProgressionMatrix& getTransition(unsigned progressionID_p);
 
     void HD updateMeta();
 

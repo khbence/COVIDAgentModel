@@ -42,7 +42,7 @@ public:
     explicit MultiBadMatrix(const std::string& fileName);
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-    MultiBadMatrix* upload();
+    MultiBadMatrix* upload() const;
 #endif
 
     [[nodiscard]] thrust::tuple<unsigned, int, bool> HD calculateNextState(unsigned currentState,
