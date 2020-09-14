@@ -311,57 +311,57 @@
     ],
     "states": [
         {
-            "name": "S",
+            "stateName": "S",
             "WB": "W",
             "infectious": 0
         },
         {
-            "name": "E",
+            "stateName": "E",
             "WB": "W",
             "infectious": 0
         },
         {
-            "name": "I1",
+            "stateName": "I1",
             "WB": "W",
             "infectious": 1
         },
         {
-            "name": "I2",
+            "stateName": "I2",
             "WB": "W",
             "infectious": 0.5
         },
         {
-            "name": "I3",
+            "stateName": "I3",
             "WB": "N",
             "infectious": 1
         },
         {
-            "name": "I4",
+            "stateName": "I4",
             "WB": "M",
             "infectious": 1
         },
         {
-            "name": "I5_hospital",
+            "stateName": "I5_hospital",
             "WB": "S",
             "infectious": 0.5
         },
         {
-            "name": "I6_hospital",
+            "stateName": "I6_hospital",
             "WB": "S",
             "infectious": 0.5
         },
         {
-            "name": "R_hospital",
+            "stateName": "R_hospital",
             "WB": "S",
             "infectious": 0
         },
         {
-            "name": "R",
+            "stateName": "R",
             "WB": "W",
             "infectious": 0
         },
         {
-            "name": "D",
+            "stateName": "D",
             "WB": "D",
             "infectious": 0
         }

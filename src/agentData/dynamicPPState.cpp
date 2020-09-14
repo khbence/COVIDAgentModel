@@ -22,16 +22,16 @@ namespace detail {
         __constant__ bool* infected;
         __constant__ states::WBStates* WB;
         __constant__ char deadState;
-        __constant__ ProgressionMatrix* d_transition;
+        __constant__ ProgressionMatrix** d_transition;
 #endif
     }// namespace DynamicPPState
 }// namespace detail
 
-HD ProgressionMatrix& DynamicPPState::getTransition() {
+HD ProgressionMatrix& DynamicPPState::getTransition(unsigned progressionID_p) {
 #ifdef __CUDA_ARCH__
-    return *detail::DynamicPPState::d_transition;
+    return *detail::DynamicPPState::d_transition[progressionID_p];
 #else
-    return *detail::DynamicPPState::h_transition.data();
+    return detail::DynamicPPState::h_transition[progressionID_p];
 #endif
 }
 
@@ -44,6 +44,8 @@ void HD DynamicPPState::updateMeta() {
     susceptible = detail::DynamicPPState::h_susceptible[state];
 #endif
 }
+
+__global__ void kecske() { printf("%p\n", detail::DynamicPPState::d_transition); }
 
 std::string DynamicPPState::initTransitionMatrix(
     std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
@@ -68,7 +70,7 @@ std::string DynamicPPState::initTransitionMatrix(
     }
 
     for (const auto& e : config.states) {
-        auto idx = detail::DynamicPPState::nameIndexMap.at(e.name);
+        auto idx = detail::DynamicPPState::nameIndexMap.at(e.stateName);
         detail::DynamicPPState::h_WB[idx] = states::parseWBState(e.WB);
         detail::DynamicPPState::h_infectious[idx] = e.infectious;
     }
@@ -97,7 +99,7 @@ std::string DynamicPPState::initTransitionMatrix(
         }
     }
 
-/*
+    /*
     // state name and its occurence
     std::vector<std::pair<char, char>> mainStates{};
     for (const auto& s : inputData.states) {
@@ -112,60 +114,22 @@ std::string DynamicPPState::initTransitionMatrix(
         }
     }
 
-    // make sure that the states are not mixed
-    auto it = inputData.states.begin();
-    for (const auto& s : mainStates) {
-        // the file indexes from 1
-        for (char i = 1; i <= s.second; ++i, ++it) {
-            std::string stateName;
-            stateName.push_back(s.first);
-            if (s.second > 1) { stateName += std::to_string(i); }
-            auto currentIt = std::find_if(it, inputData.states.end(), [stateName](const auto& s) {
-                return s.stateName == stateName;
-            });
-            if (currentIt == inputData.states.end()) {
-                throw IOProgression::MissingStateName(stateName);
-            }
-            std::iter_swap(it, currentIt);
-        }
-    }
-
-    std::string stateName = inputData.firstInfectedState;
-    auto currentIt = std::find_if(inputData.states.begin(),
-        inputData.states.end(),
-        [&stateName](const auto& s) { return s.stateName == stateName; });
-    if (currentIt == inputData.states.end()) { throw IOProgression::MissingStateName(stateName); }
-    detail::DynamicPPState::h_firstInfectedState =
-        std::distance(inputData.states.begin(), currentIt);
-
-    // setup name index mapping for the constructor
-    std::string header;
-    char idx = 0;
-    for (const auto& s : inputData.states) {
-        header += s.stateName + "\t";
-        detail::DynamicPPState::h_infectious[idx] = s.infectious;
-        detail::DynamicPPState::h_WB[idx] = states::parseWBState(s.WB);
-        detail::DynamicPPState::nameIndexMap.emplace(std::make_pair(s.stateName, idx));
-        detail::DynamicPPState::h_susceptible[idx] = (std::find(inputData.susceptibleStates.begin(),
-                                                          inputData.susceptibleStates.end(),
-                                                          s.stateName)
-                                                      != inputData.susceptibleStates.end());
-        ++idx;
-    }
-    header.pop_back();
-
-    detail::DynamicPPState::transition = new ProgressionMatrix(inputData);
-*/
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-    for (const auto& e : detail::DynamicPPState::h_transition) {}
-    ProgressionMatrix* tmp = detail::DynamicPPState::transition->upload();
-    cudaMemcpyToSymbol(detail::DynamicPPState::transition_gpu, &tmp, sizeof(ProgressionMatrix*));
+    ProgressionMatrix* tmpDevice;
+    cudaMalloc((void**) &tmpDevice, detail::DynamicPPState::h_transition.size() * sizeof(decltype(detail::DynamicPPState::d_transition)));
 
-    // do I have to make a fancy copy or it's automatic
+    std::vector<ProgressionMatrix*> tmp;
+    for (auto& e : detail::DynamicPPState::h_transition) {
+        tmp.push_back(e.upload());
+    }
+    cudaMemcpy(tmpDevice, tmp.data(), tmp.size() * sizeof(ProgressionMatrix*), cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(detail::DynamicPPState::d_transition, &tmpDevice, sizeof(decltype(tmpDevice)));
+    kecske<<<1, 1>>>();
+
     float* infTMP;
     cudaMalloc((void**)&infTMP, detail::DynamicPPState::h_numberOfStates * sizeof(float));
     cudaMemcpy(infTMP,
-        detail::DynamicPPState::h_infectious,
+        detail::DynamicPPState::h_infectious.data(),
         detail::DynamicPPState::h_numberOfStates * sizeof(float),
         cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::infectious, &infTMP, sizeof(float*));
@@ -173,16 +137,17 @@ std::string DynamicPPState::initTransitionMatrix(
     states::SIRD* wbTMP;
     cudaMalloc((void**)&wbTMP, detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD));
     cudaMemcpy(wbTMP,
-        detail::DynamicPPState::h_WB,
+        detail::DynamicPPState::h_WB.data(),
         detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD),
         cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::WB, &wbTMP, sizeof(states::SIRD*));
 
-
+    bool* tmpSusceptible = new bool[detail::DynamicPPState::h_susceptible.size()];
+    std::copy(detail::DynamicPPState::h_susceptible.begin(), detail::DynamicPPState::h_susceptible.end(), tmpSusceptible);
     bool* susTMP;
     cudaMalloc((void**)&susTMP, detail::DynamicPPState::h_numberOfStates * sizeof(bool));
     cudaMemcpy(susTMP,
-        detail::DynamicPPState::h_susceptible,
+        tmpSusceptible,
         detail::DynamicPPState::h_numberOfStates * sizeof(bool),
         cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::susceptible, &susTMP, sizeof(bool*));
@@ -217,7 +182,7 @@ std::vector<std::string> DynamicPPState::getStateNames() {
 DynamicPPState::DynamicPPState(const std::string& name, unsigned progressionID_p)
     : progressionID(progressionID_p),
       state(detail::DynamicPPState::nameIndexMap.find(name)->second),
-      daysBeforeNextState(getTransition().calculateJustDays(state)) {
+      daysBeforeNextState(getTransition(progressionID).calculateJustDays(state)) {
     updateMeta();
 }
 
@@ -237,13 +202,13 @@ bool HD DynamicPPState::update(float scalingSymptons,
     unsigned agentID,
     unsigned tracked) {
     if (daysBeforeNextState == -2) {
-        daysBeforeNextState = getTransition().calculateJustDays(state);
+        daysBeforeNextState = getTransition(progressionID).calculateJustDays(state);
     }
     if (daysBeforeNextState > 0) { --daysBeforeNextState; }
     if (daysBeforeNextState == 0) {
         states::WBStates oldWBState = this->getWBState();
         auto oldState = state;
-        auto tmp = getTransition().calculateNextState(state, scalingSymptons);
+        auto tmp = getTransition(progressionID).calculateNextState(state, scalingSymptons);
         state = thrust::get<0>(tmp);
         updateMeta();
         daysBeforeNextState = thrust::get<1>(tmp);

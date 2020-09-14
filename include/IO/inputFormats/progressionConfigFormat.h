@@ -24,7 +24,7 @@ namespace parser {
 
         struct SingleState : public jsond::JSONDecodable<SingleState> {
             BEGIN_MEMBER_DECLARATIONS();
-            DECODABLE_MEMBER(std::string, name);
+            DECODABLE_MEMBER(std::string, stateName);
             DECODABLE_MEMBER(std::string, WB);
             DECODABLE_MEMBER(float, infectious);
             END_MEMBER_DECLARATIONS();

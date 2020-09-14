@@ -48,6 +48,8 @@ find_package(CUDA)
 if(CUDA_FOUND AND USE_GPU)
   message("CUDA exists")
   enable_language(CUDA)
+  set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG} -G -O0")
+  #set(CUDA_NVCC_FLAGS_DEBUG "-G")
   set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_CUDA)
 
   # architecture
@@ -57,12 +59,12 @@ if(CUDA_FOUND AND USE_GPU)
   if(${ARCHITECTURE} STREQUAL "AUTO")
     set(CUDA_ARCH_LIST Auto)
     cuda_select_nvcc_arch_flags(CUDA_ARCH_FLAGS ${CUDA_ARCH_LIST})
-    list(APPEND CUDA_NVCC_FLAGS ${CUDA_ARCH_FLAGS})
+    list(APPEND CUDA_ARCH_FLAGS ${CUDA_ARCH_FLAGS})
     string(
       REPLACE ";"
               " "
               ARCH_FLAGS
-              "${CUDA_NVCC_FLAGS}")
+              "${CUDA_ARCH_FLAGS}")
   else()
     string(
       REPLACE "NUM"
@@ -129,10 +131,6 @@ target_compile_features(project_options INTERFACE cxx_std_14)
 
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake
 add_library(project_warnings INTERFACE)
-
-# standard compiler warnings
-include(cmake/CompilerWarnings.cmake)
-set_project_warnings(project_warnings)
 
 # sanitizer options if supported by compiler
 include(cmake/Sanitizers.cmake)
