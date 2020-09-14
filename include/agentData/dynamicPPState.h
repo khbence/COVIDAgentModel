@@ -8,7 +8,7 @@
 #include <map>
 #include "progressionType.h"
 
-using ProgressionMatrix = MultiBadMatrix; 
+using ProgressionMatrix = MultiBadMatrix;
 
 class DynamicPPState {
     float infectious = 0.0;
@@ -43,4 +43,5 @@ public:
     [[nodiscard]] float HD isInfectious() const { return infectious; }
     [[nodiscard]] bool HD isSusceptible() const { return susceptible; }
     [[nodiscard]] char HD die();
+    [[nodiscard]] bool HD isInfected() const;
 };
