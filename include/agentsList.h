@@ -122,7 +122,8 @@ public:
         agentStats_h.reserve(n);
 
         for (auto& person : inputData.people) {
-            auto tmp = std::make_pair(static_cast<unsigned>(person.age), static_cast<std::string>(person.preCond));
+            auto tmp = std::make_pair(
+                static_cast<unsigned>(person.age), static_cast<std::string>(person.preCond));
             auto it = progressionMatrices.find(tmp);
             PPValues_h.push_back(PPState(person.state, it->second.second));
             AgentStats stat;
