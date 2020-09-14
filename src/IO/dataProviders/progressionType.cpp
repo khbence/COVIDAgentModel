@@ -15,7 +15,7 @@ bool operator<(const ProgressionType& lhs, const ProgressionType& rhs) {
 
 bool operator<(const ProgressionType& lhs, const std::pair<unsigned, std::string>& rhs) {
     if (lhs.ageBegin < rhs.first) {
-        if (rhs.first < lhs.ageEnd) { return lhs.preCond < rhs.second; }
+        if (rhs.first <= lhs.ageEnd) { return lhs.preCond < rhs.second; }
         return true;
     }
     return false;
@@ -23,7 +23,7 @@ bool operator<(const ProgressionType& lhs, const std::pair<unsigned, std::string
 
 bool operator<(const std::pair<unsigned, std::string>& lhs, const ProgressionType& rhs) {
     if (lhs.first < rhs.ageEnd) {
-        if (rhs.ageBegin < lhs.first) { return lhs.second < rhs.preCond; }
+        if (rhs.ageBegin <= lhs.first) { return lhs.second < rhs.preCond; }
         return true;
     }
     return false;

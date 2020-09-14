@@ -45,8 +45,6 @@ void HD DynamicPPState::updateMeta() {
 #endif
 }
 
-__global__ void kecske() { printf("%p\n", detail::DynamicPPState::d_transition); }
-
 std::string DynamicPPState::initTransitionMatrix(
     std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
         inputData,
@@ -80,16 +78,7 @@ std::string DynamicPPState::initTransitionMatrix(
             return e.second.second == i;
         });
         assert(it != inputData.end());
-        try {
-            detail::DynamicPPState::h_transition.emplace_back(it->second.first);
-        } catch (const IOProgression::BadChances& e) {
-            std::cerr << "Error in progression matrix with age interval: "
-                      << std::to_string(it->first.ageBegin) << " - "
-                      << std::to_string(it->first.ageEnd)
-                      << " with pre-condition: " << it->first.preCond << ":\n";
-#warning Throw the exception instead of printing
-            std::cout << e.what();
-        }
+        detail::DynamicPPState::h_transition.emplace_back(it->second.first);
     }
 
     for (unsigned i = 0; i < detail::DynamicPPState::h_numberOfStates; i++) {
@@ -111,7 +100,6 @@ std::string DynamicPPState::initTransitionMatrix(
         tmpDevice, tmp.data(), tmp.size() * sizeof(ProgressionMatrix*), cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(
         detail::DynamicPPState::d_transition, &tmpDevice, sizeof(decltype(tmpDevice)));
-    kecske<<<1, 1>>>();
 
     float* infTMP;
     cudaMalloc((void**)&infTMP, detail::DynamicPPState::h_numberOfStates * sizeof(float));

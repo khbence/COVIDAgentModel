@@ -27,13 +27,22 @@ class Simulation
           PPState,
           AgentMeta,
           MovementPolicy,
-          InfectionPolicy>>
+          InfectionPolicy,
+          TestingPolicy>>
     , InfectionPolicy<Simulation<PositionType,
           TypeOfLocation,
           PPState,
           AgentMeta,
           MovementPolicy,
-          InfectionPolicy>> {
+          InfectionPolicy,
+          TestingPolicy>>
+    , TestingPolicy<Simulation<PositionType,
+          TypeOfLocation,
+          PPState,
+          AgentMeta,
+          MovementPolicy,
+          InfectionPolicy,
+          TestingPolicy>> {
 
 public:
     using PPState_t = PPState;
@@ -72,18 +81,16 @@ public:
         auto& agentMeta = agents->agentMetaData;
         unsigned timestamp = simTime.getTimestamp();
         unsigned tracked = locs->tracked;
-        thrust::for_each(
-            thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(),
-                agentMeta.begin(),
-                agentStats.begin(),
-                thrust::make_counting_iterator<unsigned>(0))),
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(),
+                             agentMeta.begin(),
+                             agentStats.begin(),
+                             thrust::make_counting_iterator<unsigned>(0))),
             thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(),
                 agentMeta.end(),
                 agentStats.end(),
                 thrust::make_counting_iterator<unsigned>(0) + ppstates.size())),
             [timestamp, tracked] HD(
-                thrust::tuple<PPState&, AgentMeta&, AgentStats&, unsigned>
-                    tup) {
+                thrust::tuple<PPState&, AgentMeta&, AgentStats&, unsigned> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
                 auto& agentStat = thrust::get<2>(tup);
@@ -96,23 +103,17 @@ public:
                     || ppstate.getWBState() == states::WBStates::S)
                     return;
                 if (age < 5) {
-                    probability =
-                        sex ? 0.000138636206246181 : 0.0000742144645456176;
+                    probability = sex ? 0.000138636206246181 : 0.0000742144645456176;
                 } else if (age < 15) {
-                    probability =
-                        sex ? 0.000138636206246181 : 0.0000742144645456176;
+                    probability = sex ? 0.000138636206246181 : 0.0000742144645456176;
                 } else if (age < 30) {
-                    probability =
-                        sex ? 0.000138636206246181 : 0.0000742144645456176;
+                    probability = sex ? 0.000138636206246181 : 0.0000742144645456176;
                 } else if (age < 60) {
-                    probability =
-                        sex ? 0.00140203198030386 : 0.000435754402861572;
+                    probability = sex ? 0.00140203198030386 : 0.000435754402861572;
                 } else if (age < 70) {
-                    probability =
-                        sex ? 0.00731842791450156 : 0.00323823204036677;
+                    probability = sex ? 0.00731842791450156 : 0.00323823204036677;
                 } else if (age < 80) {
-                    probability =
-                        sex ? 0.0127014602887186 : 0.00719076352220422;
+                    probability = sex ? 0.0127014602887186 : 0.00719076352220422;
                 } else {
                     probability = sex ? 0.0384859186350238 : 0.0355438319317952;
                 }
@@ -123,9 +124,7 @@ public:
                     // printf("Agent %d died of sudden death, %d, timestamp
                     // %d\n", agentID, (int)agentStat.worstState,timestamp);
                     if (agentID == tracked) {
-                        printf("Agent %d died of sudden death, timestamp %d\n",
-                            tracked,
-                            timestamp);
+                        printf("Agent %d died of sudden death, timestamp %d\n", tracked, timestamp);
                     }
                 }
             });
@@ -168,8 +167,8 @@ public:
         auto result = locs->refreshAndGetStatistic();
         for (auto val : result) { std::cout << val << "\t"; }
         auto tests = TestingPolicy<Simulation>::getStats();
-        std::cout << thrust::get<0>(tests) << "\t" << thrust::get<1>(tests)
-                  << "\t" << thrust::get<2>(tests) << "\t";
+        std::cout << thrust::get<0>(tests) << "\t" << thrust::get<1>(tests) << "\t"
+                  << thrust::get<2>(tests) << "\t";
         std::cout << '\n';
     }
 
@@ -185,7 +184,8 @@ public:
         enableSuddenDeath = result["suddenDeath"].as<int>();
         DataProvider data{ result };
         try {
-            std::string header = PPState_t::initTransitionMatrix(data.acquireProgressionMatrices(), data.acquireProgressionConfig());
+            std::string header = PPState_t::initTransitionMatrix(
+                data.acquireProgressionMatrices(), data.acquireProgressionConfig());
             agents->initAgentMeta(data.acquireParameters());
             locs->initLocationTypes(data.acquireLocationTypes());
             auto tmp = locs->initLocations(data.acquireLocations());

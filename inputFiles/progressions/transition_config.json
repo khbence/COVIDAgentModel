@@ -34,7 +34,7 @@
                 0,
                 4
             ],
-            "preCond": 0
+            "preCond": "0"
         },
         {
             "fileName": "transition_illness1_1.json",
@@ -42,7 +42,7 @@
                 0,
                 4
             ],
-            "preCond": 1
+            "preCond": "1"
         },
         {
             "fileName": "transition_illness2_1.json",
@@ -50,7 +50,7 @@
                 0,
                 4
             ],
-            "preCond": 2
+            "preCond": "2"
         },
         {
             "fileName": "transition_illness3_1.json",
@@ -58,7 +58,7 @@
                 0,
                 4
             ],
-            "preCond": 3
+            "preCond": "3"
         },
         {
             "fileName": "transition_illness4_1.json",
@@ -66,7 +66,7 @@
                 0,
                 4
             ],
-            "preCond": 4
+            "preCond": "4"
         },
         {
             "fileName": "transition_illness0_2.json",
@@ -74,7 +74,7 @@
                 5,
                 14
             ],
-            "preCond": 0
+            "preCond": "0"
         },
         {
             "fileName": "transition_illness1_2.json",
@@ -82,7 +82,7 @@
                 5,
                 14
             ],
-            "preCond": 1
+            "preCond": "1"
         },
         {
             "fileName": "transition_illness2_2.json",
@@ -90,7 +90,7 @@
                 5,
                 14
             ],
-            "preCond": 2
+            "preCond": "2"
         },
         {
             "fileName": "transition_illness3_2.json",
@@ -98,7 +98,7 @@
                 5,
                 14
             ],
-            "preCond": 3
+            "preCond": "3"
         },
         {
             "fileName": "transition_illness4_2.json",
@@ -106,7 +106,7 @@
                 5,
                 14
             ],
-            "preCond": 4
+            "preCond": "4"
         },
         {
             "fileName": "transition_illness0_3.json",
@@ -114,7 +114,7 @@
                 15,
                 29
             ],
-            "preCond": 0
+            "preCond": "0"
         },
         {
             "fileName": "transition_illness1_3.json",
@@ -122,7 +122,7 @@
                 15,
                 29
             ],
-            "preCond": 1
+            "preCond": "1"
         },
         {
             "fileName": "transition_illness2_3.json",
@@ -130,7 +130,7 @@
                 15,
                 29
             ],
-            "preCond": 2
+            "preCond": "2"
         },
         {
             "fileName": "transition_illness3_3.json",
@@ -138,7 +138,7 @@
                 15,
                 29
             ],
-            "preCond": 3
+            "preCond": "3"
         },
         {
             "fileName": "transition_illness4_3.json",
@@ -146,7 +146,7 @@
                 15,
                 29
             ],
-            "preCond": 4
+            "preCond": "4"
         },
         {
             "fileName": "transition_illness0_4.json",
@@ -154,7 +154,7 @@
                 30,
                 59
             ],
-            "preCond": 0
+            "preCond": "0"
         },
         {
             "fileName": "transition_illness1_4.json",
@@ -162,7 +162,7 @@
                 30,
                 59
             ],
-            "preCond": 1
+            "preCond": "1"
         },
         {
             "fileName": "transition_illness2_4.json",
@@ -170,7 +170,7 @@
                 30,
                 59
             ],
-            "preCond": 2
+            "preCond": "2"
         },
         {
             "fileName": "transition_illness3_4.json",
@@ -178,7 +178,7 @@
                 30,
                 59
             ],
-            "preCond": 3
+            "preCond": "3"
         },
         {
             "fileName": "transition_illness4_4.json",
@@ -186,7 +186,7 @@
                 30,
                 59
             ],
-            "preCond": 4
+            "preCond": "4"
         },
         {
             "fileName": "transition_illness0_5.json",
@@ -194,7 +194,7 @@
                 60,
                 69
             ],
-            "preCond": 0
+            "preCond": "0"
         },
         {
             "fileName": "transition_illness1_5.json",
@@ -202,7 +202,7 @@
                 60,
                 69
             ],
-            "preCond": 1
+            "preCond": "1"
         },
         {
             "fileName": "transition_illness2_5.json",
@@ -210,7 +210,7 @@
                 60,
                 69
             ],
-            "preCond": 2
+            "preCond": "2"
         },
         {
             "fileName": "transition_illness3_5.json",
@@ -218,7 +218,7 @@
                 60,
                 69
             ],
-            "preCond": 3
+            "preCond": "3"
         },
         {
             "fileName": "transition_illness4_5.json",
@@ -226,7 +226,7 @@
                 60,
                 69
             ],
-            "preCond": 4
+            "preCond": "4"
         },
         {
             "fileName": "transition_illness0_6.json",
@@ -234,7 +234,7 @@
                 70,
                 79
             ],
-            "preCond": 0
+            "preCond": "0"
         },
         {
             "fileName": "transition_illness1_6.json",
@@ -242,7 +242,7 @@
                 70,
                 79
             ],
-            "preCond": 1
+            "preCond": "1"
         },
         {
             "fileName": "transition_illness2_6.json",
@@ -250,7 +250,7 @@
                 70,
                 79
             ],
-            "preCond": 2
+            "preCond": "2"
         },
         {
             "fileName": "transition_illness3_6.json",
@@ -258,7 +258,7 @@
                 70,
                 79
             ],
-            "preCond": 3
+            "preCond": "3"
         },
         {
             "fileName": "transition_illness4_6.json",
@@ -266,7 +266,7 @@
                 70,
                 79
             ],
-            "preCond": 4
+            "preCond": "4"
         },
         {
             "fileName": "transition_illness0_7.json",
@@ -274,7 +274,7 @@
                 80,
                 -1
             ],
-            "preCond": 0
+            "preCond": "0"
         },
         {
             "fileName": "transition_illness1_7.json",
@@ -282,7 +282,7 @@
                 80,
                 -1
             ],
-            "preCond": 1
+            "preCond": "1"
         },
         {
             "fileName": "transition_illness2_7.json",
@@ -290,7 +290,7 @@
                 80,
                 -1
             ],
-            "preCond": 2
+            "preCond": "2"
         },
         {
             "fileName": "transition_illness3_7.json",
@@ -298,7 +298,7 @@
                 80,
                 -1
             ],
-            "preCond": 3
+            "preCond": "3"
         },
         {
             "fileName": "transition_illness4_7.json",
@@ -306,7 +306,7 @@
                 80,
                 -1
             ],
-            "preCond": 4
+            "preCond": "4"
         }
     ],
     "states": [
