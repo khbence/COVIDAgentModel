@@ -53,6 +53,8 @@ std::string DynamicPPState::initTransitionMatrix(
     detail::DynamicPPState::h_numberOfStates = config.stateInformation.stateNames.size();
     detail::DynamicPPState::h_infectious =
         decltype(detail::DynamicPPState::h_infectious)(detail::DynamicPPState::h_numberOfStates);
+    detail::DynamicPPState::h_infected =
+        decltype(detail::DynamicPPState::h_infected)(detail::DynamicPPState::h_numberOfStates);
     detail::DynamicPPState::h_WB =
         decltype(detail::DynamicPPState::h_WB)(detail::DynamicPPState::h_numberOfStates);
     detail::DynamicPPState::h_susceptible = decltype(detail::DynamicPPState::h_susceptible)(
@@ -72,6 +74,19 @@ std::string DynamicPPState::initTransitionMatrix(
         detail::DynamicPPState::h_WB[idx] = states::parseWBState(e.WB);
         detail::DynamicPPState::h_infectious[idx] = e.infectious;
     }
+
+    for (const auto& e : config.stateInformation.infectedStates) {
+        auto idx = detail::DynamicPPState::nameIndexMap.at(e);
+        detail::DynamicPPState::h_infected[idx] = true;
+    }
+
+    for (const auto& e : config.stateInformation.susceptibleStates) {
+        auto idx = detail::DynamicPPState::nameIndexMap.at(e);
+        detail::DynamicPPState::h_susceptible[idx] = true;
+    }
+
+    detail::DynamicPPState::h_firstInfectedState =
+        detail::DynamicPPState::nameIndexMap.at(config.stateInformation.firstInfectedState);
 
     for (unsigned i = 0; i < inputData.size(); ++i) {
         auto it = std::find_if(inputData.begin(), inputData.end(), [i](const auto& e) {
@@ -128,6 +143,18 @@ std::string DynamicPPState::initTransitionMatrix(
         detail::DynamicPPState::h_numberOfStates * sizeof(bool),
         cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::susceptible, &susTMP, sizeof(bool*));
+
+    bool* tmpInfected = new bool[detail::DynamicPPState::h_infected.size()];
+    std::copy(detail::DynamicPPState::h_infected.begin(),
+        detail::DynamicPPState::h_infected.end(),
+        tmpInfected);
+    bool* infTMP;
+    cudaMalloc((void**)&infTMP, detail::DynamicPPState::h_infected * sizeof(bool));
+    cudaMemcpy(infTMP,
+        tmpInfected,
+        detail::DynamicPPState::h_infected * sizeof(bool),
+        cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(detail::DynamicPPState::infected, &infTMP, sizeof(bool*));
 
     cudaMemcpyToSymbol(detail::DynamicPPState::firstInfectedState,
         &detail::DynamicPPState::h_firstInfectedState,
