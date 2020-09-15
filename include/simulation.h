@@ -266,7 +266,7 @@ public:
                 data.getAgentTypeLocTypes(),
                 data.acquireProgressionMatrices());
             RandomGenerator::resize(agents->PPValues.size());
-            std::cout << header << "\tH\tT\tP1\tP2" << '\n';
+            std::cout << header << "H\tT\tP1\tP2" << '\n';
         } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;
