@@ -26,8 +26,9 @@ cxxopts::Options defineProgramParameters() {
         "Number of dummy locations",
         cxxopts::value<int>()->default_value("-1"))("P,progression",
         "Path to the config file for the progression matrices.",
-        cxxopts::value<std::string>()->default_value(
-            ".." + separator() + "inputFiles" + separator() + "progression.json"))("a,agents",
+        cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator()
+                                                     + "progressions" + separator()
+                                                     + "transition_config.json"))("a,agents",
         "Agents file, for all human being in the experiment.",
         cxxopts::value<std::string>()->default_value(
             ".." + separator() + "inputFiles" + separator() + "agents.json"))("A,agentTypes",
