@@ -50,6 +50,31 @@ public:
     thrust::device_vector<unsigned> possibleLocations;
     thrust::device_vector<unsigned> possibleTypes;
 
+    thrust::tuple<unsigned,unsigned,unsigned> getQuarantineStats(unsigned timestamp) {
+        thrust::tuple<unsigned,unsigned,unsigned> res =
+            thrust::transform_reduce(thrust::make_zip_iterator(thrust::make_tuple(agentStats.begin(), PPValues.begin())),
+                                 thrust::make_zip_iterator(thrust::make_tuple(agentStats.end(), PPValues.end())),
+                                 [timestamp]HD(thrust::tuple<AgentStats,PPState> tup) {
+                                     AgentStats &stat = thrust::get<0>(tup);
+                                     PPState &ppstate = thrust::get<1>(tup);
+                                     unsigned isQuarantined = unsigned(stat.quarantinedTimestamp <= timestamp && stat.quarantinedUntilTimestamp > timestamp);
+                                     //Is currently quarantined
+                                     //If quarantined, is infected?
+                                     //Not quarantined, but infected
+                                     return thrust::make_tuple(
+                                        isQuarantined, 
+                                        unsigned(isQuarantined && ppstate.isInfected()),
+                                        unsigned(!isQuarantined && ppstate.isInfected()));
+                                 },
+                                 thrust::make_tuple(unsigned(0),unsigned(0),unsigned(0)),
+                                 []HD(thrust::tuple<unsigned,unsigned,unsigned> a, thrust::tuple<unsigned,unsigned,unsigned> b) {
+                                     return thrust::make_tuple(thrust::get<0>(a)+thrust::get<0>(b),
+                                                               thrust::get<1>(a)+thrust::get<1>(b),
+                                                               thrust::get<2>(a)+thrust::get<2>(b));
+                                 });
+        return res;
+    }
+
     using PPState_t = PPState;
 
     friend class Agent<AgentList>;

@@ -234,6 +234,10 @@ public:
         auto tests = TestingPolicy<Simulation>::getStats();
         std::cout << thrust::get<0>(tests) << "\t" << thrust::get<1>(tests) << "\t"
                   << thrust::get<2>(tests) << "\t";
+        //Quarantine stats
+        auto quarant = agents->getQuarantineStats(timestamp);
+        std::cout << thrust::get<0>(quarant) << "\t" << thrust::get<1>(quarant) << "\t"
+                  << thrust::get<2>(quarant) << "\t";
         std::cout << '\n';
     }
 
@@ -266,7 +270,7 @@ public:
                 data.getAgentTypeLocTypes(),
                 data.acquireProgressionMatrices());
             RandomGenerator::resize(agents->PPValues.size());
-            std::cout << header << "H\tT\tP1\tP2" << '\n';
+            std::cout << header << "H\tT\tP1\tP2\tQ\tQT\tNQ" << '\n';
         } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;
