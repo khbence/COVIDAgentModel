@@ -45,6 +45,8 @@ protected:
         dumpToFile = result["dumpLocationInfections"].as<unsigned>();
     }
 
+public:
+
     template <typename PPState_t>
     void dumpToFileStep1(thrust::device_vector<unsigned>& locationListOffsets,
                          thrust::device_vector<PPState_t>& ppstates,
@@ -109,7 +111,7 @@ protected:
         }
     }
 
-public:
+
     void infectionsAtLocations(Timehandler& simTime, unsigned timeStep) {
         PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);

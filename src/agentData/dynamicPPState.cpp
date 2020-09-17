@@ -154,11 +154,11 @@ std::string DynamicPPState::initTransitionMatrix(
     std::copy(detail::DynamicPPState::h_infected.begin(),
         detail::DynamicPPState::h_infected.end(),
         tmpInfected);
-    bool* infTMP;
-    cudaMalloc((void**)&infTMP, detail::DynamicPPState::h_infected * sizeof(bool));
+
+    cudaMalloc((void**)&infTMP, detail::DynamicPPState::h_infected.size() * sizeof(bool));
     cudaMemcpy(infTMP,
         tmpInfected,
-        detail::DynamicPPState::h_infected * sizeof(bool),
+        detail::DynamicPPState::h_infected.size() * sizeof(bool),
         cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::infected, &infTMP, sizeof(bool*));
 
