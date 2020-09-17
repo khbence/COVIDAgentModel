@@ -27,7 +27,7 @@ __global__ void reduce_by_location_kernel(unsigned* locationListOffsetsPtr,
     }
 }
 template<typename UnaryFunction, typename Count_t, typename PPState_t>
-__global__ void reduce_by_location_kernel_atomics(unsigned* agentLocationsPtr,
+__global__ void reduce_by_location_kernel_atomics(const unsigned* agentLocationsPtr,
     Count_t* fullInfectedCountsPtr,
     PPState_t* PPValuesPtr,
     unsigned numAgents,
@@ -44,13 +44,13 @@ void reduce_by_location(thrust::device_vector<unsigned>& locationListOffsets,
     thrust::device_vector<unsigned>& locationAgentList,
     thrust::device_vector<Count_t>& fullInfectedCounts,
     thrust::device_vector<PPState_t>& PPValues,
-    thrust::device_vector<unsigned>& agentLocations,
+    const thrust::device_vector<unsigned>& agentLocations,
     UnaryFunction lam) {
     unsigned numLocations = locationListOffsets.size() - 1;
     unsigned* locationListOffsetsPtr = thrust::raw_pointer_cast(locationListOffsets.data());
     Count_t* fullInfectedCountsPtr = thrust::raw_pointer_cast(fullInfectedCounts.data());
     PPState_t* PPValuesPtr = thrust::raw_pointer_cast(PPValues.data());
-    unsigned* agentLocationsPtr = thrust::raw_pointer_cast(agentLocations.data());
+    const unsigned* agentLocationsPtr = thrust::raw_pointer_cast(agentLocations.data());
     unsigned* locationAgentListPtr = thrust::raw_pointer_cast(locationAgentList.data());
     unsigned numAgents = PPValues.size();
 
@@ -77,6 +77,7 @@ void reduce_by_location(thrust::device_vector<unsigned>& locationListOffsets,
         reduce_by_location_kernel_atomics<<<(numAgents - 1) / 256 + 1, 256>>>(
             agentLocationsPtr, fullInfectedCountsPtr, PPValuesPtr, numAgents, lam);
 #else
+#error "util.cpp's locationListOffsets computation CUDA pathway relies on atomics version, as this one needs locationListOffsets to already exist"
         reduce_by_location_kernel<<<(numLocations - 1) / 256 + 1, 256>>>(
             locationListOffsetsPtr, locationAgentListPtr, fullInfectedCountsPtr, PPValuesPtr, numLocations, lam);
 #endif

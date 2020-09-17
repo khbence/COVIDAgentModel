@@ -62,16 +62,15 @@ void Util::updatePerLocationAgentLists(const thrust::device_vector<unsigned>& lo
     thrust::stable_sort_by_key(
         locationIdsOfAgents.begin(), locationIdsOfAgents.end(), locationAgentList.begin());
     END_PROFILING("sort")
-// #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-//     //Count number of people at any given location
-//     thrust::fill(locationListOffsets.begin(), locationListOffsets.end(), 0);
-//     reduce_by_location(locationListOffsets,
-//                        locationAgentList,
-//                        locationListOffsets, locationAgentList /* will be unused */,
-//                        locationOfAgents, [] HD (unsigned &a) {return unsigned(1);}); //This locationOfAgents maybe should be locationIdsOfAgents??
-
-//     thrust::exclusive_scan(locationListOffsets.begin(), locationListOffsets.end(), locationListOffsets.begin());
-// #else
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+    //Count number of people at any given location
+    thrust::fill(locationListOffsets.begin(), locationListOffsets.end(), 0);
+    reduce_by_location(locationListOffsets,
+                       locationAgentList,
+                       locationListOffsets, locationAgentList /* will be unused */,
+                       locationOfAgents, [] HD (const unsigned &a) -> unsigned {return unsigned(1);}); //This locationOfAgents maybe should be locationIdsOfAgents??
+    thrust::exclusive_scan(locationListOffsets.begin(), locationListOffsets.end(), locationListOffsets.begin());
+#else
     // Now extract offsets into locationAgentList where locations begin
     unsigned* locationIdsOfAgentsPtr = thrust::raw_pointer_cast(locationIdsOfAgents.data());
     unsigned* locationListOffsetsPtr = thrust::raw_pointer_cast(locationListOffsets.data());
@@ -79,6 +78,6 @@ void Util::updatePerLocationAgentLists(const thrust::device_vector<unsigned>& lo
         locationListOffsetsPtr,
         locationIdsOfAgents.size(),
         locationListOffsets.size() - 1);
-//#endif
+#endif
     
 };
