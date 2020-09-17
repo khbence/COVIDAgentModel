@@ -160,7 +160,7 @@ template<typename PPState, typename LocationType>
             
         } else if (testingProbability>0.0) {
             if (a.tracked == i) 
-                printf("\t Agent %d was not tested\n");
+                printf("\t Agent %d was not tested\n", i);
         }
 
         
