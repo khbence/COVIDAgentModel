@@ -15,7 +15,11 @@ __global__ void extractOffsets_kernel(unsigned* locOfAgents,
                 locationListOffsets[j] = i;
             }
         }
-        if (i == length - 1) locationListOffsets[nLocs] = length;
+        if (i == length - 1) {
+            for (unsigned j = locOfAgents[length - 1] + 1; j <= nLocs; j++) {
+                locationListOffsets[j] = length;
+            }
+        }
     }
 }
 #endif
@@ -33,6 +37,9 @@ void extractOffsets(unsigned* locOfAgents,
             }
         }
     }
+    for (unsigned j = locOfAgents[length - 1] + 1; j <= nLocs; j++) {
+        locationListOffsets[j] = length;
+    }
     locationListOffsets[nLocs] = length;
 #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     extractOffsets_kernel<<<(length - 1) / 256 + 1, 256>>>(
@@ -45,6 +52,7 @@ void Util::updatePerLocationAgentLists(const thrust::device_vector<unsigned>& lo
     thrust::device_vector<unsigned>& locationAgentList,
     thrust::device_vector<unsigned>& locationListOffsets) {
     PROFILE_FUNCTION();
+
     // Make a copy of locationOfAgents
     thrust::copy(locationOfAgents.begin(), locationOfAgents.end(), locationIdsOfAgents.begin());
     thrust::sequence(locationAgentList.begin(), locationAgentList.end());
@@ -54,6 +62,16 @@ void Util::updatePerLocationAgentLists(const thrust::device_vector<unsigned>& lo
     thrust::stable_sort_by_key(
         locationIdsOfAgents.begin(), locationIdsOfAgents.end(), locationAgentList.begin());
     END_PROFILING("sort")
+// #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+//     //Count number of people at any given location
+//     thrust::fill(locationListOffsets.begin(), locationListOffsets.end(), 0);
+//     reduce_by_location(locationListOffsets,
+//                        locationAgentList,
+//                        locationListOffsets, locationAgentList /* will be unused */,
+//                        locationOfAgents, [] HD (unsigned &a) {return unsigned(1);}); //This locationOfAgents maybe should be locationIdsOfAgents??
+
+//     thrust::exclusive_scan(locationListOffsets.begin(), locationListOffsets.end(), locationListOffsets.begin());
+// #else
     // Now extract offsets into locationAgentList where locations begin
     unsigned* locationIdsOfAgentsPtr = thrust::raw_pointer_cast(locationIdsOfAgents.data());
     unsigned* locationListOffsetsPtr = thrust::raw_pointer_cast(locationListOffsets.data());
@@ -61,4 +79,6 @@ void Util::updatePerLocationAgentLists(const thrust::device_vector<unsigned>& lo
         locationListOffsetsPtr,
         locationIdsOfAgents.size(),
         locationListOffsets.size() - 1);
+//#endif
+    
 };

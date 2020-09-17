@@ -117,9 +117,12 @@ public:
         const std::map<unsigned, unsigned>& typeMap,
         const std::map<unsigned, std::vector<unsigned>>& agentTypeLocType,
         const std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
-            progressionMatrices) {
+            progressionMatrices,
+        const parser::LocationTypes& locationTypes) {
         auto n = inputData.people.size();
         reserve(n);
+
+        unsigned homeType = locationTypes.home;
 
         thrust::host_vector<PPState> PPValues_h;
         thrust::host_vector<AgentStats> agentStats_h;
@@ -166,8 +169,7 @@ public:
             // I don't know if we should put any data about it in the input
             diagnosed_h.push_back(false);
             quarantined_h.push_back(false);
-            // Where to put them first?
-            location_h.push_back(0);
+            
             agents_h.push_back(Agent<AgentList>{ static_cast<unsigned>(agents.size()) });
 
             // agentType
@@ -214,6 +216,14 @@ public:
             possibleLocations_h.insert(possibleLocations_h.end(), locs.begin(), locs.end());
             possibleTypes_h.insert(possibleTypes_h.end(), ts.begin(), ts.end());
             locationOffset_h.push_back(locationOffset_h.back() + locs.size());
+
+            // First, put them in their homes if there is any
+            auto it2 = std::find(ts.begin(), ts.end(), homeType);
+            if (it2 == ts.end())
+                location_h.push_back(0);
+            else
+                location_h.push_back(locs[std::distance(ts.begin(), it2)]);
+
         }
 
         PPValues = PPValues_h;

@@ -268,7 +268,8 @@ public:
                 locationMapping,
                 agentTypeMapping,
                 data.getAgentTypeLocTypes(),
-                data.acquireProgressionMatrices());
+                data.acquireProgressionMatrices(),
+                data.acquireLocationTypes());
             RandomGenerator::resize(agents->PPValues.size());
             std::cout << header << "H\tT\tP1\tP2\tQ\tQT\tNQ" << '\n';
         } catch (const CustomErrors& e) {
