@@ -61,7 +61,8 @@ namespace DetailedTestingOps {
         if (a.agentStatsPtr[i].diagnosedTimestamp > a.timestamp - 24 * 60 / a.timeStep) {
             //Mark home
             unsigned home = RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-            a.locationFlagsPtr[home] = true;
+            if (home != std::numeric_limits<unsigned>::max())
+                a.locationFlagsPtr[home] = true;
             //Mark work
             unsigned work = RealMovementOps::findActualLocationForType(i, a.workType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             if (work != std::numeric_limits<unsigned>::max() &&
@@ -109,7 +110,9 @@ template<typename PPState, typename LocationType>
     
         //Check home
         unsigned home = RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-        bool homeFlag = a.locationFlagsPtr[home];
+        bool homeFlag = false;
+        if (home != std::numeric_limits<unsigned>::max())
+            homeFlag = a.locationFlagsPtr[home];
         //Check work
         unsigned work = RealMovementOps::findActualLocationForType(i, a.workType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
         bool workFlag = false;
