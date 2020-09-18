@@ -23,7 +23,7 @@ public:
 namespace DetailedTestingOps {
         template<typename PPState, typename LocationType>
     struct TestingArguments {
-        TestingArguments() {}
+        HD TestingArguments() {}
         PPState *agentStatesPtr;
         AgentStats* agentStatsPtr;
         unsigned long* locationOffsetPtr;
@@ -91,7 +91,7 @@ namespace DetailedTestingOps {
     }
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     template<typename PPState, typename LocationType>
-    __global__ void flagLocationsDriver(TestingArguments<PPState, LocationType> &a, unsigned numberOfAgents ) {
+    __global__ void flagLocationsDriver(TestingArguments<PPState, LocationType> a, unsigned numberOfAgents ) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
         if (i < numberOfAgents) { DetailedTestingOps::flagLocations(i, a); }
     }
@@ -170,7 +170,7 @@ template<typename PPState, typename LocationType>
     }
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     template<typename PPState, typename LocationType>
-    __global__ void doTestingDriver(TestingArguments<PPState, LocationType> &a, unsigned numberOfAgents ) {
+    __global__ void doTestingDriver(TestingArguments<PPState, LocationType> a, unsigned numberOfAgents ) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
         if (i < numberOfAgents) { DetailedTestingOps::doTesting(i, a); }
     }
