@@ -24,6 +24,7 @@ class BasicAgentMeta {
     float scalingSymptoms = 1.0;
     float scalingTransmission = 1.0;
     uint8_t age;
+    uint8_t preCondIdx;
     bool sex;
 
     static std::array<std::pair<char, float>, 2> sexScaling;
@@ -40,4 +41,5 @@ public:
 
     [[nodiscard]] uint8_t HD getAge() const;
     [[nodiscard]] bool HD getSex() const;
+    [[nodiscard]] uint8_t HD getPrecondIdx() const;
 };

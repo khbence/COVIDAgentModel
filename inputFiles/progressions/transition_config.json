@@ -7,9 +7,9 @@
             "I2",
             "I3",
             "I4",
-            "I5_hospital",
-            "I6_hospital",
-            "R_hospital",
+            "I5_h",
+            "I6_h",
+            "R_h",
             "R",
             "D1",
             "D2"
@@ -25,8 +25,8 @@
             "I2",
             "I3",
             "I4",
-            "I5_hospital",
-            "I6_hospital"
+            "I5_h",
+            "I6_h"
         ]
     },
     "transitionMatrices": [
@@ -343,17 +343,17 @@
             "infectious": 1
         },
         {
-            "stateName": "I5_hospital",
+            "stateName": "I5_h",
             "WB": "S",
             "infectious": 0.5
         },
         {
-            "stateName": "I6_hospital",
+            "stateName": "I6_h",
             "WB": "S",
             "infectious": 0.5
         },
         {
-            "stateName": "R_hospital",
+            "stateName": "R_h",
             "WB": "S",
             "infectious": 0
         },

@@ -71,6 +71,7 @@ BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, std::string preConditi
     // modify based on pre-condition
     auto itMap = preConditionScaling.find(preCondition);
     if (itMap == preConditionScaling.end()) { throw IOAgents::NotDefinedCondition(preCondition); }
+    preCondIdx = std::stoi(preCondition);
     scalingSymptoms *= itMap->second;
 }
 
@@ -81,3 +82,5 @@ float HD BasicAgentMeta::getScalingTransmission() const { return scalingTransmis
 uint8_t HD BasicAgentMeta::getAge() const { return age; }
 
 bool HD BasicAgentMeta::getSex() const { return sex; }
+
+uint8_t HD BasicAgentMeta::getPrecondIdx() const { return preCondIdx; }
