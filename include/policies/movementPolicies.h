@@ -6,6 +6,7 @@
 #include "operators.h"
 #include "locationTypesFormat.h"
 
+#define MIN(a,b) (a)<(b)?(a):(b)
 template<typename SimulationType>
 class NoMovement {
 public:
@@ -164,6 +165,17 @@ namespace RealMovementOps {
         }
     }
 
+        template<typename PPState, typename LocationType>
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+    __device__
+#endif
+        void
+        checkLarger(unsigned i, MovementArguments<PPState, LocationType>& a) {
+            if (a.stepsUntilMovePtr[i] >  a.simTime.getStepsUntilMidnight(a.timeStep)) {
+                printf("WARN LARGER %d > %d\n", a.stepsUntilMovePtr[i],  a.simTime.getStepsUntilMidnight(a.timeStep));
+            }
+        }
+
     template<typename PPState, typename LocationType>
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     __device__
@@ -188,7 +200,8 @@ namespace RealMovementOps {
             a.agentStatsPtr[i].hospitalizedUntilTimestamp > a.timestamp &&
             wBState != states::WBStates::S && wBState != states::WBStates::D) {
 
-            a.stepsUntilMovePtr[i] = a.agentStatsPtr[i].hospitalizedUntilTimestamp - a.timestamp - 1;
+            a.stepsUntilMovePtr[i] = MIN(a.agentStatsPtr[i].hospitalizedUntilTimestamp - a.timestamp - 1,
+                                         a.simTime.getStepsUntilMidnight(a.timeStep));
             a.agentLocationsPtr[i] =
                 RealMovementOps::findActualLocationForType(i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
             if (i == a.tracked) {
@@ -204,6 +217,7 @@ namespace RealMovementOps {
                 a.agentStatsPtr[i].hospitalizedUntilTimestamp
                 );
             }
+            checkLarger(i,a);
             return;
         }
 
@@ -236,6 +250,7 @@ namespace RealMovementOps {
 
                 RealMovementOps::quarantineAgent(i, a, a.timestamp + 2 * 7 * 24 * 60 / a.timeStep);
             }
+            checkLarger(i,a);
             return;
         }
 
@@ -263,7 +278,8 @@ namespace RealMovementOps {
                     i, a, a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]);
             }
             a.stepsUntilMovePtr[i] =
-                a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] - a.timestamp - 1;
+                MIN(a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] - a.timestamp - 1,
+                    a.simTime.getStepsUntilMidnight(a.timeStep));
 
             if (i == a.tracked) {
                 printf(
@@ -293,6 +309,7 @@ namespace RealMovementOps {
                 // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]];
                 // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = until;
             }
+            checkLarger(i,a);
             return;
         }
 
@@ -352,6 +369,7 @@ namespace RealMovementOps {
                     a.agentStatsPtr[i].quarantinedUntilTimestamp,
                     a.timestamp);
             }
+            checkLarger(i,a);
             return;
         }
 
@@ -413,6 +431,7 @@ namespace RealMovementOps {
                 a.possibleTypesPtr);
             a.agentLocationsPtr[i] = myHome;
             a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
+            checkLarger(i,a);
             if (i == a.tracked)
                 printf(
                     "\tCase 1- moving to locType %d location %d until midnight "
@@ -454,26 +473,34 @@ namespace RealMovementOps {
             a.agentLocationsPtr[i] = newLocation;
             if (basicDuration.getHours() > 24) {
                 a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
+                checkLarger(i,a);
             } else if (activeEventsEnd == -1) {
                 if ((a.simTime + basicDuration).isOverMidnight()) {
                     a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
+                    checkLarger(i,a);
                 } else {
                     // does not last till midnight, but no events afterwards -
                     // spend full duration there
                     a.stepsUntilMovePtr[i] = basicDuration.steps(a.timeStep);
+                    checkLarger(i,a);
                 }
             } else {
                 // If duration is less then the beginning of the next move
                 // window, then spend full duration here
-                if (a.simTime + basicDuration < a.eventsPtr[activeEventsEnd].start)
+                if (a.simTime + basicDuration < a.eventsPtr[activeEventsEnd].start) {
                     a.stepsUntilMovePtr[i] = basicDuration.steps(a.timeStep);
-                else {
+                    checkLarger(i,a);
+                } else if (a.simTime + basicDuration > a.eventsPtr[activeEventsEnd].end) {
+                    a.stepsUntilMovePtr[i] = basicDuration.steps(a.timeStep);
+                } else {
                     // Otherwise I need to move again randomly between the end
                     // of this duration and the end of next movement window
                     TimeDayDuration window =
                         a.eventsPtr[activeEventsEnd].end - (a.simTime + basicDuration);
-                    unsigned randExtra = RandomGenerator::randomUnsigned(window.steps(a.timeStep));
+                    unsigned st = window.steps(a.timeStep);
+                    unsigned randExtra = RandomGenerator::randomUnsigned(st);
                     a.stepsUntilMovePtr[i] = basicDuration.steps(a.timeStep) + randExtra;
+                    checkLarger(i,a);
                 }
             }
             if (i == a.tracked) {
@@ -563,7 +590,9 @@ namespace RealMovementOps {
                         a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]);
             }
             a.stepsUntilMovePtr[i] =
-                a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] - a.timestamp - 1;
+                MIN(a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] - a.timestamp - 1,
+                    a.simTime.getStepsUntilMidnight(a.timeStep));
+            checkLarger(i,a);
 
             if (i == a.tracked) {
                 printf(
@@ -593,6 +622,7 @@ namespace RealMovementOps {
                 // TODO: quarantine whole home??
                 // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = until;
             }
+            checkLarger(i,a);
             return;
         }
 
@@ -621,7 +651,7 @@ namespace RealMovementOps {
                 // quarantine anyway (if enabled)
             }
         }
-
+        checkLarger(i,a);
         a.stepsUntilMovePtr[i]--;
     }
 

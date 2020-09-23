@@ -59,6 +59,7 @@ public:
 #endif
 
     [[nodiscard]] static __host__ __device__ unsigned randomUnsigned(unsigned max) {
+        if (max == 0) return 0u;
         --max;
 #ifdef __CUDA_ARCH__
         return curand(&dstates[threadIdx.x + blockIdx.x * blockDim.x]) % (max + 1);
