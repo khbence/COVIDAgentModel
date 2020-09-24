@@ -171,9 +171,9 @@ namespace RealMovementOps {
 #endif
         void
         checkLarger(unsigned i, MovementArguments<PPState, LocationType>& a) {
-            if (a.stepsUntilMovePtr[i] >  a.simTime.getStepsUntilMidnight(a.timeStep)) {
+        /*    if (a.stepsUntilMovePtr[i] >  a.simTime.getStepsUntilMidnight(a.timeStep)) {
                 printf("WARN LARGER %d > %d\n", a.stepsUntilMovePtr[i],  a.simTime.getStepsUntilMidnight(a.timeStep));
-            }
+            }*/
         }
 
     template<typename PPState, typename LocationType>
