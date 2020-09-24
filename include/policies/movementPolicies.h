@@ -171,7 +171,7 @@ namespace RealMovementOps {
 #endif
         void
         checkLarger(unsigned i, MovementArguments<PPState, LocationType>& a) {
-        /*    if (a.stepsUntilMovePtr[i] >  a.simTime.getStepsUntilMidnight(a.timeStep)) {
+            /*      if (a.stepsUntilMovePtr[i] >  a.simTime.getStepsUntilMidnight(a.timeStep)) {
                 printf("WARN LARGER %d > %d\n", a.stepsUntilMovePtr[i],  a.simTime.getStepsUntilMidnight(a.timeStep));
             }*/
         }
@@ -473,16 +473,13 @@ namespace RealMovementOps {
             a.agentLocationsPtr[i] = newLocation;
             if (basicDuration.getHours() > 24) {
                 a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
-                checkLarger(i,a);
             } else if (activeEventsEnd == -1) {
                 if ((a.simTime + basicDuration).isOverMidnight()) {
                     a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
-                    checkLarger(i,a);
                 } else {
                     // does not last till midnight, but no events afterwards -
                     // spend full duration there
                     a.stepsUntilMovePtr[i] = basicDuration.steps(a.timeStep);
-                    checkLarger(i,a);
                 }
             } else {
                 // If duration is less then the beginning of the next move
@@ -491,7 +488,8 @@ namespace RealMovementOps {
                     a.stepsUntilMovePtr[i] = basicDuration.steps(a.timeStep);
                     checkLarger(i,a);
                 } else if (a.simTime + basicDuration > a.eventsPtr[activeEventsEnd].end) {
-                    a.stepsUntilMovePtr[i] = basicDuration.steps(a.timeStep);
+                    a.stepsUntilMovePtr[i] = (a.eventsPtr[activeEventsEnd].end - a.simTime).steps(a.timeStep) - 1;
+                    checkLarger(i,a);
                 } else {
                     // Otherwise I need to move again randomly between the end
                     // of this duration and the end of next movement window
