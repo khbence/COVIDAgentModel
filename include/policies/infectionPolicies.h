@@ -23,11 +23,11 @@ private:
 
 public:
     static void addProgramParameters(cxxopts::Options& options) {
-        options.add_options()("m,Imax", "Infection: [0 1] :max value ", cxxopts::value<double>()->default_value("1.0"))("v,Iasymmetry",
+        options.add_options()("m,Imax", "Infection: [0 1] :max value ", cxxopts::value<double>()->default_value("0.46333"))("v,Iasymmetry",
             "Infection: 1< :longer small phase [0 1] :longer high phase",
             cxxopts::value<double>()->default_value("1.0"))("H,Ihorizontal",
             "sigmoid: horizotal move of inflexcion point; <-1 or >1 :exponential like",
-            cxxopts::value<double>()->default_value("0.0"))("s,Ishape", "shape: bigger, more steep", cxxopts::value<double>()->default_value("5.0"))(
+            cxxopts::value<double>()->default_value("-0.43751"))("s,Ishape", "shape: bigger, more steep", cxxopts::value<double>()->default_value("31.85316"))(
             "dumpLocationInfections", "Dump per-location statistics every N timestep ", cxxopts::value<unsigned>()->default_value("0"));
     }
 
