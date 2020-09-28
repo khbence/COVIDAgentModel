@@ -1,7 +1,7 @@
 #include "basicLengthAbstract.h"
 
 BasicLengthAbstract::LengthOfState::LengthOfState(int avgLength_p, int maxLength_p)
-    : avgLength(avgLength_p), maxLength(maxLength_p), p(1.0 / static_cast<double>(avgLength_p)) {
+    : avgLength(avgLength_p), maxLength(maxLength_p), p(1.0 / static_cast<double>(avgLength_p + 1)) {
     if (maxLength == -1) { maxLength = std::numeric_limits<decltype(maxLength)>::max(); }
 }
 
