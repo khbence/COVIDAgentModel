@@ -222,6 +222,7 @@ bool HD DynamicPPState::update(float scalingSymptons,
         state = thrust::get<0>(tmp);
         updateMeta();
         daysBeforeNextState = thrust::get<1>(tmp);
+
         if (thrust::get<2>(tmp)) {// was a bad progression
             stats.worstState = state;
             stats.worstStateTimestamp = simTime;
@@ -236,7 +237,7 @@ bool HD DynamicPPState::update(float scalingSymptons,
                     this->getWBState(),
                     daysBeforeNextState);
             }
-        } else {// if (oldWBState != states::WBStates::W) this will record any
+        } else if (oldState != state) {// if (oldWBState != states::WBStates::W) this will record any
                 // good progression!
             stats.worstStateEndTimestamp = simTime;
             if (agentID == tracked) {

@@ -49,6 +49,7 @@ namespace DetailedTestingOps {
         double testingSchool;
         double testingRandomHospital;
         unsigned testingDelay;
+        unsigned quarantineLength;
     };
 
     template<typename PPState, typename LocationType>
@@ -68,7 +69,7 @@ namespace DetailedTestingOps {
             if (work != std::numeric_limits<unsigned>::max() &&
                 (a.locationQuarantineUntilPtr[work] == 0 || //Should test if it was not quarantined, OR
                     (a.locationQuarantineUntilPtr[work] != 0 && //It has been quarantined - either in last 24 hours, OR it's already over
-                     (a.locationQuarantineUntilPtr[work] - 2 * 7 * 24 * 60 / a.timeStep >= a.timestamp - 24 * 60/a.timeStep ||
+                     (a.locationQuarantineUntilPtr[work] - a.quarantineLength * 24 * 60 / a.timeStep >= a.timestamp - 24 * 60/a.timeStep ||
                       a.locationQuarantineUntilPtr[work] < a.timestamp))))
                 a.locationFlagsPtr[work] = true;
             //Mark school
@@ -76,7 +77,7 @@ namespace DetailedTestingOps {
             if (school != std::numeric_limits<unsigned>::max() &&
                 (a.locationQuarantineUntilPtr[school] == 0 || //Should test if it was not quarantined, OR
                     (a.locationQuarantineUntilPtr[school] != 0 && //It has been quarantined - either in last 24 hours, OR it's already over
-                     (a.locationQuarantineUntilPtr[school] - 2 * 7 * 24 * 60 / a.timeStep >= a.timestamp - 24 * 60/a.timeStep ||
+                     (a.locationQuarantineUntilPtr[school] - a.quarantineLength * 24 * 60 / a.timeStep >= a.timestamp - 24 * 60/a.timeStep ||
                       a.locationQuarantineUntilPtr[school] < a.timestamp))))
                 a.locationFlagsPtr[school] = true;
 
@@ -185,7 +186,7 @@ class DetailedTesting {
     unsigned hospital;
     unsigned doctor;
     unsigned tracked;
-    unsigned quarantinePolicy;
+    unsigned quarantineLength;
     unsigned school;
     unsigned work;
     thrust::tuple<unsigned, unsigned, unsigned> stats;
@@ -234,6 +235,9 @@ public:
         if (params.size()>3) testingSchool = params[3];
         if (params.size()>4) testingRandomHospital = params[4];
         //printf("testing probabilities: %g %g %g %g %g\n", testingRandom, testingHome, testingWork, testingSchool, testingRandomHospital);
+        try {
+            quarantineLength = result["quarantineLength"].as<unsigned>();
+        } catch (std::exception& e) { quarantineLength = 14; }
     }
     auto getStats() {return stats;}
 
@@ -281,6 +285,7 @@ public:
         a.testingSchool = testingSchool;
         a.testingRandomHospital = testingRandomHospital;
         a.testingDelay = testingDelay;
+        a.quarantineLength = quarantineLength;
 
         //agent data
         thrust::device_vector<AgentStats>& agentStats = realThis->agents->agentStats;

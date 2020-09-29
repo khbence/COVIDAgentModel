@@ -104,6 +104,7 @@ namespace RealMovementOps {
         unsigned* locationCapacitiesPtr;
         unsigned* locationQuarantineUntilPtr;
         unsigned quarantinePolicy;
+        unsigned quarantineLength;
         Days day;
         unsigned hospitalType;
         unsigned homeType;
@@ -248,7 +249,7 @@ namespace RealMovementOps {
                                                             // being counted as random test in
                                                             // TestingPolicy
 
-                RealMovementOps::quarantineAgent(i, a, a.timestamp + 2 * 7 * 24 * 60 / a.timeStep);
+                RealMovementOps::quarantineAgent(i, a, a.timestamp + a.quarantineLength * 24 * 60 / a.timeStep);
             }
             checkLarger(i,a);
             return;
@@ -318,7 +319,7 @@ namespace RealMovementOps {
                 && (a.diagnosedPtr[i]
                     || (a.agentStatsPtr[i].diagnosedTimestamp > 0
                         && (a.timestamp - a.agentStatsPtr[i].diagnosedTimestamp)
-                               < 2 * 7 * 24 * 60 / a.timeStep)))// stay home if diagnosed or
+                               < a.quarantineLength * 24 * 60 / a.timeStep)))// stay home if diagnosed or
                                                                 // quarantine has not
                                                                 // expired
             || (a.quarantinePolicy > 0 && a.quarantinedPtr[i]
@@ -347,7 +348,7 @@ namespace RealMovementOps {
                         a.agentStatsPtr[i].diagnosedTimestamp,
                         a.timestamp);
                 }
-                RealMovementOps::quarantineAgent(i, a, a.timestamp + 2 * 7 * 24 * 60 / a.timeStep);
+                RealMovementOps::quarantineAgent(i, a, a.timestamp + a.quarantineLength * 24 * 60 / a.timeStep);
             }
 
             // if less than 2 weeks since diagnosis/quarantine, stay where agent
@@ -642,7 +643,7 @@ namespace RealMovementOps {
 
                 RealMovementOps::quarantineAgent(i,
                     a,
-                    a.timestamp + 2 * 7 * 24 * 60 / a.timeStep);// TODO: quarantine period
+                    a.timestamp + a.quarantineLength * 24 * 60 / a.timeStep);// TODO: quarantine period
 
                 // We are not moving the agent - stay here for full duration,
                 // potentially infect others when moving next, he will go into
@@ -673,6 +674,7 @@ class RealMovement {
     unsigned doctor;
     unsigned tracked;
     unsigned quarantinePolicy;
+    unsigned quarantineLength;
     unsigned school;
     unsigned work;
 
@@ -686,11 +688,15 @@ public:
                 std::to_string(std::numeric_limits<unsigned>::max())))("quarantinePolicy",
             "Quarantine policy: 0 - None, 1 - Agent only, 2 - Agent and "
             "household, 3 - Agent, household, school/work",
-            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))));
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))))
+            ("quarantineLength",
+            "Length of quarantine in days",
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(14))));
     }
     void initializeArgs(const cxxopts::ParseResult& result) {
         tracked = result["trace"].as<unsigned>();
         quarantinePolicy = result["quarantinePolicy"].as<unsigned>();
+        quarantineLength = result["quarantineLength"].as<unsigned>();
     }
     void init(const parser::LocationTypes& data, unsigned cemeteryID) {
         publicSpace = data.publicSpace;
@@ -721,6 +727,7 @@ public:
             a;
 
         a.quarantinePolicy = quarantinePolicy;
+        a.quarantineLength = quarantineLength;
         a.tracked = this->tracked;
         a.hospitalType = hospital;
         a.homeType = home;
