@@ -8,6 +8,9 @@ protected:
         int maxLength;
         double p;
 
+    [[nodiscard]] static double expectedLength(double p, unsigned max) const;
+    [[nodiscard]] double calculateModifiedP() const;
+
     public:
         LengthOfState() = default;
         LengthOfState(int avgLength_p, int maxLength_p);
