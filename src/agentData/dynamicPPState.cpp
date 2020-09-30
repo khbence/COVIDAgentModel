@@ -214,7 +214,7 @@ bool HD DynamicPPState::update(float scalingSymptons,
     if (daysBeforeNextState == -2) {
         daysBeforeNextState = getTransition(progressionID).calculateJustDays(state);
     }
-    if (daysBeforeNextState > 0) { --daysBeforeNextState; }
+    if (daysBeforeNextState > 0) { --daysBeforeNextState; return false; }
     if (daysBeforeNextState == 0) {
         states::WBStates oldWBState = this->getWBState();
         auto oldState = state;
