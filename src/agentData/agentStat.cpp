@@ -5,8 +5,8 @@ std::ostream& operator<<(std::ostream& os, const AgentStats& s) {
         return os;
     }
     os << "Infected at " << s.infectedTimestamp << " location " << s.infectedLocation
-       << " diagnosed: " << s.diagnosedTimestamp << " quarantined: " << s.quarantinedTimestamp
-       << " - " << s.quarantinedUntilTimestamp;
+       << " diagnosed: " << s.diagnosedTimestamp << " last quarantined: " << s.quarantinedTimestamp
+       << " - " << s.quarantinedUntilTimestamp << " total days in quarantine " << s.daysInQuarantine;
     os << " worst state " << static_cast<unsigned>(s.worstState)
        << " between: " << s.worstStateTimestamp << "-" << s.worstStateEndTimestamp;
     os << " hospitalized " << static_cast<unsigned>(s.hospitalizedTimestamp) << "-" 

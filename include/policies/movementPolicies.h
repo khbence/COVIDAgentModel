@@ -130,6 +130,7 @@ namespace RealMovementOps {
         a.quarantinedPtr[i] = true;
         a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
         a.agentStatsPtr[i].quarantinedUntilTimestamp = until;
+        a.agentStatsPtr[i].daysInQuarantine += (until-a.timestamp)/(24*60/a.timeStep);
 
         // If agent was also diagnosed (is sick with COVID)
         if (a.diagnosedPtr[i]) {
@@ -186,6 +187,10 @@ namespace RealMovementOps {
         if (a.stepsUntilMovePtr[i] > 0) {
             a.stepsUntilMovePtr[i]--;
             return;
+        }
+
+        if (a.agentStatsPtr[i].quarantinedUntilTimestamp <= a.timestamp) {
+            a.quarantinedPtr[i] = false;
         }
 
         unsigned& agentType = a.agentTypesPtr[i];
@@ -573,9 +578,11 @@ namespace RealMovementOps {
                        == a.schoolType// Only send agent to quarantine if this
                                       // is home, work or school
                 || a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType)) {
-            if (a.agentStatsPtr[i].quarantinedTimestamp == 0) {
-                a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
-                a.quarantinedPtr[i] = true;
+            //if not currently under quarantine
+            if (a.agentStatsPtr[i].quarantinedUntilTimestamp <= a.timestamp) {
+                    RealMovementOps::quarantineAgent(i, a,
+                    a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]);
+
                 if (i == a.tracked)
                     printf(
                         "Agent %d of type %d day %d at %d:%d location %d is "

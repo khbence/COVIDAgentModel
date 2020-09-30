@@ -11,6 +11,7 @@ public:
     unsigned diagnosedTimestamp = 0;
     unsigned quarantinedTimestamp = 0;
     unsigned quarantinedUntilTimestamp = 0;
+    unsigned daysInQuarantine = 0;
     unsigned hospitalizedTimestamp = 0;
     unsigned hospitalizedUntilTimestamp = 0;
     char worstState = 0;

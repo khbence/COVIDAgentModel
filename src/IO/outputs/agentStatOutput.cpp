@@ -16,6 +16,7 @@ AgentStatOutput::AgentStatOutput(const thrust::host_vector<AgentStats>& data) {
             currentAgent.AddMember("diagnosisTime", e.diagnosedTimestamp, allocator);
             currentAgent.AddMember("quarantinedTime", e.quarantinedTimestamp, allocator);
             currentAgent.AddMember("quarantinedUntilTime", e.quarantinedUntilTimestamp, allocator);
+            currentAgent.AddMember("daysInQuarantine", e.daysInQuarantine, allocator);
             currentAgent.AddMember("hospitalizedTime", e.hospitalizedTimestamp, allocator);
             currentAgent.AddMember("hospitalizedUntilTime", e.hospitalizedUntilTimestamp, allocator);
             rapidjson::Value worst(rapidjson::kObjectType);

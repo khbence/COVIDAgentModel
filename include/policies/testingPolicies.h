@@ -158,6 +158,15 @@ template<typename PPState, typename LocationType>
                 if (a.tracked == i) 
                     printf("\t Agent %d tested positive\n", i);
             } else {
+                //Release from quarantine if home is not quarantined
+                if (a.agentStatsPtr[i].quarantinedUntilTimestamp > a.timestamp &&
+                    (home != std::numeric_limits<unsigned>::max() && a.locationQuarantineUntilPtr[home] < a.timestamp)) {
+                    //Reduce number of days spent in quarantine
+                    if (a.agentStatsPtr[i].daysInQuarantine > 0)
+                        a.agentStatsPtr[i].daysInQuarantine -= (a.agentStatsPtr[i].quarantinedUntilTimestamp - a.timestamp)/(24*60/a.timeStep);
+                    //End quarantine
+                    a.agentStatsPtr[i].quarantinedUntilTimestamp = a.timestamp;
+                }
                 if (a.tracked == i) 
                     printf("\t Agent %d tested negative\n", i);
             }
