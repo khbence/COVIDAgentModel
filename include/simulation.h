@@ -20,7 +20,9 @@ template<typename PositionType,
     template<typename>
     typename InfectionPolicy,
     template<typename>
-    typename TestingPolicy>
+    typename TestingPolicy,
+    template<typename>
+    typename ClosurePolicy>
 class Simulation
     : private MovementPolicy<Simulation<PositionType,
           TypeOfLocation,
@@ -28,21 +30,32 @@ class Simulation
           AgentMeta,
           MovementPolicy,
           InfectionPolicy,
-          TestingPolicy>>
+          TestingPolicy,
+          ClosurePolicy>>
     , InfectionPolicy<Simulation<PositionType,
           TypeOfLocation,
           PPState,
           AgentMeta,
           MovementPolicy,
           InfectionPolicy,
-          TestingPolicy>>
+          TestingPolicy,
+          ClosurePolicy>>
     , TestingPolicy<Simulation<PositionType,
           TypeOfLocation,
           PPState,
           AgentMeta,
           MovementPolicy,
           InfectionPolicy,
-          TestingPolicy>> {
+          TestingPolicy,
+          ClosurePolicy>>
+    , ClosurePolicy<Simulation<PositionType,
+          TypeOfLocation,
+          PPState,
+          AgentMeta,
+          MovementPolicy,
+          InfectionPolicy,
+          TestingPolicy,
+          ClosurePolicy>> {
 
 public:
     using PPState_t = PPState;
@@ -64,14 +77,16 @@ public:
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
     friend class TestingPolicy<Simulation>;
+    friend class ClosurePolicy<Simulation>;
 
     static void addProgramParameters(cxxopts::Options& options) {
         options.add_options()("otherDisease",
-            "Enable (1) or disable (2) non-COVID related hospitalization and sudden death ",
+            "Enable (1) or disable (0) non-COVID related hospitalization and sudden death ",
             cxxopts::value<int>()->default_value("1"));
         InfectionPolicy<Simulation>::addProgramParameters(options);
         MovementPolicy<Simulation>::addProgramParameters(options);
         TestingPolicy<Simulation>::addProgramParameters(options);
+        ClosurePolicy<Simulation>::addProgramParameters(options);
     }
 
     void otherDisease(Timehandler& simTime, unsigned timeStep) {
@@ -278,6 +293,7 @@ public:
         InfectionPolicy<Simulation>::initializeArgs(result);
         MovementPolicy<Simulation>::initializeArgs(result);
         TestingPolicy<Simulation>::initializeArgs(result);
+        ClosurePolicy<Simulation>::initializeArgs(result);
         enableOtherDisease = result["otherDisease"].as<int>();
         DataProvider data{ result };
         try {
@@ -291,6 +307,7 @@ public:
             locs->initializeArgs(result);
             MovementPolicy<Simulation>::init(data.acquireLocationTypes(), cemeteryID);
             TestingPolicy<Simulation>::init(data.acquireLocationTypes());
+            ClosurePolicy<Simulation>::init(data.acquireLocationTypes());
             auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
             agents->initAgents(data.acquireAgents(),
                 locationMapping,
@@ -317,11 +334,13 @@ public:
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
                 if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
+                if (simTime.getTimestamp() > 0) ClosurePolicy<Simulation>::midnight(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 if (enableOtherDisease) otherDisease(simTime,timeStep);
                 refreshAndPrintStatistics(simTime);
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
+            ClosurePolicy<Simulation>::step(simTime, timeStep);
             InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep);
             ++simTime;
         }

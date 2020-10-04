@@ -123,6 +123,16 @@ set_property(
            NoTesting
            DetailedTesting)
 
+set(ClosurePolicy
+    "RuleClosure"
+    CACHE STRING "Type of the closure policy.")
+set_property(
+  CACHE ClosurePolicy
+  PROPERTY STRINGS
+           NoClosure
+           RuleClosure)
+
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/in/configTypes.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config/out/configTypes.h @ONLY)
 
