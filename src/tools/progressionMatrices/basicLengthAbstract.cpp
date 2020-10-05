@@ -33,7 +33,7 @@ double BasicLengthAbstract::LengthOfState::calculateModifiedP() const {
     if((pNew * 10.0 < (1.0/n)) || pNew > 1.0) {
         pNew = 1.0/n;
     }
-    // std::cout << "n: " << n  << " max: " << maxLocal << " old p: " << 1.0/n << " new p: " << pNew << '\n';
+//    std::cout << "n: " << avgLength  << " max: " << maxLocal << " old p: " << 1.0/n << " new p: " << pNew << '\n';
     return pNew;
 }
 
