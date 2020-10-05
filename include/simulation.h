@@ -72,6 +72,7 @@ public:
     unsigned lengthOfSimulationWeeks;
     bool succesfullyInitialized = true;
     std::string outAgentStat;
+    std::string statesHeader;
     int enableOtherDisease = 1;
 
     friend class MovementPolicy<Simulation>;
@@ -249,7 +250,7 @@ public:
             });
     }
 
-    void refreshAndPrintStatistics(Timehandler& simTime) {
+    std::vector<unsigned> refreshAndPrintStatistics(Timehandler& simTime) {
         PROFILE_FUNCTION();
         //COVID
         auto result = locs->refreshAndGetStatistic();
@@ -272,16 +273,25 @@ public:
                                  timestamp < agentStat.hospitalizedUntilTimestamp) return true;
                              else return false;
                          });
+        std::vector<unsigned> stats(result);
+        stats.push_back(hospitalized);
         std::cout << hospitalized << "\t";
         //Testing
         auto tests = TestingPolicy<Simulation>::getStats();
         std::cout << thrust::get<0>(tests) << "\t" << thrust::get<1>(tests) << "\t"
                   << thrust::get<2>(tests) << "\t";
+        stats.push_back(thrust::get<0>(tests));
+        stats.push_back(thrust::get<1>(tests));
+        stats.push_back(thrust::get<2>(tests));
         //Quarantine stats
         auto quarant = agents->getQuarantineStats(timestamp);
         std::cout << thrust::get<0>(quarant) << "\t" << thrust::get<1>(quarant) << "\t"
                   << thrust::get<2>(quarant) << "\t";
+        stats.push_back(thrust::get<0>(quarant));
+        stats.push_back(thrust::get<1>(quarant));
+        stats.push_back(thrust::get<2>(quarant));
         std::cout << '\n';
+        return stats;
     }
 
 public:
@@ -307,7 +317,6 @@ public:
             locs->initializeArgs(result);
             MovementPolicy<Simulation>::init(data.acquireLocationTypes(), cemeteryID);
             TestingPolicy<Simulation>::init(data.acquireLocationTypes());
-            ClosurePolicy<Simulation>::init(data.acquireLocationTypes());
             auto agentTypeMapping = agents->initAgentTypes(data.acquireAgentTypes());
             agents->initAgents(data.acquireAgents(),
                 locationMapping,
@@ -316,7 +325,9 @@ public:
                 data.acquireProgressionMatrices(),
                 data.acquireLocationTypes());
             RandomGenerator::resize(agents->PPValues.size());
-            std::cout << header << "H\tT\tP1\tP2\tQ\tQT\tNQ" << '\n';
+            statesHeader = header + "H\tT\tP1\tP2\tQ\tQT\tNQ";
+            std::cout << statesHeader << '\n';
+            ClosurePolicy<Simulation>::init(data.acquireLocationTypes(), statesHeader);
         } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;
@@ -334,10 +345,10 @@ public:
             if (simTime.isMidnight()) {
                 MovementPolicy<Simulation>::planLocations();
                 if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
-                if (simTime.getTimestamp() > 0) ClosurePolicy<Simulation>::midnight(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 if (enableOtherDisease) otherDisease(simTime,timeStep);
-                refreshAndPrintStatistics(simTime);
+                auto stats = refreshAndPrintStatistics(simTime);
+                if (simTime.getTimestamp() > 0) ClosurePolicy<Simulation>::midnight(simTime, timeStep, stats);
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
             ClosurePolicy<Simulation>::step(simTime, timeStep);

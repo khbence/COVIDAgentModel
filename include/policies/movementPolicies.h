@@ -412,9 +412,9 @@ namespace RealMovementOps {
 
         // Possibilities:
         // 1 both are -1 -> no more events for that day. Should be home if
-        // wBState != S, or at hospital if S 2 Begin != -1, End == -1 -> last
-        // event for the day. Move there (if needed pick randomly) 3 Begin ==
-        // -1, End != -1 -> no events right now, but there will be some later
+        // wBState != S, or at hospital if S 
+        // 2 Begin != -1, End == -1 -> last event for the day. Move there (if needed pick randomly) 
+        // 3 Begin == -1, End != -1 -> no events right now, but there will be some later
         //      3a if less than 30 mins until next possible event, then stay
         //      here 3b if 30-60 to next possible event, should go to public
         //      place (type 0) 3c more than 60 mins, then go home
