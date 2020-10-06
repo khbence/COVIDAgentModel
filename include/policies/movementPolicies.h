@@ -85,11 +85,12 @@ namespace RealMovementOps {
         return std::numeric_limits<unsigned>::max();
     }
 
-    template<typename PPState, typename LocationType>
+    template<typename PPState, typename AgentMeta, typename LocationType>
     struct MovementArguments {
         MovementArguments() : simTime(0u) {}
         unsigned* stepsUntilMovePtr;
         PPState* agentStatesPtr;
+        AgentMeta* agentMetaDataPtr;
         unsigned* agentTypesPtr;
         bool* diagnosedPtr;
         bool* quarantinedPtr;
@@ -118,14 +119,15 @@ namespace RealMovementOps {
         unsigned schoolType;
         unsigned workType;
         LocationType* locationTypePtr;
+        uint8_t *noWorkAgentPtr;
     };
 
-    template<typename PPState, typename LocationType>
+    template<typename PPState, typename AgentMeta, typename LocationType>
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     __device__
 #endif
         void
-        quarantineAgent(unsigned i, MovementArguments<PPState, LocationType>& a, unsigned until) {
+        quarantineAgent(unsigned i, MovementArguments<PPState, AgentMeta, LocationType>& a, unsigned until) {
         if (a.quarantinePolicy == 0) return;
         a.quarantinedPtr[i] = true;
         a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
@@ -167,23 +169,23 @@ namespace RealMovementOps {
         }
     }
 
-        template<typename PPState, typename LocationType>
+        template<typename PPState, typename AgentMeta, typename LocationType>
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     __device__
 #endif
         void
-        checkLarger(unsigned i, MovementArguments<PPState, LocationType>& a) {
+        checkLarger(unsigned i, MovementArguments<PPState, AgentMeta, LocationType>& a) {
             /*      if (a.stepsUntilMovePtr[i] >  a.simTime.getStepsUntilMidnight(a.timeStep)) {
                 printf("WARN LARGER %d > %d\n", a.stepsUntilMovePtr[i],  a.simTime.getStepsUntilMidnight(a.timeStep));
             }*/
         }
 
-    template<typename PPState, typename LocationType>
+    template<typename PPState, typename AgentMeta, typename LocationType>
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     __device__
 #endif
         void
-        doMovement(unsigned i, MovementArguments<PPState, LocationType>& a) {
+        doMovement(unsigned i, MovementArguments<PPState, AgentMeta, LocationType>& a) {
         if (a.stepsUntilMovePtr[i] > 0) {
             a.stepsUntilMovePtr[i]--;
             return;
@@ -464,6 +466,13 @@ namespace RealMovementOps {
                 newLocationType = a.eventsPtr[activeEventsBegin + i].locationType;
                 basicDuration = a.eventsPtr[activeEventsBegin + i].duration;
             }
+
+            //if agent has to stay home with children, then check to see if is work, and set it to home
+            if (a.noWorkAgentPtr[i]!=0 && newLocationType == a.workType) {
+                newLocationType = a.homeType;
+                if (i == a.tracked) printf("Agent %d not going to work because child at home\n", i);
+            }
+
             unsigned newLocation = RealMovementOps::findActualLocationForType(i,
                 newLocationType,
                 a.locationOffsetPtr,
@@ -662,11 +671,83 @@ namespace RealMovementOps {
     }
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-    template<typename PPState, typename LocationType>
+    template<typename PPState, typename AgentMeta, typename LocationType>
     __global__ void doMovementDriver(unsigned numberOfAgents,
-        MovementArguments<PPState, LocationType> a) {
+        MovementArguments<PPState, AgentMeta, LocationType> a) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
         if (i < numberOfAgents) { RealMovementOps::doMovement(i, a); }
+    }
+#endif
+
+    template<typename AgentMeta>
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+    __device__
+#endif
+        void
+        checkUnderageAtHome(unsigned i, unsigned *noWorkPtr, AgentMeta *agentMetaDataPtr, bool *quarantinedPtr, bool *locationStatesPtr, unsigned long *locationOffsetPtr, 
+            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned school) {
+                if (agentMetaDataPtr[i].getAge() > 14) return; //Only underage
+                if (quarantinedPtr[i]) {
+                    //If quarantined
+                    unsigned homeLocation = RealMovementOps::findActualLocationForType(
+                            i, home, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                    if (homeLocation != std::numeric_limits<unsigned>::max())
+                        noWorkPtr[homeLocation] = 1;
+                } else {
+                    //Check if school open/closed
+                    unsigned schoolLocation = RealMovementOps::findActualLocationForType(
+                    i, school, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                    if (schoolLocation != std::numeric_limits<unsigned>::max() &&
+                        locationStatesPtr[schoolLocation]==false) { //School closed
+                        unsigned homeLocation = RealMovementOps::findActualLocationForType(
+                                i, home, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                        if (homeLocation != std::numeric_limits<unsigned>::max())
+                            noWorkPtr[homeLocation] = 1;
+                        }
+                }
+        }
+
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+    template<typename AgentMeta>
+    __global__ void checkUnderageAtHomeDriver(unsigned numberOfAgents,
+        unsigned *noWorkPtr, AgentMeta *agentMetaDataPtr, bool *quarantinedPtr, bool *locationStatesPtr, unsigned long *locationOffsetPtr, 
+            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned school) {
+        unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
+        if (i < numberOfAgents) { RealMovementOps::checkUnderageAtHome(i, noWorkPtr, agentMetaDataPtr, quarantinedPtr, locationStatesPtr, 
+                                    locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, school); }
+    }
+#endif
+
+    template<typename AgentMeta>
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+    __device__
+#endif
+        void
+        setNoWorkToday(unsigned i, unsigned *noWorkLocPtr, uint8_t *noWorkAgentPtr, AgentMeta *agentMetaDataPtr, unsigned long *locationOffsetPtr, 
+            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home) {
+                if (agentMetaDataPtr[i].getAge() > 26 && agentMetaDataPtr[i].getAge() < 65) {
+                    unsigned homeLocation = RealMovementOps::findActualLocationForType(
+                                i, home, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                        if (homeLocation != std::numeric_limits<unsigned>::max())
+                            if (noWorkLocPtr[homeLocation] == 1) { //TODO this is not exactly thread safe on the CPU....
+                            #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+                                if (atomicAdd(&noWorkLocPtr[homeLocation],1)==1)
+                            #else
+                                noWorkLocPtr[homeLocation] = 2;
+                            #endif
+                                noWorkAgentPtr[i] = 1;
+                            }
+                }
+        }
+
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+    template<typename AgentMeta>
+    __global__ void setNoWorkTodayDriver(unsigned numberOfAgents,
+        unsigned *noWorkLocPtr, uint8_t *noWorkAgentPtr, AgentMeta *agentMetaDataPtr, unsigned long *locationOffsetPtr, 
+            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home) {
+        unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
+        if (i < numberOfAgents) { RealMovementOps::setNoWorkToday(i, noWorkLocPtr, noWorkAgentPtr, agentMetaDataPtr, 
+                                    locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home); }
     }
 #endif
 }// namespace RealMovementOps
@@ -674,6 +755,8 @@ namespace RealMovementOps {
 template<typename SimulationType>
 class RealMovement {
     thrust::device_vector<unsigned> stepsUntilMove;
+    thrust::device_vector<unsigned> noWorkLoc; //indicating children at home
+    thrust::device_vector<uint8_t> noWorkAgent; //indicating agent staying home because children at home
     unsigned publicSpace;
     unsigned home;
     unsigned hospital;
@@ -720,9 +803,54 @@ public:
         auto realThis = static_cast<SimulationType*>(this);
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
         unsigned numberOfAgents = agentLocations.size();
-
-        if (stepsUntilMove.size() == 0) stepsUntilMove.resize(numberOfAgents);
+        unsigned numberOfLocations = realThis->locs->locationListOffsets.size()-1;
+        if (stepsUntilMove.size() == 0) {
+            stepsUntilMove.resize(numberOfAgents);
+            noWorkLoc.resize(numberOfLocations);
+            noWorkAgent.resize(numberOfAgents);
+        }
         thrust::fill(stepsUntilMove.begin(), stepsUntilMove.end(), 0u);
+
+        //For each agent that is under 14 years, check if quarantined or school closed, if so flag home as noWork
+        thrust::fill(noWorkLoc.begin(), noWorkLoc.end(), (uint8_t)0u);
+        thrust::fill(noWorkAgent.begin(), noWorkAgent.end(), (uint8_t)0u);
+        unsigned* noWorkLocPtr = thrust::raw_pointer_cast(noWorkLoc.data());
+        uint8_t* noWorkAgentPtr = thrust::raw_pointer_cast(noWorkAgent.data());
+        thrust::device_vector<typename SimulationType::AgentMeta_t>& agentMetaData = 
+            realThis->agents->agentMetaData;
+        typename SimulationType::AgentMeta_t *agentMetaDataPtr = thrust::raw_pointer_cast(agentMetaData.data());
+        thrust::device_vector<bool>& quarantined = realThis->agents->quarantined;
+        bool *quarantinedPtr = thrust::raw_pointer_cast(quarantined.data());
+        thrust::device_vector<bool>& locationStates = realThis->locs->states;
+        bool *locationStatesPtr = thrust::raw_pointer_cast(locationStates.data());
+        thrust::device_vector<unsigned long>& locationOffset = realThis->agents->locationOffset;
+        unsigned long *locationOffsetPtr = thrust::raw_pointer_cast(locationOffset.data());
+        thrust::device_vector<unsigned>& possibleLocations = realThis->agents->possibleLocations;
+        unsigned *possibleLocationsPtr = thrust::raw_pointer_cast(possibleLocations.data());
+        thrust::device_vector<unsigned>& possibleTypes = realThis->agents->possibleTypes;
+        unsigned *possibleTypesPtr = thrust::raw_pointer_cast(possibleTypes.data());
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
+        #pragma omp parallel for
+        for (unsigned i = 0; i < numberOfAgents; i++) { RealMovementOps::checkUnderageAtHome(i, noWorkLocPtr, agentMetaDataPtr,
+                        quarantinedPtr, locationStatesPtr, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, school); }
+#elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+        RealMovementOps::checkUnderageAtHomeDriver<<<(numberOfAgents - 1) / 256 + 1, 256>>>(
+            numberOfAgents, noWorkLocPtr, agentMetaDataPtr, quarantinedPtr, locationStatesPtr, locationOffsetPtr, 
+            possibleLocationsPtr, possibleTypesPtr, home, school);
+        cudaDeviceSynchronize();
+#endif
+
+        //For each adult working agent (25-65), if home is flagged, at least one adult is flagged as not working that day
+        #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
+        #pragma omp parallel for
+        for (unsigned i = 0; i < numberOfAgents; i++) { RealMovementOps::setNoWorkToday(i, noWorkLocPtr, noWorkAgentPtr, agentMetaDataPtr,
+                        locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home); }
+#elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+        RealMovementOps::setNoWorkTodayDriver<<<(numberOfAgents - 1) / 256 + 1, 256>>>(
+            numberOfAgents, noWorkLocPtr, noWorkAgentPtr, agentMetaDataPtr, locationOffsetPtr, 
+            possibleLocationsPtr, possibleTypesPtr, home);
+        cudaDeviceSynchronize();
+#endif
     }
 
     void movement(Timehandler simTime, unsigned timeStep) {
@@ -730,6 +858,7 @@ public:
         auto realThis = static_cast<SimulationType*>(this);
 
         RealMovementOps::MovementArguments<typename SimulationType::PPState_t,
+            typename SimulationType::AgentMeta_t,
             typename SimulationType::TypeOfLocation_t>
             a;
 
@@ -771,6 +900,9 @@ public:
         thrust::device_vector<typename SimulationType::PPState_t>& agentStates =
             realThis->agents->PPValues;
         a.agentStatesPtr = thrust::raw_pointer_cast(agentStates.data());
+        thrust::device_vector<typename SimulationType::AgentMeta_t>& agentMetaData = 
+            realThis->agents->agentMetaData;
+        a.agentMetaDataPtr = thrust::raw_pointer_cast(agentMetaData.data());
         thrust::device_vector<bool>& diagnosed = realThis->agents->diagnosed;
         a.diagnosedPtr = thrust::raw_pointer_cast(diagnosed.data());
         thrust::device_vector<bool>& quarantined = realThis->agents->quarantined;
@@ -778,6 +910,7 @@ public:
         thrust::device_vector<AgentStats>& agentStats = realThis->agents->agentStats;
         a.agentStatsPtr = thrust::raw_pointer_cast(agentStats.data());
         a.stepsUntilMovePtr = thrust::raw_pointer_cast(this->stepsUntilMove.data());
+        a.noWorkAgentPtr = thrust::raw_pointer_cast(noWorkAgent.data());
 
         // Arrays storing actual location IDs for each agent, for each location
         // type
