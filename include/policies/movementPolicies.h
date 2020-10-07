@@ -470,6 +470,7 @@ namespace RealMovementOps {
             //if agent has to stay home with children, then check to see if is work, and set it to home
             if (a.noWorkAgentPtr[i]!=0 && newLocationType == a.workType) {
                 newLocationType = a.homeType;
+                if (a.quarantinedPtr[i] == false) a.agentStatsPtr[i].daysInQuarantine++;
                 if (i == a.tracked) printf("Agent %d not going to work because child at home\n", i);
             }
 

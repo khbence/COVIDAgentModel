@@ -93,8 +93,8 @@ class RuleClosure {
         thrust::device_vector<typename SimulationType::TypeOfLocation_t>& locTypes = realThis->locs->locType;
         thrust::device_vector<bool>& locationOpenState = realThis->locs->states;
         //Rule for closing schools
-        std::vector<GlobalCondition*> conds = {&globalConditions[0]};
-        rules.emplace_back(conds, [&,schoolType](Rule *r) {
+        std::vector<GlobalCondition*> conds2 = {&globalConditions[0]};
+        rules.emplace_back(conds2, [&,schoolType](Rule *r) {
             bool close = true;
             for (GlobalCondition *c : r->conditions) close = close && c->active;
             bool shouldBeOpen = !close;
@@ -109,6 +109,47 @@ class RuleClosure {
                                  });
                 r->previousOpenState = shouldBeOpen;
                 printf("Schools switched %d\n", (int)shouldBeOpen);
+            }
+        });
+
+        unsigned workType = data.work;
+        //Rule for closing workplaces
+        std::vector<GlobalCondition*> conds3 = {&globalConditions[0]};
+        rules.emplace_back(conds3, [&,workType](Rule *r) {
+            bool close = true;
+            for (GlobalCondition *c : r->conditions) close = close && c->active;
+            bool shouldBeOpen = !close;
+            if (r->previousOpenState != shouldBeOpen) {
+                thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(locTypes.begin(), locationOpenState.begin())),
+                                 thrust::make_zip_iterator(thrust::make_tuple(locTypes.end(), locationOpenState.end())),
+                                 [workType,shouldBeOpen]HD(thrust::tuple<typename SimulationType::TypeOfLocation_t&, bool&> tup)
+                                 {
+                                     auto& type = thrust::get<0>(tup);
+                                     auto& isOpen = thrust::get<1>(tup);
+                                     if (type == workType) isOpen = shouldBeOpen;
+                                 });
+                r->previousOpenState = shouldBeOpen;
+                printf("Workplaces switched %d\n", (int)shouldBeOpen);
+            }
+        });
+
+        //Rule for closing pubs, churches, etc.
+        std::vector<GlobalCondition*> conds = {&globalConditions[0]};
+        rules.emplace_back(conds, [&](Rule *r) {
+            bool close = true;
+            for (GlobalCondition *c : r->conditions) close = close && c->active;
+            bool shouldBeOpen = !close;
+            if (r->previousOpenState != shouldBeOpen) {
+                thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(locTypes.begin(), locationOpenState.begin())),
+                                 thrust::make_zip_iterator(thrust::make_tuple(locTypes.end(), locationOpenState.end())),
+                                 [shouldBeOpen]HD(thrust::tuple<typename SimulationType::TypeOfLocation_t&, bool&> tup)
+                                 {
+                                     auto& type = thrust::get<0>(tup);
+                                     auto& isOpen = thrust::get<1>(tup);
+                                     if (type == 5 || type == 6 || type == 9) isOpen = shouldBeOpen;
+                                 });
+                r->previousOpenState = shouldBeOpen;
+                printf("LocTypes 5,6,9 switched %d\n", (int)shouldBeOpen);
             }
         });
     }

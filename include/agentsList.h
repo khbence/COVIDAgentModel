@@ -247,6 +247,16 @@ public:
     PPState& getPPState(unsigned i) { return PPValues[i]; }
 
     void printAgentStatJSON(const std::string& fileName) {
+        //number of days in quarantine for ages 20-65
+        days = thrust::transform_reduce(thrust::make_zip_iterator(thrust::make_tuple(agentStats.begin(), agentMetaData.begin())),
+                                 thrust::make_zip_iterator(thrust::make_tuple(agentStats.end(), agentMetaData.end())),
+                                 []HD(thrust::tuple<AgentStats, AgentMeta> tup) {
+                                     AgentStats& stat = thrust::get<0>(tup);
+                                     AgentMeta& meta = thrust::get<0>(tup);
+                                     return unsigned(stat.daysInQuarantine * (meta.getAge()>20 && meta.getAge()<=65));
+                                 }, unsigned(0),thrust::plus<unsigned>());
+        //number of infections by location type
+
         AgentStatOutput writer{ agentStats };
         writer.writeFile(fileName);
     }
