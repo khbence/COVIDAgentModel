@@ -81,6 +81,8 @@ public:
 
     thrust::device_vector<Agent<AgentList>> agents;
 
+    unsigned disableTourists;
+
     void initAgentMeta(const parser::Parameters& data) { AgentMeta::initData(data); }
 
     [[nodiscard]] std::map<unsigned, unsigned> initAgentTypes(const parser::AgentTypes& inputData) {
@@ -110,6 +112,16 @@ public:
         }
 
         return agentTypeIDMapping;
+    }
+
+    static void addProgramParameters(cxxopts::Options& options) {
+        options.add_options()("disableTourists",
+            "enable or disable tourists",
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))));
+    }
+
+    void initializeArgs(const cxxopts::ParseResult& result) {
+        disableTourists = result["disableTourists"].as<unsigned>();
     }
 
     void initAgents(parser::Agents& inputData,
@@ -150,6 +162,7 @@ public:
         agentStats_h.reserve(n);
 
         for (auto& person : inputData.people) {
+            if (disableTourists && person.typeID == 9) continue;
             auto tmp = std::make_pair(
                 static_cast<unsigned>(person.age), static_cast<std::string>(person.preCond));
             auto it = progressionMatrices.find(tmp);

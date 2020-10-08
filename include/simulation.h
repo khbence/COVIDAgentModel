@@ -88,6 +88,7 @@ public:
         MovementPolicy<Simulation>::addProgramParameters(options);
         TestingPolicy<Simulation>::addProgramParameters(options);
         ClosurePolicy<Simulation>::addProgramParameters(options);
+        AgentListType::addProgramParameters(options);
     }
 
     void otherDisease(Timehandler& simTime, unsigned timeStep) {
@@ -304,6 +305,7 @@ public:
         MovementPolicy<Simulation>::initializeArgs(result);
         TestingPolicy<Simulation>::initializeArgs(result);
         ClosurePolicy<Simulation>::initializeArgs(result);
+        agents->initializeArgs(result);
         enableOtherDisease = result["otherDisease"].as<int>();
         DataProvider data{ result };
         try {
