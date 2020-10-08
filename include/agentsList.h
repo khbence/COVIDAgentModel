@@ -248,15 +248,33 @@ public:
 
     void printAgentStatJSON(const std::string& fileName) {
         //number of days in quarantine for ages 20-65
-        days = thrust::transform_reduce(thrust::make_zip_iterator(thrust::make_tuple(agentStats.begin(), agentMetaData.begin())),
+        unsigned days = thrust::transform_reduce(thrust::make_zip_iterator(thrust::make_tuple(agentStats.begin(), agentMetaData.begin())),
                                  thrust::make_zip_iterator(thrust::make_tuple(agentStats.end(), agentMetaData.end())),
                                  []HD(thrust::tuple<AgentStats, AgentMeta> tup) {
-                                     AgentStats& stat = thrust::get<0>(tup);
-                                     AgentMeta& meta = thrust::get<0>(tup);
+                                     auto& stat = thrust::get<0>(tup);
+                                     auto& meta = thrust::get<1>(tup);
                                      return unsigned(stat.daysInQuarantine * (meta.getAge()>20 && meta.getAge()<=65));
                                  }, unsigned(0),thrust::plus<unsigned>());
+        std::cout << days << std::endl;
         //number of infections by location type
-
+        unsigned cemeteryLocation = Location::getInstance()->locType.size()-1; //NOTE, we set the infected location for those who did NOT get infected to cemetery
+        auto lambda = [cemeteryLocation]HD(AgentStats s) {return s.infectedTimestamp == std::numeric_limits<unsigned>::max() ? cemeteryLocation : s.infectedLocation;};
+        thrust::device_vector<unsigned> agentInfectedLocType(agentStats.size());
+        thrust::copy(thrust::make_permutation_iterator(Location::getInstance()->locType.begin(), thrust::make_transform_iterator(agentStats.begin(),lambda)),
+                          thrust::make_permutation_iterator(Location::getInstance()->locType.begin(), thrust::make_transform_iterator(agentStats.end(),lambda)),
+                          agentInfectedLocType.begin());
+        thrust::sort(agentInfectedLocType.begin(),agentInfectedLocType.end());
+        thrust::device_vector<unsigned> infectionsByLocTypeIDs(Location::getInstance()->generalLocationTypes.size()+2,0u);
+        thrust::device_vector<unsigned> infectionsByLocTypeCount(Location::getInstance()->generalLocationTypes.size()+2,0u);
+        thrust::reduce_by_key(agentInfectedLocType.begin(),agentInfectedLocType.end(),thrust::make_constant_iterator<unsigned>(1u),
+                            infectionsByLocTypeIDs.begin(), infectionsByLocTypeCount.begin());
+        //NOTE: since people who are not infected are assigned to cemetery locaiton, which is last, we don't print those
+        thrust::copy(infectionsByLocTypeIDs.begin(), infectionsByLocTypeIDs.end(),
+                 std::ostream_iterator<unsigned>(std::cout, " "));
+        std::cout << std::endl;
+        thrust::copy(infectionsByLocTypeCount.begin(), infectionsByLocTypeCount.end(),
+                 std::ostream_iterator<unsigned>(std::cout, " "));
+        std::cout << std::endl;
         AgentStatOutput writer{ agentStats };
         writer.writeFile(fileName);
     }

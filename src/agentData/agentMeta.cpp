@@ -49,6 +49,8 @@ void BasicAgentMeta::initData(const parser::Parameters& inputData) {
     }
 }
 
+BasicAgentMeta::BasicAgentMeta() {}
+
 BasicAgentMeta::BasicAgentMeta(char gender, unsigned age, std::string preCondition) {
     // modify based on gender
     if (gender == 'F') {
