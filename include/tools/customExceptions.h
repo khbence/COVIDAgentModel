@@ -145,9 +145,9 @@ namespace IOAgents {
 
     class MissingLocationType : public AgentsInputError {
     public:
-        MissingLocationType(unsigned agentID, std::string&& missingTypes)
+        MissingLocationType(unsigned agentID, unsigned agentType, std::string&& missingTypes)
             : AgentsInputError("Agent with the index of " + std::to_string(agentID)
-                               + " does not have the following location types: " + missingTypes
+                               + " type "+std::to_string(agentType)+" does not have the following location types: " + missingTypes
                                + ".\n") {}
     };
 }// namespace IOAgents

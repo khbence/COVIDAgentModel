@@ -223,7 +223,7 @@ public:
                 }
                 missingTypes.pop_back();
                 missingTypes.pop_back();
-                throw IOAgents::MissingLocationType(agents_h.size() - 1, std::move(missingTypes));
+                throw IOAgents::MissingLocationType(agents_h.size() - 1, types_h[types_h.size()-1], std::move(missingTypes));
             }
 
             possibleLocations_h.insert(possibleLocations_h.end(), locs.begin(), locs.end());
@@ -268,6 +268,7 @@ public:
                                      auto& meta = thrust::get<1>(tup);
                                      return unsigned(stat.daysInQuarantine * (meta.getAge()>20 && meta.getAge()<=65));
                                  }, unsigned(0),thrust::plus<unsigned>());
+        std::cout << "Total number of days in quarantine for agents 20<age<=65" << std::endl;
         std::cout << days << std::endl;
         //number of infections by location type
         unsigned cemeteryLocation = Location::getInstance()->locType.size()-1; //NOTE, we set the infected location for those who did NOT get infected to cemetery
