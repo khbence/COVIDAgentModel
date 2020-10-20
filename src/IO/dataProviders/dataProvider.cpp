@@ -101,10 +101,11 @@ void DataProvider::randomLocations(unsigned N) {
         current.type = randomSelect(configRandom.locationTypeDistibution.begin());
         typeToLocationMapping[current.type].push_back(current.ID);
         current.coordinates = std::vector<double>{ 0.0, 0.0 };
-        current.area = 0;
+        current.area = 1;
         current.state = "ON";
-        current.capacity = 0;
+        current.capacity = 100;
         current.ageInter = std::vector<int>{ 0, 100 };
+        current.infectious = 1.0;
         locations.places.emplace_back(std::move(current));
     }
 }

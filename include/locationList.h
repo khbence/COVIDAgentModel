@@ -159,6 +159,8 @@ public:
     // TODO optimise randoms for performance
     static void infectAgents(thrust::device_vector<double>& infectionRatioAtLocations,
         thrust::device_vector<unsigned>& agentLocations,
+        thrust::device_vector<bool>& infectionAtLocation,
+        bool flagInfectionsAtLocation,
         Timehandler& simTime) {
         PROFILE_FUNCTION();
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
@@ -173,37 +175,51 @@ public:
         thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(),
                              thrust::make_permutation_iterator(
                                  infectionRatioAtLocations.begin(), agentLocations.begin()),
+                             thrust::make_permutation_iterator(
+                                 getInstance()->locType.begin(), agentLocations.begin()),
                              agentStats.begin(),
                              agentLocations.begin(),
-                             thrust::make_counting_iterator<unsigned>(0))),
+                             thrust::make_counting_iterator<unsigned>(0),
+                             thrust::make_permutation_iterator(
+                                 infectionAtLocation.begin(), agentLocations.begin()))),
             thrust::make_zip_iterator(thrust::make_tuple(ppstates.end(),
                 thrust::make_permutation_iterator(
                     infectionRatioAtLocations.begin(), agentLocations.end()),
+                thrust::make_permutation_iterator(
+                    getInstance()->locType.begin(), agentLocations.end()),
                 agentStats.end(),
                 agentLocations.end(),
-                thrust::make_counting_iterator<unsigned>(0) + ppstates.size())),
-            [timestamp, tracked2] HD(thrust::tuple<typename SimulationType::PPState_t&,
+                thrust::make_counting_iterator<unsigned>(0) + ppstates.size(),
+                thrust::make_permutation_iterator(
+                                 infectionAtLocation.begin(), agentLocations.end()))),
+            [timestamp, tracked2,flagInfectionsAtLocation] HD(thrust::tuple<typename SimulationType::PPState_t&,
                 double&,
+                TypeOfLocation&,
                 AgentStats&,
                 unsigned&,
-                unsigned> tuple) {
+                unsigned,
+                bool&> tuple) {
                 auto& ppstate = thrust::get<0>(tuple);
                 double& infectionRatio = thrust::get<1>(tuple);
-                auto& agentStat = thrust::get<2>(tuple);
-                unsigned& agentLocation = thrust::get<3>(tuple);
-                unsigned agentID = thrust::get<4>(tuple);
+                TypeOfLocation& locType = thrust::get<2>(tuple);
+                auto& agentStat = thrust::get<3>(tuple);
+                unsigned& agentLocation = thrust::get<4>(tuple);
+                unsigned agentID = thrust::get<5>(tuple);
+                bool& infectionAtLocation = thrust::get<6>(tuple);
                 if (ppstate.isSusceptible() && RandomGenerator::randomUnit() < infectionRatio) {
                     ppstate.gotInfected();
                     agentStat.infectedTimestamp = timestamp;
                     agentStat.infectedLocation = agentLocation;
                     agentStat.worstState = ppstate.getStateIdx();
                     agentStat.worstStateTimestamp = timestamp;
+                    if (flagInfectionsAtLocation)
+                        infectionAtLocation = true;
                     if (agentID == tracked2) {
                         printf(
-                            "Agent %d got infected at location %d at timestamp "
-                            "%d\n",
+                            "Agent %d got infected at location %d of type %d at timestamp %d\n",
                             agentID,
                             agentLocation,
+                            locType,
                             timestamp);
                     }
                 }

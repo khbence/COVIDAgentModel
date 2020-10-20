@@ -293,6 +293,7 @@ public:
         a.testingWork = testingWork;
         a.testingSchool = testingSchool;
         a.testingRandomHospital = testingRandomHospital;
+        a.testingRandom = testingRandom;
         a.testingDelay = testingDelay;
         a.quarantineLength = quarantineLength;
 
