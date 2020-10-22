@@ -223,7 +223,7 @@ public:
                 }
                 missingTypes.pop_back();
                 missingTypes.pop_back();
-                throw IOAgents::MissingLocationType(agents_h.size() - 1, types_h[types_h.size()-1], std::move(missingTypes));
+                throw IOAgents::MissingLocationType(agents_h.size() - 1, types_h[types_h.size()-1]+1, std::move(missingTypes));
             }
 
             possibleLocations_h.insert(possibleLocations_h.end(), locs.begin(), locs.end());
