@@ -20,6 +20,7 @@ private:
     unsigned flagInfectionAtLocations = 0;
     thrust::device_vector<unsigned> newInfectionsAtLocationsAccumulator;
     thrust::device_vector<bool> infectionFlagAtLocations;
+    thrust::device_vector<unsigned> newlyInfectedAgents;
     std::ofstream file;
     thrust::device_vector<unsigned> susceptible1;
 
@@ -123,6 +124,8 @@ public:
     void dumpLocationInfectiousList(thrust::device_vector<PPState_t>& ppstates,
                                     thrust::device_vector<unsigned>& agentLocations,
                                     thrust::device_vector<unsigned>& fullInfectedCounts,
+                                    thrust::device_vector<unsigned>& newlyInfectedAgents,
+                                    thrust::device_vector<unsigned>& numberOfNewInfectionsAtLocations,
                                     Timehandler& simTime) {
 
         thrust::device_vector<unsigned> outLocationIdOffsets(infectionFlagAtLocations.size());
@@ -163,6 +166,67 @@ public:
         // thrust::copy(outLocationIds.begin(), outLocationIds.end(), std::ostream_iterator<unsigned>(std::cout, " "));
         // std::cout << "\n";
         
+        //
+        // List of people infected
+        //
+        //counts
+        unsigned totalNewInfections = numberOfNewInfectionsAtLocations[numberOfNewInfectionsAtLocations.size()-1];
+        thrust::exclusive_scan(numberOfNewInfectionsAtLocations.begin(), numberOfNewInfectionsAtLocations.end(),numberOfNewInfectionsAtLocations.begin());
+        totalNewInfections += numberOfNewInfectionsAtLocations[numberOfNewInfectionsAtLocations.size()-1];
+        thrust::device_vector<unsigned> outNumberOfNewInfectionsAtLocations(numberOfLocsWithInfections);
+        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(
+                            infectionFlagAtLocations.begin(),
+                            thrust::make_permutation_iterator(
+                                outNumberOfNewInfectionsAtLocations.begin(),
+                                outLocationIdOffsets.begin()),
+                            numberOfNewInfectionsAtLocations.begin())),
+                         thrust::make_zip_iterator(thrust::make_tuple(
+                            infectionFlagAtLocations.end(),
+                            thrust::make_permutation_iterator(
+                                outNumberOfNewInfectionsAtLocations.begin(),
+                                outLocationIdOffsets.end()),
+                            numberOfNewInfectionsAtLocations.end())),
+                         []HD(thrust::tuple<bool&, unsigned&, unsigned> tup) {
+                             if (thrust::get<0>(tup)) //if infection at this loc
+                                thrust::get<1>(tup) = thrust::get<2>(tup); //then save loc ID
+                         });
+        // std::cout << "new infection counts  by loc";
+        // thrust::copy(outNumberOfNewInfectionsAtLocations.begin(), outNumberOfNewInfectionsAtLocations.end(), std::ostream_iterator<unsigned>(std::cout, " "));
+        // std::cout << totalNewInfections << "\n";
+        //indexes
+        thrust::device_vector<unsigned> newlyInfectedAgentsByLocation(ppstates.size());
+        thrust::device_vector<unsigned> newlyInfectedAgentOffsetsByLocation(ppstates.size()); 
+        auto realThis = static_cast<SimulationType*>(this);
+        thrust::device_vector<unsigned>& locationAgentList =
+            realThis->locs->locationAgentList;
+        thrust::copy(thrust::make_permutation_iterator(newlyInfectedAgents.begin(),locationAgentList.begin()),
+                     thrust::make_permutation_iterator(newlyInfectedAgents.begin(),locationAgentList.end()),
+                     newlyInfectedAgentsByLocation.begin());
+        thrust::exclusive_scan(newlyInfectedAgentsByLocation.begin(),newlyInfectedAgentsByLocation.end(),newlyInfectedAgentOffsetsByLocation.begin());
+        // std::cout << "newlyInfectedAgentOffsetsByLocation ";
+        // thrust::copy(newlyInfectedAgentOffsetsByLocation.begin(), newlyInfectedAgentOffsetsByLocation.end(), std::ostream_iterator<unsigned>(std::cout, " "));
+        // std::cout << "\n";
+        unsigned totalNewInfections2 = newlyInfectedAgentOffsetsByLocation[newlyInfectedAgentOffsetsByLocation.size()-1]+newlyInfectedAgentsByLocation[newlyInfectedAgentsByLocation.size()-1];
+        if (totalNewInfections != totalNewInfections2) { throw CustomErrors("dumpLocationInfectiousList: mismatch between number of new infected calculations"); }
+        thrust::device_vector<unsigned> newlyInfectedPeopleIds(totalNewInfections);
+        thrust::for_each(thrust::make_zip_iterator(
+                            thrust::make_tuple(newlyInfectedAgentsByLocation.begin(),
+                            locationAgentList.begin(),
+                            thrust::make_permutation_iterator(
+                                    newlyInfectedPeopleIds.begin(),
+                                    newlyInfectedAgentOffsetsByLocation.begin()))),
+                        thrust::make_zip_iterator(
+                            thrust::make_tuple(newlyInfectedAgentsByLocation.end(),
+                            locationAgentList.end(),
+                            thrust::make_permutation_iterator(
+                                    newlyInfectedPeopleIds.begin(),
+                                    newlyInfectedAgentOffsetsByLocation.end()))),
+                        []HD(thrust::tuple<unsigned&, unsigned&, unsigned&> tup) {
+                            if (thrust::get<0>(tup)) //if person should be written
+                                thrust::get<2>(tup) = thrust::get<1>(tup); //then write ID there
+                        });
+
+
         //
         // Length of list at each location, scanned
         //
@@ -238,9 +302,6 @@ public:
         //rearrange people flags
         thrust::device_vector<unsigned> peopleFlagsByLocation(peopleFlags.size());
         thrust::device_vector<unsigned> peopleOffsetsByLocation(peopleFlags.size());
-        auto realThis = static_cast<SimulationType*>(this);
-        thrust::device_vector<unsigned>& locationAgentList =
-            realThis->locs->locationAgentList;
         thrust::copy(thrust::make_permutation_iterator(peopleFlags.begin(),locationAgentList.begin()),
                      thrust::make_permutation_iterator(peopleFlags.begin(),locationAgentList.end()),
                      peopleFlagsByLocation.begin());
@@ -272,6 +333,10 @@ public:
         file << numberOfLocsWithInfections << "\n";
         thrust::copy(outLocationIds.begin(), outLocationIds.end(), std::ostream_iterator<unsigned>(file, " "));
         file << "\n";
+        thrust::copy(outNumberOfNewInfectionsAtLocations.begin(), outNumberOfNewInfectionsAtLocations.end(), std::ostream_iterator<unsigned>(file, " "));
+        file << totalNewInfections << "\n";
+        thrust::copy(newlyInfectedPeopleIds.begin(), newlyInfectedPeopleIds.end(), std::ostream_iterator<unsigned>(file, " "));
+        file << "\n";
         thrust::copy(locationLength.begin(), locationLength.end(), std::ostream_iterator<unsigned>(file, " "));
         file << "\n";
         thrust::copy(peopleIds.begin(), peopleIds.end(), std::ostream_iterator<unsigned>(file, " "));
@@ -295,10 +360,15 @@ public:
         thrust::device_vector<double> infectionRatios(locationListOffsets.size() - 1, 0.0);
         thrust::device_vector<float> fullInfectedCounts(locationListOffsets.size() - 1, 0);
 
-        if (infectionFlagAtLocations.size()==0)
-            infectionFlagAtLocations.resize(infectiousness.size());
-        if (flagInfectionAtLocations)
+        
+        if (flagInfectionAtLocations) {
+            if (infectionFlagAtLocations.size()==0)
+                infectionFlagAtLocations.resize(infectiousness.size());
             thrust::fill(infectionFlagAtLocations.begin(), infectionFlagAtLocations.end(), false);
+            if (newlyInfectedAgents.size()==0)
+                newlyInfectedAgents.resize(ppstates.size());
+            thrust::fill(newlyInfectedAgents.begin(), newlyInfectedAgents.end(), 0u);
+        }
 
         //
         // Step 1 - Count up infectious people - those who are Infectious
@@ -334,13 +404,18 @@ public:
         //
         // Step 3 - randomly infect susceptible people
         //
-        LocationsList<SimulationType>::infectAgents(infectionRatios, agentLocations, infectionFlagAtLocations, flagInfectionAtLocations, simTime);
+        
+        LocationsList<SimulationType>::infectAgents(infectionRatios, agentLocations, infectionFlagAtLocations, newlyInfectedAgents, flagInfectionAtLocations, simTime);
         if (flagInfectionAtLocations) {
             thrust::device_vector<unsigned> fullInfectedCounts2(fullInfectedCounts.size(),0);
             reduce_by_location(locationListOffsets, locationAgentList, fullInfectedCounts2, ppstates, agentLocations, [] HD(const typename SimulationType::PPState_t& ppstate) -> unsigned {
                 return unsigned(ppstate.isInfectious()>0);
             });
-            dumpLocationInfectiousList(ppstates, agentLocations, fullInfectedCounts2, simTime);
+            thrust::device_vector<unsigned> numberOfNewInfectionsAtLocations(fullInfectedCounts.size(),0);
+            reduce_by_location(locationListOffsets, locationAgentList, numberOfNewInfectionsAtLocations, newlyInfectedAgents, agentLocations, [] HD(const unsigned &flag) -> unsigned {
+                return flag;
+            });
+            dumpLocationInfectiousList(ppstates, agentLocations, fullInfectedCounts2, newlyInfectedAgents, numberOfNewInfectionsAtLocations, simTime);
         }
 
         dumpToFileStep2(locationListOffsets, locationAgentList, ppstates, agentLocations, simTime);
