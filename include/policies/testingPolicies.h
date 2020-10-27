@@ -35,6 +35,7 @@ namespace DetailedTestingOps {
         unsigned publicPlaceType;
         unsigned doctorType;
         unsigned schoolType;
+        unsigned classroomType;
         unsigned workType;
         unsigned timeStep;
         unsigned timestamp;
@@ -74,15 +75,26 @@ namespace DetailedTestingOps {
                 a.locationFlagsPtr[work] = true;
             //Mark school
             unsigned school = RealMovementOps::findActualLocationForType(i, a.schoolType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+            unsigned classroom = std::numeric_limits<unsigned>::max();
             if (school != std::numeric_limits<unsigned>::max() &&
                 (a.locationQuarantineUntilPtr[school] == 0 || //Should test if it was not quarantined, OR
                     (a.locationQuarantineUntilPtr[school] != 0 && //It has been quarantined - either in last 24 hours, OR it's already over
                      (a.locationQuarantineUntilPtr[school] - a.quarantineLength * 24 * 60 / a.timeStep >= a.timestamp - 24 * 60/a.timeStep ||
-                      a.locationQuarantineUntilPtr[school] < a.timestamp))))
+                      a.locationQuarantineUntilPtr[school] < a.timestamp)))) {
                 a.locationFlagsPtr[school] = true;
+                //Mark classroom too
+                classroom = RealMovementOps::findActualLocationForType(i, a.classroomType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+                if (classroom != std::numeric_limits<unsigned>::max() &&
+                    (a.locationQuarantineUntilPtr[classroom] == 0 || //Should test if it was not quarantined, OR
+                    (a.locationQuarantineUntilPtr[classroom] != 0 && //It has been quarantined - either in last 24 hours, OR it's already over
+                     (a.locationQuarantineUntilPtr[classroom] - a.quarantineLength * 24 * 60 / a.timeStep >= a.timestamp - 24 * 60/a.timeStep ||
+                      a.locationQuarantineUntilPtr[classroom] < a.timestamp))))
+                    a.locationFlagsPtr[classroom] = true;
+
+            }
 
             if (a.tracked == i) {
-                printf("Testing: Agent %d was diagnosed in last 24 hours, marking home %d, work %d school %d\n",
+                printf("Testing: Agent %d was diagnosed in last 24 hours, marking home %d, work %d school %d classroom %d\n",
                     i, home, 
                     work==std::numeric_limits<unsigned>::max()?-1:(int)work,
                     school==std::numeric_limits<unsigned>::max()?-1:(int)school);
@@ -121,14 +133,21 @@ template<typename PPState, typename LocationType>
             workFlag = a.locationFlagsPtr[work];
         //Check school
         unsigned school = RealMovementOps::findActualLocationForType(i, a.schoolType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+        unsigned classroom = std::numeric_limits<unsigned>::max();
         bool schoolFlag = false;
-        if (school != std::numeric_limits<unsigned>::max())
+        bool classroomFlag = false;
+        if (school != std::numeric_limits<unsigned>::max()) {
             schoolFlag = a.locationFlagsPtr[school];
+            classroom = RealMovementOps::findActualLocationForType(i, a.classroomType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
+            if (classroom != std::numeric_limits<unsigned>::max())
+                classroomFlag = true;
+        }
 
         double testingProbability = a.testingRandom;
         testingProbability += homeFlag * a.testingHome;
         testingProbability += workFlag * a.testingWork;
         testingProbability += schoolFlag * a.testingSchool;
+        testingProbability += classroomFlag * 3.0 * a.testingSchool;
 
         //If agent works in hospital or doctor's office
         if (work != std::numeric_limits<unsigned>::max() &&
@@ -197,6 +216,7 @@ class DetailedTesting {
     unsigned tracked;
     unsigned quarantineLength;
     unsigned school;
+    unsigned classroom;
     unsigned work;
     thrust::tuple<unsigned, unsigned, unsigned> stats;
     thrust::device_vector<unsigned> lastTest;
@@ -257,6 +277,7 @@ public:
         doctor = data.doctor;
         school = data.school;
         work = data.work;
+        classroom = data.classroom;
     }
 
     void performTests(Timehandler simTime, unsigned timeStep) {
@@ -288,6 +309,7 @@ public:
         a.doctorType = doctor;
         a.timeStep = timeStep;
         a.schoolType = school;
+        a.classroomType = classroom;
         a.workType = work;
         a.testingHome = testingHome;
         a.testingWork = testingWork;
@@ -296,6 +318,7 @@ public:
         a.testingRandom = testingRandom;
         a.testingDelay = testingDelay;
         a.quarantineLength = quarantineLength;
+        
 
         //agent data
         thrust::device_vector<AgentStats>& agentStats = realThis->agents->agentStats;

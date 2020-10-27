@@ -117,6 +117,7 @@ namespace RealMovementOps {
         unsigned tracked;
         unsigned cemeteryLoc;
         unsigned schoolType;
+        unsigned classroomType;
         unsigned workType;
         LocationType* locationTypePtr;
         uint8_t *noWorkAgentPtr;
@@ -145,23 +146,23 @@ namespace RealMovementOps {
                 // if (myHome==2149) printf("LOCATION 2149 quarantined until %d
                 // because agent %d got
                 // hospitalized\n",a.locationQuarantineUntilPtr[myHome],i);
-            }// Place work/school under quarantine
+            }// Place work/classroom under quarantine
             if (a.quarantinePolicy > 2) {
-                unsigned school = RealMovementOps::findActualLocationForType(i,
-                    a.schoolType,
+                unsigned classroom = RealMovementOps::findActualLocationForType(i,
+                    a.classroomType,
                     a.locationOffsetPtr,
                     a.possibleLocationsPtr,
                     a.possibleTypesPtr);
                 unsigned work = RealMovementOps::findActualLocationForType(
                     i, a.workType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr);
-                unsigned toClose[2] = { school, work };
+                unsigned toClose[2] = { classroom, work };
                 for (unsigned loc : toClose) {
                     if (loc != std::numeric_limits<unsigned>::max()
                         && a.locationTypePtr[loc] != a.doctorType
                         && a.locationTypePtr[loc] != a.hospitalType
                         && a.locationQuarantineUntilPtr[loc] < a.timestamp) {
                         if (i == a.tracked)
-                            printf("\tFlagging work/school as quarantined: %d\n", loc);
+                            printf("\tFlagging work/classroom as quarantined: %d\n", loc);
                         a.locationQuarantineUntilPtr[loc] = until;// TODO: quarantine period
                     }
                 }
@@ -190,6 +191,15 @@ namespace RealMovementOps {
             a.stepsUntilMovePtr[i]--;
             return;
         }
+
+        //   if (a.agentLocationsPtr[i] == 76030) {
+        //      printf("Agent %d  of type %d IS AT location %d type %d at day %d %d:%d\n",
+        //             i, a.agentTypesPtr[i]+1, a.agentLocationsPtr[i],
+        //             a.locationTypePtr[a.agentLocationsPtr[i]],
+        //             (int)a.day,
+        //             a.simTime.getMinutes() / 60,
+        //             a.simTime.getMinutes() % 60);
+        // }
 
         if (a.agentStatsPtr[i].quarantinedUntilTimestamp <= a.timestamp) {
             a.quarantinedPtr[i] = false;
@@ -269,6 +279,7 @@ namespace RealMovementOps {
                 || a.locationTypePtr[a.agentLocationsPtr[i]]
                        == a.schoolType// Only send agent to quarantine if this
                                       // is home, work or school
+                || a.locationTypePtr[a.agentLocationsPtr[i]] == a.classroomType
                 || a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType)) {
             if (a.quarantinedPtr[i] == false) {
                 if (i == a.tracked)
@@ -587,6 +598,7 @@ namespace RealMovementOps {
                 || a.locationTypePtr[a.agentLocationsPtr[i]]
                        == a.schoolType// Only send agent to quarantine if this
                                       // is home, work or school
+                || a.locationTypePtr[a.agentLocationsPtr[i]] == a.classroomType
                 || a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType)) {
             //if not currently under quarantine
             if (a.agentStatsPtr[i].quarantinedUntilTimestamp <= a.timestamp) {
@@ -642,6 +654,22 @@ namespace RealMovementOps {
             return;
         }
 
+        // if (a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType) {
+        //     printf("Agent %d  of type %d moved to work type location %d at day %d %d:%d\n",
+        //             i, agentType+1, a.agentLocationsPtr[i],
+        //             (int)a.day,
+        //             a.simTime.getMinutes() / 60,
+        //             a.simTime.getMinutes() % 60);
+        // }76030
+        // if (a.agentLocationsPtr[i] == 76030) {
+        //      printf("Agent %d  of type %d moved to location %d type %d at day %d %d:%d\n",
+        //             i, agentType+1, a.agentLocationsPtr[i],
+        //             a.locationTypePtr[a.agentLocationsPtr[i]],
+        //             (int)a.day,
+        //             a.simTime.getMinutes() / 60,
+        //             a.simTime.getMinutes() % 60);
+        // }
+
 
         // Diagnosis-related operations
         if (newLocationType == a.hospitalType || newLocationType == a.doctorType) {
@@ -686,7 +714,7 @@ namespace RealMovementOps {
 #endif
         void
         checkUnderageAtHome(unsigned i, unsigned *noWorkPtr, AgentMeta *agentMetaDataPtr, bool *quarantinedPtr, bool *locationStatesPtr, unsigned long *locationOffsetPtr, 
-            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned school) {
+            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned school, unsigned classroom) {
                 if (agentMetaDataPtr[i].getAge() > 14) return; //Only underage
                 if (quarantinedPtr[i]) {
                     //If quarantined
@@ -698,8 +726,12 @@ namespace RealMovementOps {
                     //Check if school open/closed
                     unsigned schoolLocation = RealMovementOps::findActualLocationForType(
                     i, school, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
-                    if (schoolLocation != std::numeric_limits<unsigned>::max() &&
-                        locationStatesPtr[schoolLocation]==false) { //School closed
+                    unsigned classroomLocation = RealMovementOps::findActualLocationForType(
+                    i, classroom, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
+                    if ((schoolLocation != std::numeric_limits<unsigned>::max() &&
+                        locationStatesPtr[schoolLocation]==false)
+                        || (classroomLocation != std::numeric_limits<unsigned>::max() &&
+                        locationStatesPtr[classroomLocation]==false)) { //School closed
                         unsigned homeLocation = RealMovementOps::findActualLocationForType(
                                 i, home, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr);
                         if (homeLocation != std::numeric_limits<unsigned>::max())
@@ -712,10 +744,10 @@ namespace RealMovementOps {
     template<typename AgentMeta>
     __global__ void checkUnderageAtHomeDriver(unsigned numberOfAgents,
         unsigned *noWorkPtr, AgentMeta *agentMetaDataPtr, bool *quarantinedPtr, bool *locationStatesPtr, unsigned long *locationOffsetPtr, 
-            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned school) {
+            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned school, unsigned classroom) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
         if (i < numberOfAgents) { RealMovementOps::checkUnderageAtHome(i, noWorkPtr, agentMetaDataPtr, quarantinedPtr, locationStatesPtr, 
-                                    locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, school); }
+                                    locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, school, classroom); }
     }
 #endif
 
@@ -767,6 +799,7 @@ class RealMovement {
     unsigned quarantinePolicy;
     unsigned quarantineLength;
     unsigned school;
+    unsigned classroom;
     unsigned work;
 
 public:
@@ -778,7 +811,7 @@ public:
             cxxopts::value<unsigned>()->default_value(
                 std::to_string(std::numeric_limits<unsigned>::max())))("quarantinePolicy",
             "Quarantine policy: 0 - None, 1 - Agent only, 2 - Agent and "
-            "household, 3 - Agent, household, school/work",
+            "household, 3 - + classroom/work, 4 - + school",
             cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))))
             ("quarantineLength",
             "Length of quarantine in days",
@@ -797,6 +830,7 @@ public:
         doctor = data.doctor;
         school = data.school;
         work = data.work;
+        classroom = data.classroom;
     }
 
     void planLocations() {
@@ -833,11 +867,11 @@ public:
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
         #pragma omp parallel for
         for (unsigned i = 0; i < numberOfAgents; i++) { RealMovementOps::checkUnderageAtHome(i, noWorkLocPtr, agentMetaDataPtr,
-                        quarantinedPtr, locationStatesPtr, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, school); }
+                        quarantinedPtr, locationStatesPtr, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, school, classroom); }
 #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
         RealMovementOps::checkUnderageAtHomeDriver<<<(numberOfAgents - 1) / 256 + 1, 256>>>(
             numberOfAgents, noWorkLocPtr, agentMetaDataPtr, quarantinedPtr, locationStatesPtr, locationOffsetPtr, 
-            possibleLocationsPtr, possibleTypesPtr, home, school);
+            possibleLocationsPtr, possibleTypesPtr, home, school, classroom);
         cudaDeviceSynchronize();
 #endif
 
@@ -874,6 +908,7 @@ public:
         a.simTime = TimeDay(simTime);
         a.cemeteryLoc = cemeteryLoc;
         a.schoolType = school;
+        a.classroomType = classroom;
         a.workType = work;
 
         // Location-based data
