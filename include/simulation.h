@@ -313,7 +313,7 @@ public:
                 data.acquireProgressionMatrices(), data.acquireProgressionConfig());
             agents->initAgentMeta(data.acquireParameters());
             locs->initLocationTypes(data.acquireLocationTypes());
-            auto tmp = locs->initLocations(data.acquireLocations());
+            auto tmp = locs->initLocations(data.acquireLocations(), data.acquireLocationTypes());
             auto cemeteryID = tmp.first;
             auto locationMapping = tmp.second;
             locs->initializeArgs(result);
@@ -345,7 +345,7 @@ public:
         refreshAndPrintStatistics(simTime);
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
-                MovementPolicy<Simulation>::planLocations();
+                MovementPolicy<Simulation>::planLocations(simTime);
                 if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 if (enableOtherDisease) otherDisease(simTime,timeStep);

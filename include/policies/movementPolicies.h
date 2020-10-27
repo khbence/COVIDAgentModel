@@ -783,6 +783,40 @@ namespace RealMovementOps {
                                     locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home); }
     }
 #endif
+
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+    __device__
+#endif
+        void
+        checkSchoolQuarantine(unsigned i, unsigned *schoolsPtr, unsigned *classroomsPtr, unsigned *classroomOffsetsPtr, unsigned *locationQuarantineUntilPtr, unsigned timestamp) {
+            unsigned schoolIdx = schoolsPtr[i];
+            if (locationQuarantineUntilPtr[schoolIdx] > timestamp) return;
+            unsigned counter = 0;
+            unsigned max = 0;
+            for (unsigned classOffset = classroomOffsetsPtr[i]; classOffset < classroomOffsetsPtr[i+1]; classOffset++) {
+                unsigned classIdx = classroomsPtr[classOffset];
+                if (locationQuarantineUntilPtr[classIdx] > timestamp) { 
+                    counter++;
+                    max = max > locationQuarantineUntilPtr[classIdx] ? max : locationQuarantineUntilPtr[classIdx];
+                }
+            }
+            if (counter > 1) {
+                //printf("School %d has %d quarantined classes, quarantining entire school until %d\n", schoolIdx, counter, max);
+                locationQuarantineUntilPtr[schoolIdx] = max;
+                for (unsigned classOffset = classroomOffsetsPtr[i]; classOffset < classroomOffsetsPtr[i+1]; classOffset++) {
+                    unsigned classIdx = classroomsPtr[classOffset];
+                    locationQuarantineUntilPtr[classIdx] = max;
+                }
+            }
+        }
+
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+    template<typename AgentMeta>
+    __global__ void checkSchoolQuarantineDriver(unsigned numSchools, unsigned *schoolsPtr, unsigned *classroomsPtr, unsigned *classroomOffsetsPtr, unsigned *locationQuarantineUntilPtr, unsigned timestamp) {
+        unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
+        if (i < numSchools) { RealMovementOps::checkSchoolQuarantine(i, schoolsPtr, classroomsPtr, classroomOffsetsPtr, locationQuarantineUntilPtr, quarantineLength, timestamp); }
+    }
+#endif
 }// namespace RealMovementOps
 
 template<typename SimulationType>
@@ -833,7 +867,7 @@ public:
         classroom = data.classroom;
     }
 
-    void planLocations() {
+    void planLocations(Timehandler simTime) {
         PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
@@ -876,7 +910,7 @@ public:
 #endif
 
         //For each adult working agent (25-65), if home is flagged, at least one adult is flagged as not working that day
-        #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
         #pragma omp parallel for
         for (unsigned i = 0; i < numberOfAgents; i++) { RealMovementOps::setNoWorkToday(i, noWorkLocPtr, noWorkAgentPtr, agentMetaDataPtr,
                         locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home); }
@@ -886,6 +920,30 @@ public:
             possibleLocationsPtr, possibleTypesPtr, home);
         cudaDeviceSynchronize();
 #endif
+
+        //if quarantinePolicy >3, check if more than 1 classrrom in a school is quarantined, if so, quarantine the schooland all classrooms
+        if (quarantinePolicy>3) {
+            thrust::device_vector<unsigned>& schools = realThis->locs->schools;
+            unsigned *schoolsPtr = thrust::raw_pointer_cast(schools.data());
+            thrust::device_vector<unsigned>& classrooms = realThis->locs->classrooms;
+            unsigned *classroomsPtr = thrust::raw_pointer_cast(classrooms.data());
+            thrust::device_vector<unsigned>& classroomOffsets = realThis->locs->classroomOffsets;
+            unsigned *classroomOffsetsPtr = thrust::raw_pointer_cast(classroomOffsets.data());
+            thrust::device_vector<unsigned>& locationQuarantineUntil = realThis->locs->quarantineUntil;
+            unsigned *locationQuarantineUntilPtr = thrust::raw_pointer_cast(locationQuarantineUntil.data());
+
+            unsigned numSchools = schools.size();
+            unsigned timestamp = simTime.getTimestamp();
+#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
+        #pragma omp parallel for
+        for (unsigned i = 0; i < numSchools; i++) { RealMovementOps::checkSchoolQuarantine(i, schoolsPtr, classroomsPtr, classroomOffsetsPtr, locationQuarantineUntilPtr, timestamp); }
+#elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+        RealMovementOps::checkSchoolQuarantineDriver<<<(numSchools - 1) / 256 + 1, 256>>>(
+            numSchools, schoolsPtr, classroomsPtr, classroomOffsetsPtr, locationQuarantineUntilPtr, timestamp);
+        cudaDeviceSynchronize();
+#endif
+
+        }
     }
 
     void movement(Timehandler simTime, unsigned timeStep) {
