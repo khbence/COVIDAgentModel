@@ -132,6 +132,7 @@ namespace RealMovementOps {
         if (a.quarantinePolicy == 0) return;
         a.quarantinedPtr[i] = true;
         a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
+        unsigned previousQuarantineUntil = a.agentStatsPtr[i].quarantinedUntilTimestamp;
         a.agentStatsPtr[i].quarantinedUntilTimestamp = until;
         a.agentStatsPtr[i].daysInQuarantine += (until-a.timestamp)/(24*60/a.timeStep);
 
@@ -147,7 +148,7 @@ namespace RealMovementOps {
                 // because agent %d got
                 // hospitalized\n",a.locationQuarantineUntilPtr[myHome],i);
             }// Place work/classroom under quarantine
-            if (a.quarantinePolicy > 2) {
+            if (a.quarantinePolicy > 2 && previousQuarantineUntil < a.timestamp) {
                 unsigned classroom = RealMovementOps::findActualLocationForType(i,
                     a.classroomType,
                     a.locationOffsetPtr,
@@ -601,7 +602,7 @@ namespace RealMovementOps {
                 || a.locationTypePtr[a.agentLocationsPtr[i]] == a.classroomType
                 || a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType)) {
             //if not currently under quarantine
-            if (a.agentStatsPtr[i].quarantinedUntilTimestamp <= a.timestamp) {
+            if (!a.quarantinedPtr[i]) {
                     RealMovementOps::quarantineAgent(i, a,
                     a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]]);
 

@@ -124,7 +124,7 @@ public:
             auto it = IDMapping.find(loc.ID);
             if (it != IDMapping.end()) {
                 if (loc.type != locType_h[it->second]) printf("Location with ID %s already exists with mismatching type %d and %d\n", loc.ID.c_str(), loc.type, locType_h[it->second]);
-                continue;
+                //continue;
             }
             IDMapping.emplace(loc.ID, idx);
             locType_h.push_back(loc.type);
