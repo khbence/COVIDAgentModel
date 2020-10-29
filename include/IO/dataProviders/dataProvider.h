@@ -43,13 +43,15 @@ class DataProvider {
     template<typename Iter>
     [[nodiscard]] auto randomSelect(Iter it) const {
         double r = RandomGenerator::randomUnit();
-        double preSum = it->chance;
+        long double preSum = it->chance;
         while (preSum < r) {
             ++it;
             preSum += it->chance;
         }
         return it->value;
     }
+
+    [[nodiscard]] std::string calculateSingleRandomState(unsigned age) const;
 
     void randomLocations(unsigned N);
     void randomAgents(unsigned N);
