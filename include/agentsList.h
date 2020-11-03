@@ -208,10 +208,10 @@ public:
 
                 auto it = std::find(requestedLocs.begin(), requestedLocs.end(), l.typeID);
                 if (it == requestedLocs.end()) {
-                    throw IOAgents::UnnecessaryLocType(
-                        agents_h.size() - 1, person.typeID, l.typeID);
-                }
-                hasThatLocType[std::distance(requestedLocs.begin(), it)] = true;
+                    //throw IOAgents::UnnecessaryLocType(
+                    //    agents_h.size() - 1, person.typeID, l.typeID);
+                } else 
+                    hasThatLocType[std::distance(requestedLocs.begin(), it)] = true;
             }
             if (std::any_of(
                     hasThatLocType.begin(), hasThatLocType.end(), [](bool v) { return !v; })) {
