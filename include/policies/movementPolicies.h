@@ -156,6 +156,7 @@ namespace RealMovementOps {
         void
         quarantineAgent(unsigned i, MovementArguments<PPState, AgentMeta, LocationType>& a, unsigned until) {
         if (a.quarantinePolicy == 0) return;
+        if (a.diagnosedPtr[i] > 0 && a.agentStatesPtr[i].isInfected() == false) return;
         a.quarantinedPtr[i] = true;
         a.agentStatsPtr[i].quarantinedTimestamp = a.timestamp;
         unsigned previousQuarantineUntil = a.agentStatsPtr[i].quarantinedUntilTimestamp;
