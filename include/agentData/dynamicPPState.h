@@ -44,4 +44,6 @@ public:
     [[nodiscard]] bool HD isSusceptible() const { return susceptible; }
     [[nodiscard]] bool HD isInfected() const;
     [[nodiscard]] char HD die(bool covid);
+    [[nodiscard]] float HD getAccuracyPCR() const;
+    [[nodiscard]] float HD getAccuracyAntigen() const;
 };

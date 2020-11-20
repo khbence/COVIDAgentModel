@@ -10,6 +10,8 @@ namespace detail {
         char h_nonCOVIDDeadState = 0;
         char h_deadState;
         std::vector<float> h_infectious;
+        std::vector<float> h_accuracyPCR;
+        std::vector<float> h_accuracyAntigen;
         std::vector<bool> h_susceptible;
         std::vector<bool> h_infected;
         std::vector<states::WBStates> h_WB;
@@ -20,6 +22,8 @@ namespace detail {
         __constant__ char firstInfectedState = 0;
         __constant__ char nonCOVIDDeadState = 0;
         __constant__ float* infectious;
+        __constant__ float* accuracyPCR;
+        __constant__ float* accuracyAntigen;
         __constant__ bool* susceptible;
         __constant__ bool* infected;
         __constant__ states::WBStates* WB;
@@ -55,6 +59,10 @@ std::string DynamicPPState::initTransitionMatrix(
     detail::DynamicPPState::h_numberOfStates = config.stateInformation.stateNames.size();
     detail::DynamicPPState::h_infectious =
         decltype(detail::DynamicPPState::h_infectious)(detail::DynamicPPState::h_numberOfStates);
+    detail::DynamicPPState::h_accuracyPCR =
+        decltype(detail::DynamicPPState::h_accuracyPCR)(detail::DynamicPPState::h_numberOfStates);
+    detail::DynamicPPState::h_accuracyAntigen =
+        decltype(detail::DynamicPPState::h_accuracyAntigen)(detail::DynamicPPState::h_numberOfStates);
     detail::DynamicPPState::h_infected =
         decltype(detail::DynamicPPState::h_infected)(detail::DynamicPPState::h_numberOfStates);
     detail::DynamicPPState::h_WB =
@@ -75,6 +83,8 @@ std::string DynamicPPState::initTransitionMatrix(
         auto idx = detail::DynamicPPState::nameIndexMap.at(e.stateName);
         detail::DynamicPPState::h_WB[idx] = states::parseWBState(e.WB);
         detail::DynamicPPState::h_infectious[idx] = e.infectious;
+        detail::DynamicPPState::h_accuracyPCR[idx] = e.accuracyPCR;
+        detail::DynamicPPState::h_accuracyAntigen[idx] = e.accuracyAntigen;
     }
 
     for (const auto& e : config.stateInformation.infectedStates) {
@@ -129,6 +139,22 @@ std::string DynamicPPState::initTransitionMatrix(
         detail::DynamicPPState::h_numberOfStates * sizeof(float),
         cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::infectious, &infTMP, sizeof(float*));
+
+    float* accuracyPCRTMP;
+    cudaMalloc((void**)&accuracyPCRTMP, detail::DynamicPPState::h_numberOfStates * sizeof(float));
+    cudaMemcpy(accuracyPCRTMP,
+        detail::DynamicPPState::h_accuracyPCR.data(),
+        detail::DynamicPPState::h_numberOfStates * sizeof(float),
+        cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(detail::DynamicPPState::accuracyPCR, &accuracyPCRTMP, sizeof(float*));
+
+    float* accuracyAntigenTMP;
+    cudaMalloc((void**)&accuracyAntigenTMP, detail::DynamicPPState::h_numberOfStates * sizeof(float));
+    cudaMemcpy(accuracyAntigenTMP,
+        detail::DynamicPPState::h_accuracyAntigen.data(),
+        detail::DynamicPPState::h_numberOfStates * sizeof(float),
+        cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(detail::DynamicPPState::accuracyAntigen, &accuracyAntigenTMP, sizeof(float*));
 
     states::SIRD* wbTMP;
     cudaMalloc((void**)&wbTMP, detail::DynamicPPState::h_numberOfStates * sizeof(states::SIRD));
@@ -283,3 +309,21 @@ bool HD DynamicPPState::isInfected() const {
     return detail::DynamicPPState::h_infected[state];
 #endif
 }
+
+
+float HD DynamicPPState::getAccuracyPCR() const {
+#ifdef __CUDA_ARCH__
+    return detail::DynamicPPState::accuracyPCR[state];
+#else
+    return detail::DynamicPPState::h_accuracyPCR[state];
+#endif
+}
+
+float HD DynamicPPState::getAccuracyAntigen() const {
+#ifdef __CUDA_ARCH__
+    return detail::DynamicPPState::accuracyAntigen[state];
+#else
+    return detail::DynamicPPState::h_accuracyAntigen[state];
+#endif
+}
+

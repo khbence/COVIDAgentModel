@@ -51,6 +51,7 @@ namespace DetailedTestingOps {
         double testingRandomHospital;
         unsigned testingDelay;
         unsigned quarantineLength;
+        bool usePCR;
     };
 
     template<typename PPState, typename LocationType>
@@ -180,10 +181,16 @@ template<typename PPState, typename LocationType>
             RandomGenerator::randomReal(1.0) < testingProbability) { 
             a.lastTestPtr[i] = a.timestamp;
             if (a.agentStatesPtr[i].isInfected()) {
-                a.diagnosedPtr[i] = true;
-                a.agentStatsPtr[i].diagnosedTimestamp = a.timestamp;
-                if (a.tracked == i) 
-                    printf("\t Agent %d tested positive\n", i);
+                float probability = a.usePCR ? a.agentStatesPtr[i].getAccuracyPCR() : a.agentStatesPtr[i].getAccuracyAntigen();
+                if (probability > RandomGenerator::randomReal(1.0)) {
+                    a.diagnosedPtr[i] = true;
+                    a.agentStatsPtr[i].diagnosedTimestamp = a.timestamp;
+                    if (a.tracked == i) 
+                        printf("\t Agent %d tested positive\n", i);
+                } else {
+                    if (a.tracked == i) 
+                        printf("\t Agent %d tested FALSE negative\n", i);
+                }
             } else {
                 //Release from quarantine if home is not quarantined
                 if (a.agentStatsPtr[i].quarantinedUntilTimestamp > a.timestamp &&
@@ -235,6 +242,7 @@ class DetailedTesting {
     double testingSchool = 0.1;
     double testingRandomHospital = 0.2;
     unsigned testingDelay = 5;
+    bool usePCR = true;
 
 public:
     // add program parameters if we need any, this function got called already from Simulation
@@ -244,7 +252,10 @@ public:
             cxxopts::value<std::string>()->default_value("0.005,0.2,0.1,0.1,0.2"))
             ("testingRepeatDelay",
             "Minimum number of days between taking tests",
-            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(5))));
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(5))))
+            ("testingMethod",
+            "default method for testing. Can be PCR (default) on antigen. Accuracies are provided in progression json input",
+            cxxopts::value<std::string>()->default_value("PCR"));
     }
     void initializeArgs(const cxxopts::ParseResult& result) {
         testingDelay = result["testingRepeatDelay"].as<unsigned>();
@@ -275,6 +286,12 @@ public:
         try {
             quarantineLength = result["quarantineLength"].as<unsigned>();
         } catch (std::exception& e) { quarantineLength = 14; }
+
+        if (result["testingMethod"].as<std::string>().compare("PCR")==0)
+            usePCR = true;
+        else if (result["testingMethod"].as<std::string>().compare("antigen")==0)
+            usePCR = false;
+        else throw CustomErrors("unrecognized testingMethod "+result["testingMethod"].as<std::string>()+" must be either PCR or antigen");
     }
     auto getStats() {return stats;}
 
@@ -326,6 +343,7 @@ public:
         a.testingRandom = testingRandom;
         a.testingDelay = testingDelay;
         a.quarantineLength = quarantineLength;
+        a.usePCR = usePCR;
         
 
         //agent data
