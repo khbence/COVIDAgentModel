@@ -199,7 +199,7 @@ template<typename PPState, typename LocationType>
                     if (a.agentStatsPtr[i].daysInQuarantine > 0)
                         a.agentStatsPtr[i].daysInQuarantine -= (a.agentStatsPtr[i].quarantinedUntilTimestamp - a.timestamp)/(24*60/a.timeStep);
                     //End quarantine
-                    a.agentStatsPtr[i].quarantinedUntilTimestamp = a.timestamp;
+                    a.agentStatsPtr[i].quarantinedUntilTimestamp = a.timestamp;//a.quarantinedPtr will be cleared by next movementPolicy
                 }
                 if (a.tracked == i) 
                     printf("\t Agent %d tested negative\n", i);

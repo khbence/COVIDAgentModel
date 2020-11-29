@@ -36,6 +36,7 @@ class LocationsList {
         capacity.reserve(s);
         states.reserve(s);
         quarantineUntil.reserve(s);
+        closedUntil.reserve(s);
     }
 
 public:
@@ -48,6 +49,7 @@ public:
     thrust::device_vector<unsigned> capacity;
     thrust::device_vector<bool> states;// Closed/open or ON/OFF
     thrust::device_vector<unsigned> quarantineUntil;
+    thrust::device_vector<unsigned> closedUntil;
 
     thrust::device_vector<unsigned> schools;
     thrust::device_vector<unsigned> classrooms;
@@ -129,7 +131,10 @@ public:
             IDMapping.emplace(loc.ID, idx);
             locType_h.push_back(loc.type);
             position_h.push_back(PositionType{ loc.coordinates[0], loc.coordinates[1] });
-            infectiousness_h.push_back(loc.infectious);
+            // if (loc.type == locTypes.hospital)
+            //   infectiousness_h.push_back(0.1);
+            // else
+              infectiousness_h.push_back(loc.infectious);
             capacity_h.push_back(loc.capacity);
             areas_h.push_back(loc.area);
             quarantineUntil_h.push_back(0);
@@ -191,6 +196,9 @@ public:
         states = states_h;
         capacity = capacity_h;
         quarantineUntil = quarantineUntil_h;
+
+        closedUntil.resize(capacity.size());
+        thrust::fill(closedUntil.begin(), closedUntil.end(), 0);
 
         return std::make_pair(locType.size() - 1, IDMapping);
     }
