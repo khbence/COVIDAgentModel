@@ -855,7 +855,7 @@ namespace RealMovementOps {
 #endif
         void
         checkSchoolWorkQuarantine(unsigned i, AgentStats *agentStatsPtr, PPValues *agentStatesPtr, bool *quarantinedPtr, unsigned *locationQuarantineUntilPtr, unsigned long *locationOffsetPtr, 
-            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned work, unsigned school, unsigned classroom, unsigned timestamp, unsigned timeStep) {
+            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned work, unsigned school, unsigned classroom, unsigned timestamp, unsigned timeStep, unsigned tracked) {
             //If already quarantined, do nothing
             if (quarantinedPtr[i]) return;
             //If immune, do nothing
@@ -889,6 +889,14 @@ namespace RealMovementOps {
                 agentStatsPtr[i].quarantinedTimestamp = timestamp;
                 agentStatsPtr[i].quarantinedUntilTimestamp = until;
                 agentStatsPtr[i].daysInQuarantine += (until-timestamp)/(24*60/timeStep);
+                if (i == tracked) {
+                    printf(
+                        "Agent %d at %d: "
+                        "school/class/work under quarantine, going to quarantine until %d ",
+                        i,
+                        timestamp,
+                        agentStatsPtr[i].quarantinedUntilTimestamp);
+                }
             }
         }
 
@@ -896,10 +904,10 @@ namespace RealMovementOps {
     template<typename PPValues>
     __global__ void checkSchoolWorkQuarantineDriver(unsigned numberOfAgents,
         AgentStats *agentStatsPtr, PPValues *agentStatesPtr, bool *quarantinedPtr, unsigned *locationQuarantineUntilPtr, unsigned long *locationOffsetPtr, unsigned *possibleLocationsPtr,
-            unsigned *possibleTypesPtr, unsigned home, unsigned work, unsigned school, unsigned classroom, unsigned timestamp, unsigned timeStep) {
+            unsigned *possibleTypesPtr, unsigned home, unsigned work, unsigned school, unsigned classroom, unsigned timestamp, unsigned timeStep, unsigned tracked) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
         if (i < numberOfAgents) { RealMovementOps::checkSchoolWorkQuarantine(i, noWorkPtr, agentStatsPtr, agentStatesPtr, quarantinedPtr, locationQuarantineUntilPtr, locationStatesPtr, 
-                                    locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, work, school, classroom, timestamp, timeStemp); }
+                                    locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, work, school, classroom, timestamp, timeStemp, tracked); }
     }
 #endif
 
@@ -1058,11 +1066,11 @@ public:
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
             #pragma omp parallel for
             for (unsigned i = 0; i < numberOfAgents; i++) { RealMovementOps::checkSchoolWorkQuarantine(i, agentStatsPtr, agentStatesPtr,
-                            quarantinedPtr, locationQuarantineUntilPtr, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, work, school, classroom, timestamp, timeStep); }
+                            quarantinedPtr, locationQuarantineUntilPtr, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, work, school, classroom, timestamp, timeStep, tracked); }
 #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
             RealMovementOps::checkSchoolWorkQuarantineDriver<<<(numberOfAgents - 1) / 256 + 1, 256>>>(
                 numberOfAgents, agentStatsPtr, agentStatesPtr, quarantinedPtr, locationQuarantineUntilPtr, locationOffsetPtr, 
-                possibleLocationsPtr, possibleTypesPtr, home, work, school, classroom, timestamp, timeStep);
+                possibleLocationsPtr, possibleTypesPtr, home, work, school, classroom, timestamp, timeStep, tracked);
             cudaDeviceSynchronize();
 #endif
             unsigned schoolType = school; unsigned classroomType = classroom; unsigned workType = work;
