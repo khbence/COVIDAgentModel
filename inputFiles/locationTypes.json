@@ -66,6 +66,10 @@
         {
             "ID": 33,
             "name": "Classroom"
+        },
+        {
+            "ID": 44,
+            "name": "University"
         }
     ]
 }
