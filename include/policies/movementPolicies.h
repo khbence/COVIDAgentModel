@@ -191,7 +191,7 @@ namespace RealMovementOps {
                 for (unsigned loc : toClose) {
                     if (loc != std::numeric_limits<unsigned>::max()
                         && (a.locationTypePtr[loc] == a.workType 
-                            || a.locationTypePtr[loc] != a.classroomType)
+                            || a.locationTypePtr[loc] == a.classroomType)
                         //only quarantining work & classrooms
                         //&& a.locationTypePtr[loc] != a.doctorType
                         //&& a.locationTypePtr[loc] != a.hospitalType
