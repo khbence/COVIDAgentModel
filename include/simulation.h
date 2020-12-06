@@ -345,8 +345,8 @@ public:
         refreshAndPrintStatistics(simTime);
         while (simTime < endOfSimulation) {
             if (simTime.isMidnight()) {
-                MovementPolicy<Simulation>::planLocations(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
+                MovementPolicy<Simulation>::planLocations(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 if (enableOtherDisease) otherDisease(simTime,timeStep);
                 auto stats = refreshAndPrintStatistics(simTime);
