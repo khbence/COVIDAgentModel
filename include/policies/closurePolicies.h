@@ -223,7 +223,7 @@ class RuleClosure {
                 thrust::device_vector<double>& locInfectiousness = realThis->locs->infectiousness;
                 thrust::device_vector<typename SimulationType::TypeOfLocation_t>& locTypes = realThis->locs->locType;
                 unsigned homeType = data.home;
-                unsigned maskCoefficient2 = maskCoefficient;
+                double maskCoefficient2 = maskCoefficient;
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
                 this->rules.emplace_back(rule.name, conds, [&,homeType,maskCoefficient2](Rule *r) {
                     bool close = true;
@@ -242,7 +242,7 @@ class RuleClosure {
                                             }
                                         });
                         r->previousOpenState = shouldBeOpen;
-                        printf("Masks %s\n", (int)shouldBeOpen ? "off": "on");
+                        printf("Masks %s with %g multiplier\n", (int)shouldBeOpen ? "off": "on", maskCoefficient2);
                     }
                 });
             }
