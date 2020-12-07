@@ -37,6 +37,7 @@ class LocationsList {
         states.reserve(s);
         quarantineUntil.reserve(s);
         closedUntil.reserve(s);
+        essential.reserve(s);
     }
 
 public:
@@ -54,6 +55,7 @@ public:
     thrust::device_vector<unsigned> schools;
     thrust::device_vector<unsigned> classrooms;
     thrust::device_vector<unsigned> classroomOffsets;
+    thrust::device_vector<uint8_t> essential;
 
 
 
@@ -103,6 +105,7 @@ public:
         thrust::host_vector<unsigned> areas_h;
         thrust::host_vector<bool> states_h;
         thrust::host_vector<unsigned> capacity_h;
+        thrust::host_vector<uint8_t> essential_h;
         thrust::host_vector<unsigned> quarantineUntil_h;
         auto s = inputData.places.size() + 1;//+1 because of the cemetery
         locType_h.reserve(s);
@@ -111,6 +114,7 @@ public:
         areas_h.reserve(s);
         states_h.reserve(s);
         capacity_h.reserve(s);
+        essential_h.reserve(s);
         quarantineUntil_h.reserve(s);
         thrust::host_vector<unsigned> schools_h;
         thrust::host_vector<std::string> schoolIDs_h;
@@ -136,6 +140,7 @@ public:
             // else
               infectiousness_h.push_back(loc.infectious);
             capacity_h.push_back(loc.capacity);
+            essential_h.push_back(loc.essential);
             areas_h.push_back(loc.area);
             quarantineUntil_h.push_back(0);
             if (loc.type == locTypes.classroom) {classrooms_h.push_back(idx);classroomsIDs_h.push_back(loc.ID);}
@@ -160,6 +165,7 @@ public:
         areas_h.push_back(std::numeric_limits<unsigned>::max());
         states_h.push_back(true);
         capacity_h.push_back(std::numeric_limits<unsigned>::max());
+        essential_h.push_back(1);
 
         //classroom-school pairings
         thrust::host_vector<unsigned> schoolIdForClassroom(classrooms_h.size());
@@ -195,6 +201,7 @@ public:
         areas = areas_h;
         states = states_h;
         capacity = capacity_h;
+        essential = essential_h;
         quarantineUntil = quarantineUntil_h;
 
         closedUntil.resize(capacity.size());

@@ -9,6 +9,7 @@ namespace parser {
             BEGIN_MEMBER_DECLARATIONS();
             DECODABLE_MEMBER(std::string, ID);
             DECODABLE_MEMBER(int, type);
+            DECODABLE_MEMBER(int, essential);
             DECODABLE_MEMBER(std::vector<double>, coordinates);
             DECODABLE_MEMBER(double, infectious);
             DECODABLE_MEMBER(int, area);

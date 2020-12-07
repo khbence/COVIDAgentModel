@@ -9,6 +9,10 @@ void DataProvider::readParameters(const std::string& fileName) {
     parameters = DECODE_JSON_FILE(fileName, decltype(parameters));
 }
 
+void DataProvider::readClosureRules(const std::string& fileName) {
+    rules = DECODE_JSON_FILE(fileName, decltype(rules));
+}
+
 std::map<ProgressionType, std::string> DataProvider::readProgressionConfig(
     const std::string& fileName) {
     progressionConfig = DECODE_JSON_FILE(fileName, parser::ProgressionDirectory);
@@ -114,6 +118,12 @@ void DataProvider::randomLocations(unsigned N) {
         current.capacity = 100;
         current.ageInter = std::vector<int>{ 0, 100 };
         current.infectious = 1.0;
+        if (current.type == 4 || current.type == 7 || current.type == 8)
+            current.essential = RandomGenerator::randomUnit() < 0.1;
+        else if (current.type == 12 || current.type == 14)
+            current.essential = 1;
+        else 
+            current.essential = 0;
         locations.places.emplace_back(std::move(current));
     }
 }
@@ -156,6 +166,7 @@ DataProvider::DataProvider(const cxxopts::ParseResult& result) {
     PROFILE_FUNCTION();
     readParameters(result["parameters"].as<std::string>());
     readProgressionMatrices(result["progression"].as<std::string>());
+    readClosureRules(result["closures"].as<std::string>());
     int numberOfAgents = result["numagents"].as<int>();
     int numberOfLocations = result["numlocs"].as<int>();
     if ((numberOfAgents != -1) || (numberOfLocations != -1) || result["randomStates"].as<bool>()) {
@@ -182,6 +193,8 @@ DataProvider::DataProvider(const cxxopts::ParseResult& result) {
 [[nodiscard]] parser::Locations& DataProvider::acquireLocations() { return locations; }
 
 [[nodiscard]] parser::LocationTypes& DataProvider::acquireLocationTypes() { return locationTypes; }
+
+[[nodiscard]] parser::ClosureRules& DataProvider::acquireClosureRules() { return rules; }
 
 [[nodiscard]] parser::Parameters& DataProvider::acquireParameters() { return parameters; }
 

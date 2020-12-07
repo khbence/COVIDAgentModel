@@ -5,6 +5,7 @@
 #include "locationTypesFormat.h"
 #include "parametersFormat.h"
 #include "progressionConfigFormat.h"
+#include "closuresFormat.h"
 #include "progressionMatrixFormat.h"
 #include "configRandomFormat.h"
 #include "progressionType.h"
@@ -22,6 +23,7 @@ class DataProvider {
     parser::Locations locations;
     parser::LocationTypes locationTypes;
     parser::Parameters parameters;
+    parser::ClosureRules rules;
     std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>
         progressionDirectory;
     parser::ProgressionDirectory progressionConfig;
@@ -39,6 +41,7 @@ class DataProvider {
     void readLocations(const std::string& fileName, bool randomAgents);
     void readAgentTypes(const std::string& fileName);
     void readAgents(const std::string& fileName);
+    void readClosureRules(const std::string& fileName);
 
     template<typename Iter>
     [[nodiscard]] auto randomSelect(Iter it) const {
@@ -65,6 +68,7 @@ public:
     [[nodiscard]] parser::Locations& acquireLocations();
     [[nodiscard]] parser::LocationTypes& acquireLocationTypes();
     [[nodiscard]] parser::Parameters& acquireParameters();
+    [[nodiscard]] parser::ClosureRules& acquireClosureRules();
     [[nodiscard]] std::
         map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
         acquireProgressionMatrices();

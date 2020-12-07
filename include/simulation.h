@@ -329,7 +329,7 @@ public:
             RandomGenerator::resize(agents->PPValues.size());
             statesHeader = header + "H\tT\tP1\tP2\tQ\tQT\tNQ";
             std::cout << statesHeader << '\n';
-            ClosurePolicy<Simulation>::init(data.acquireLocationTypes(), statesHeader);
+            ClosurePolicy<Simulation>::init(data.acquireLocationTypes(), data.acquireClosureRules(), statesHeader);
         } catch (const CustomErrors& e) {
             std::cerr << e.what();
             succesfullyInitialized = false;

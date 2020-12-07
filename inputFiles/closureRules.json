@@ -1,0 +1,44 @@
+{
+    "rules":[
+        {
+            "name": "Close Universities",
+            "conditionType": "afterDays",
+            "threshold": 10,
+            "openAfter": 200,
+            "closeAfter": -1,
+            "locationTypesToClose": [
+                44
+            ]
+        },
+        {
+            "name": "Stop social/church activities",
+            "conditionType": "hospitalizedFraction",
+            "threshold": 0.001,
+            "openAfter": 10,
+            "closeAfter": 5,
+            "locationTypesToClose": [
+                6, 7, 9
+            ]
+        },
+        {
+            "name": "Close workplaces",
+            "conditionType": "newDeadFraction",
+            "threshold": 0.00001,
+            "openAfter": 5,
+            "closeAfter": 5,
+            "locationTypesToClose": [
+                4, 13
+            ]
+        },
+        {
+            "name": "Close schools/kindergartens",
+            "conditionType": "hospitalizedFraction",
+            "threshold": 0.002,
+            "openAfter": 10,
+            "closeAfter": 5,
+            "locationTypesToClose": [
+                3
+            ]
+        }
+    ]
+}

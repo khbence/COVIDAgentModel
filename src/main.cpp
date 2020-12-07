@@ -47,7 +47,10 @@ cxxopts::Options defineProgramParameters() {
             ".." + separator() + "inputFiles" + separator() + "parameters.json"))("c,configRandom",
         "Config file for random initialization.",
         cxxopts::value<std::string>()->default_value(".." + separator() + "inputFiles" + separator()
-                                                     + "configRandom.json"))("r,randomStates",
+                                                     + "configRandom.json"))("closures",
+        "List of closure rules.",
+        cxxopts::value<std::string>()->default_value(
+            ".." + separator() + "inputFiles" + separator() + "closureRules.json"))("r,randomStates",
         "Change the states from the agents file with the configRandom file's "
         "stateDistribution.")("outAgentStat",
         "name of the agent stat output file, if not set there will be no print",
