@@ -39,6 +39,16 @@
             "locationTypesToClose": [
                 3
             ]
+        },
+        {
+            "name": "Masks",
+            "conditionType": "afterDays",
+            "threshold": 0,
+            "openAfter": 200,
+            "closeAfter": -1,
+            "locationTypesToClose": [
+                2
+            ]
         }
     ]
 }
