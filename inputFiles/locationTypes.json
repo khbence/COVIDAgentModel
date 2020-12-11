@@ -6,6 +6,7 @@
     "school": 3,
     "classroom": 33,
     "work": 4,
+    "nurseryhome": 22,
     "types": [
         {
             "ID": 1,
@@ -62,6 +63,10 @@
         {
             "ID": 14,
             "name": "Health Centre"
+        },
+        {
+            "ID": 22,
+            "name": "Nursery home"
         },
         {
             "ID": 33,

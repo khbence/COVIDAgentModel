@@ -117,7 +117,7 @@ public:
     static void addProgramParameters(cxxopts::Options& options) {
         options.add_options()("disableTourists",
             "enable or disable tourists",
-            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))));
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(1))));
     }
 
     void initializeArgs(const cxxopts::ParseResult& result) {
@@ -213,6 +213,7 @@ public:
                 } else 
                     hasThatLocType[std::distance(requestedLocs.begin(), it)] = true;
             }
+            try {
             if (std::any_of(
                     hasThatLocType.begin(), hasThatLocType.end(), [](bool v) { return !v; })) {
                 std::string missingTypes;
@@ -224,6 +225,9 @@ public:
                 missingTypes.pop_back();
                 missingTypes.pop_back();
                 throw IOAgents::MissingLocationType(agents_h.size() - 1, types_h[types_h.size()-1]+1, std::move(missingTypes));
+            }
+            } catch (IOAgents::MissingLocationType& e) {
+                std::cout << e.what() << std::endl;   
             }
 
             possibleLocations_h.insert(possibleLocations_h.end(), locs.begin(), locs.end());
