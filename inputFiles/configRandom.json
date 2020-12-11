@@ -94,15 +94,15 @@
                     "chance": 0.0000762152376846830
                 },
                 {
-                    "value": "I5_hospital",
+                    "value": "I5_h",
                     "chance": 0.00000265156347579970
                 },
                 {
-                    "value": "I6_hospital",
+                    "value": "I6_h",
                     "chance": 0.00000110419215564955
                 },
                 {
-                    "value": "R_hospital",
+                    "value": "R_h",
                     "chance": 0.000000393409221211067
                 },
                 {
@@ -148,15 +148,15 @@
                     "chance": 0.0000762152376846830
                 },
                 {
-                    "value": "I5_hospital",
+                    "value": "I5_h",
                     "chance": 0.00000265156347579970
                 },
                 {
-                    "value": "I6_hospital",
+                    "value": "I6_h",
                     "chance": 0.00000110419215564955
                 },
                 {
-                    "value": "R_hospital",
+                    "value": "R_h",
                     "chance": 0.000000393409221211067
                 },
                 {
