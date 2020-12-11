@@ -78,10 +78,12 @@ class RuleClosure {
             cxxopts::value<double>()->default_value("1.0"));
     }
     unsigned enableClosures;
+    bool curfewExists;
     double maskCoefficient;
     void initializeArgs(const cxxopts::ParseResult& result) {
         enableClosures = result["enableClosures"].as<unsigned>();
         maskCoefficient = result["maskCoefficient"].as<double>();
+        curfewExists = result["curfew"].as<std::string>().length()>0;
     }
     void init(const parser::LocationTypes& data, const parser::ClosureRules& rules, std::string header) {
         this->header = ClosureHelpers::splitHeader(header);
@@ -246,6 +248,7 @@ class RuleClosure {
                     }
                 });
             } else if (rule.name.compare("Curfew")==0) {
+                if (!curfewExists) continue;
                 //Curfew
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
                 auto realThis = static_cast<SimulationType*>(this);
