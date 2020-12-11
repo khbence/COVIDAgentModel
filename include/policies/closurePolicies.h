@@ -75,15 +75,23 @@ class RuleClosure {
             cxxopts::value<unsigned>()->default_value("0"));
         options.add_options()("maskCoefficient",
             "0.0-1.0 multiplier on infectiousness at non-home locations",
-            cxxopts::value<double>()->default_value("1.0"));
+            cxxopts::value<double>()->default_value("1.0"))
+            ("holidayMode",
+            "enable/disable holiday mode - in cojunction with a HolidayMode closure policy");
     }
     unsigned enableClosures;
     bool curfewExists;
     double maskCoefficient;
+    bool holidayModeExists;
     void initializeArgs(const cxxopts::ParseResult& result) {
         enableClosures = result["enableClosures"].as<unsigned>();
         maskCoefficient = result["maskCoefficient"].as<double>();
-        curfewExists = result["curfew"].as<std::string>().length()>0;
+        try {
+            curfewExists = result["curfew"].as<std::string>().length()>0;
+        } catch (std::exception &e) {
+            curfewExists = false;
+        }
+        holidayModeExists = result["holidayMode"].as<bool>();
     }
     void init(const parser::LocationTypes& data, const parser::ClosureRules& rules, std::string header) {
         this->header = ClosureHelpers::splitHeader(header);
@@ -102,7 +110,7 @@ class RuleClosure {
         for (const parser::ClosureRules::Rule& rule : rules.rules) {
 
             //check if masks/closures are enabled
-            if (!enableClosures && !(maskCoefficient<1.0 && rule.name.compare("Masks")==0) && !rule.name.compare("Curfew")==0) continue;
+            if (!enableClosures && !(maskCoefficient<1.0 && rule.name.compare("Masks")==0) && !rule.name.compare("Curfew")==0 && !rule.name.compare("HolidayMode")==0) continue;
             if (maskCoefficient==1.0 && rule.name.compare("Masks")==0) continue;
 
             //Create condition
@@ -180,7 +188,7 @@ class RuleClosure {
                 throw CustomErrors("Unknown closure type "+rule.conditionType);
             }
 
-            if (rule.name.compare("Masks")!=0 && rule.name.compare("Curfew")!=0) { //Not masks or curfew
+            if (rule.name.compare("Masks")!=0 && rule.name.compare("Curfew")!=0 && rule.name.compare("HolidayMode")!=0) { //Not masks or curfew
                 //Create rule
                 thrust::device_vector<typename SimulationType::TypeOfLocation_t>& locTypes = realThis->locs->locType;
                 thrust::device_vector<bool>& locationOpenState = realThis->locs->states;
@@ -260,6 +268,21 @@ class RuleClosure {
                         realThis->toggleCurfew(close);
                         r->previousOpenState = shouldBeOpen;
                         printf("Curfew %s\n", (int)shouldBeOpen ? "disabled": "enabled");
+                    }
+                });
+            } else if (rule.name.compare("HolidayMode")==0) {
+                if (!holidayModeExists) continue;
+                //Curfew
+                std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
+                auto realThis = static_cast<SimulationType*>(this);
+                this->rules.emplace_back(rule.name, conds, [&, realThis](Rule *r) {
+                    bool close = true;
+                    for (GlobalCondition *c : r->conditions) {close = close && c->active;}
+                    bool shouldBeOpen = !close;
+                    if (r->previousOpenState != shouldBeOpen) {
+                        realThis->toggleHolidayMode(close);
+                        r->previousOpenState = shouldBeOpen;
+                        printf("Holiday mode %s\n", (int)shouldBeOpen ? "disabled": "enabled");
                     }
                 });
             }

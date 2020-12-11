@@ -57,6 +57,15 @@
             "closeAfter": -1,
             "locationTypesToClose": [
             ]
+        },
+        {
+            "name": "HolidayMode",
+            "conditionType": "afterDays",
+            "threshold": 50,
+            "openAfter": 10,
+            "closeAfter": -1,
+            "locationTypesToClose": [
+            ]
         }
     ]
 }

@@ -365,4 +365,7 @@ public:
     void toggleCurfew(bool enable) {
         MovementPolicy<Simulation>::enableCurfew = enable;
     }
+    void toggleHolidayMode(bool enable) {
+        MovementPolicy<Simulation>::holidayModeActive = enable;
+    }
 };

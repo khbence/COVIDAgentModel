@@ -990,6 +990,7 @@ class RealMovement {
 
 public:
     bool enableCurfew;
+    bool holidayModeActive = false;
     // add program parameters if we need any, this function got called already
     // from Simulation
     static void addProgramParameters(cxxopts::Options& options) {
@@ -1243,6 +1244,7 @@ public:
         unsigned numberOfLocations = locationListOffsets.size() - 1;
 
         a.day = simTime.getDay();
+        if (holidayModeActive) a.day = Days::SUNDAY;
         a.timestamp = simTime.getTimestamp();
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
