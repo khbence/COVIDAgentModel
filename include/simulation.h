@@ -361,4 +361,8 @@ public:
         // std::ostream_iterator<AgentStats>(std::cout, ""));
         agents->printAgentStatJSON(outAgentStat);
     }
+
+    void toggleCurfew(bool enable) {
+        MovementPolicy<Simulation>::enableCurfew = enable;
+    }
 };

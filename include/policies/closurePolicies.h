@@ -100,7 +100,7 @@ class RuleClosure {
         for (const parser::ClosureRules::Rule& rule : rules.rules) {
 
             //check if masks/closures are enabled
-            if (!enableClosures && !(maskCoefficient<1.0 && rule.name.compare("Masks")==0)) continue;
+            if (!enableClosures && !(maskCoefficient<1.0 && rule.name.compare("Masks")==0) && !rule.name.compare("Curfew")==0) continue;
             if (maskCoefficient==1.0 && rule.name.compare("Masks")==0) continue;
 
             //Create condition
@@ -178,7 +178,7 @@ class RuleClosure {
                 throw CustomErrors("Unknown closure type "+rule.conditionType);
             }
 
-            if (rule.name.compare("Masks")!=0) { //Not masks
+            if (rule.name.compare("Masks")!=0 && rule.name.compare("Curfew")!=0) { //Not masks or curfew
                 //Create rule
                 thrust::device_vector<typename SimulationType::TypeOfLocation_t>& locTypes = realThis->locs->locType;
                 thrust::device_vector<bool>& locationOpenState = realThis->locs->states;
@@ -218,7 +218,7 @@ class RuleClosure {
                         printf("Rule %s %s\n", r->name.c_str(), (int)shouldBeOpen ? "disabled": "enabled");
                     }
                 });
-            } else {
+            } else if (rule.name.compare("Masks")==0) {
                 //Masks
                 thrust::device_vector<double>& locInfectiousness = realThis->locs->infectiousness;
                 thrust::device_vector<typename SimulationType::TypeOfLocation_t>& locTypes = realThis->locs->locType;
@@ -243,6 +243,20 @@ class RuleClosure {
                                         });
                         r->previousOpenState = shouldBeOpen;
                         printf("Masks %s with %g multiplier\n", (int)shouldBeOpen ? "off": "on", maskCoefficient2);
+                    }
+                });
+            } else if (rule.name.compare("Curfew")==0) {
+                //Curfew
+                std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
+                auto realThis = static_cast<SimulationType*>(this);
+                this->rules.emplace_back(rule.name, conds, [&, realThis](Rule *r) {
+                    bool close = true;
+                    for (GlobalCondition *c : r->conditions) {close = close && c->active;}
+                    bool shouldBeOpen = !close;
+                    if (r->previousOpenState != shouldBeOpen) {
+                        realThis->toggleCurfew(close);
+                        r->previousOpenState = shouldBeOpen;
+                        printf("Curfew %s\n", (int)shouldBeOpen ? "disabled": "enabled");
                     }
                 });
             }

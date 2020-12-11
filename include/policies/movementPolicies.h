@@ -148,6 +148,10 @@ namespace RealMovementOps {
         unsigned workType;
         LocationType* locationTypePtr;
         uint8_t *noWorkAgentPtr;
+        unsigned curfewBegin;
+        unsigned curfewEnd;
+        bool enableCurfew;
+
     };
 
     template<typename PPState, typename AgentMeta, typename LocationType>
@@ -224,19 +228,32 @@ namespace RealMovementOps {
 #endif
         void
         doMovement(unsigned i, MovementArguments<PPState, AgentMeta, LocationType>& a) {
+
+        //if not dead or not in hospital (covid or non-covid) go home at curfew
+        if (a.enableCurfew && a.curfewBegin == a.simTime.getMinutes()/a.timeStep) {
+            states::WBStates wBState = a.agentStatesPtr[i].getWBState();
+            if (wBState != states::WBStates::D && wBState != states::WBStates::S &&
+                !(a.agentStatsPtr[i].hospitalizedTimestamp <= a.timestamp && 
+                  a.agentStatsPtr[i].hospitalizedUntilTimestamp > a.timestamp))
+              a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
+              a.agentLocationsPtr[i] =
+                RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
+                                                            a.homeType, a.schoolType, a.workType);
+              if (a.tracked == i)
+                printf("Agent %d day %d at %d:%d WBState %d moved to home %d due to curfew\n",
+                i,
+                (int)a.day,
+                a.simTime.getMinutes() / 60,
+                a.simTime.getMinutes() % 60,
+                (int)wBState,
+                a.agentLocationsPtr[i]);
+            return;
+        }
+
         if (a.stepsUntilMovePtr[i] > 0) {
             a.stepsUntilMovePtr[i]--;
             return;
         }
-
-        //   if (a.agentLocationsPtr[i] == 76030) {
-        //      printf("Agent %d  of type %d IS AT location %d type %d at day %d %d:%d\n",
-        //             i, a.agentTypesPtr[i]+1, a.agentLocationsPtr[i],
-        //             a.locationTypePtr[a.agentLocationsPtr[i]],
-        //             (int)a.day,
-        //             a.simTime.getMinutes() / 60,
-        //             a.simTime.getMinutes() % 60);
-        // }
 
         if (a.agentStatsPtr[i].quarantinedUntilTimestamp <= a.timestamp) {
             a.quarantinedPtr[i] = false;
@@ -967,8 +984,12 @@ class RealMovement {
     unsigned school;
     unsigned classroom;
     unsigned work;
+    unsigned curfewBegin=0;
+    unsigned curfewEnd=0;
+    bool curfewTimeConverted = false;
 
 public:
+    bool enableCurfew;
     // add program parameters if we need any, this function got called already
     // from Simulation
     static void addProgramParameters(cxxopts::Options& options) {
@@ -981,12 +1002,25 @@ public:
             cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))))
             ("quarantineLength",
             "Length of quarantine in days",
-            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(14))));
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(14))))
+            ("curfew",
+            "begin and end times of curfew (hhmm-hhmm), e.g. 2000-0500. Needs to be paired with a Curfew closure policy",
+            cxxopts::value<std::string>()->default_value(""));
     }
     void initializeArgs(const cxxopts::ParseResult& result) {
         tracked = result["trace"].as<unsigned>();
         quarantinePolicy = result["quarantinePolicy"].as<unsigned>();
         quarantineLength = result["quarantineLength"].as<unsigned>();
+        enableCurfew = false;
+        std::string curfewString = result["curfew"].as<std::string>();
+        if (curfewString.length()==9) {
+            unsigned bhours = atoi(curfewString.substr(0,2).c_str());
+            unsigned bminutes = atoi(curfewString.substr(2,2).c_str());
+            curfewBegin = bhours*60+bminutes;
+            unsigned ehours = atoi(curfewString.substr(5,2).c_str());
+            unsigned eminutes = atoi(curfewString.substr(7,2).c_str());
+            curfewEnd = ehours*60+eminutes;
+        } else if (curfewString.length()>0) throw CustomErrors("curfew parameter string needs to be exactly 9 characters long");
     }
     void init(const parser::LocationTypes& data, unsigned cemeteryID) {
         publicSpace = data.publicSpace;
@@ -1011,7 +1045,13 @@ public:
             noWorkLoc.resize(numberOfLocations);
             noWorkAgent.resize(numberOfAgents);
         }
-        thrust::fill(stepsUntilMove.begin(), stepsUntilMove.end(), 0u);
+        if (curfewTimeConverted == false) {
+            curfewBegin = curfewBegin/timeStep;
+            curfewEnd = curfewEnd/timeStep;
+            curfewTimeConverted = true;
+        }
+        //If curfew, noone moves before curfew ends
+        thrust::fill(stepsUntilMove.begin(), stepsUntilMove.end(), curfewEnd);
 
         //For each agent that is under 14 years, check if quarantined or school closed, if so flag home as noWork
         thrust::fill(noWorkLoc.begin(), noWorkLoc.end(), (uint8_t)0u);
@@ -1140,6 +1180,9 @@ public:
         a.schoolType = school;
         a.classroomType = classroom;
         a.workType = work;
+        a.enableCurfew = enableCurfew;
+        a.curfewBegin = curfewBegin;
+        a.curfewEnd = curfewEnd;
 
         // Location-based data
         thrust::device_vector<unsigned>& locationAgentList = realThis->locs->locationAgentList;

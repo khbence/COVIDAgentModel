@@ -36,6 +36,7 @@ namespace DetailedTestingOps {
         unsigned doctorType;
         unsigned schoolType;
         unsigned classroomType;
+        unsigned nurseryhomeType;
         unsigned workType;
         unsigned timeStep;
         unsigned timestamp;
@@ -49,6 +50,7 @@ namespace DetailedTestingOps {
         double testingWork;
         double testingSchool;
         double testingRandomHospital;
+        double testingNurseryHome;
         unsigned testingDelay;
         unsigned quarantineLength;
         bool usePCR;
@@ -165,6 +167,12 @@ template<typename PPState, typename LocationType>
             testingProbability += a.testingRandomHospital;
         }
 
+        //If agent works in nursery home
+        if (work != std::numeric_limits<unsigned>::max() &&
+            a.locationTypePtr[work] ==  a.nurseryhomeType) {
+            testingProbability += a.testingNurseryHome;
+        }
+
         //If agent is hospitalized for non-COVID
         if (a.agentStatsPtr[i].hospitalizedTimestamp <= a.timestamp &&
             a.agentStatsPtr[i].hospitalizedUntilTimestamp > a.timestamp) {
@@ -232,6 +240,7 @@ class DetailedTesting {
     unsigned quarantineLength;
     unsigned school;
     unsigned classroom;
+    unsigned nurseryhome;
     unsigned work;
     thrust::tuple<unsigned, unsigned, unsigned> stats;
     thrust::device_vector<unsigned> lastTest;
@@ -241,6 +250,7 @@ class DetailedTesting {
     double testingWork = 0.1;
     double testingSchool = 0.1;
     double testingRandomHospital = 0.2;
+    double testingNurseryHome = 0.3;
     unsigned testingDelay = 5;
     bool usePCR = true;
 
@@ -248,8 +258,8 @@ public:
     // add program parameters if we need any, this function got called already from Simulation
     static void addProgramParameters(cxxopts::Options& options) {
         options.add_options()("testingProbabilities",
-            "Testing probabilities for random, if someone else was diagnosed at home/work/school, and random for hospital workers: comma-delimited string random,home,work,school,hospital",
-            cxxopts::value<std::string>()->default_value("0.005,0.2,0.1,0.1,0.2"))
+            "Testing probabilities for random, if someone else was diagnosed at home/work/school, and random for hospital workers: comma-delimited string random,home,work,school,hospital,nurseryHome",
+            cxxopts::value<std::string>()->default_value("0.005,0.2,0.1,0.1,0.2,0.3"))
             ("testingRepeatDelay",
             "Minimum number of days between taking tests",
             cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(5))))
@@ -282,6 +292,7 @@ public:
         if (params.size()>2) testingWork = params[2];
         if (params.size()>3) testingSchool = params[3];
         if (params.size()>4) testingRandomHospital = params[4];
+        if (params.size()>5) testingNurseryHome = params[5];
         //printf("testing probabilities: %g %g %g %g %g\n", testingRandom, testingHome, testingWork, testingSchool, testingRandomHospital);
         try {
             quarantineLength = result["quarantineLength"].as<unsigned>();
@@ -303,6 +314,7 @@ public:
         school = data.school;
         work = data.work;
         classroom = data.classroom;
+        nurseryhome = data.nurseryhome;
     }
 
     void performTests(Timehandler simTime, unsigned timeStep) {
@@ -343,6 +355,7 @@ public:
         a.testingRandom = testingRandom;
         a.testingDelay = testingDelay;
         a.quarantineLength = quarantineLength;
+        a.testingNurseryHome = testingNurseryHome;
         a.usePCR = usePCR;
         
 
