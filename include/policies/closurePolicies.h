@@ -218,7 +218,7 @@ class RuleClosure {
                                             auto& type = thrust::get<0>(tup);
                                             auto& isOpen = thrust::get<1>(tup);
                                             auto& isEssential = thrust::get<2>(tup);
-                                            if (isEssential) return;
+                                            if (isEssential==1) return;
                                             for (unsigned i = 0; i < 10; i++)
                                                 if (type == fixListArr[i])
                                                     isOpen = shouldBeOpen;
