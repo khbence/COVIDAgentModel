@@ -83,8 +83,10 @@ class RuleClosure {
     bool curfewExists;
     double maskCoefficient;
     bool holidayModeExists;
+    unsigned diagnosticLevel=0;
     void initializeArgs(const cxxopts::ParseResult& result) {
         enableClosures = result["enableClosures"].as<unsigned>();
+        diagnosticLevel = result["diags"].as<unsigned>();
         maskCoefficient = result["maskCoefficient"].as<double>();
         try {
             curfewExists = result["curfew"].as<std::string>().length()>0;
@@ -99,6 +101,7 @@ class RuleClosure {
         auto realThis = static_cast<SimulationType*>(this);
         thrust::device_vector<unsigned>& agentLocations = realThis->agents->location;
         unsigned numberOfAgents = agentLocations.size();
+        unsigned diags = diagnosticLevel;
 
         std::vector<unsigned> hospitalStates;
         for (unsigned i = 0; i < this->header.size(); i++)
@@ -206,7 +209,7 @@ class RuleClosure {
 
                 //printf("cond %p\n",&globalConditions[globalConditions.size()-1]);
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
-                this->rules.emplace_back(rule.name, conds, [&,fixListArr](Rule *r) {
+                this->rules.emplace_back(rule.name, conds, [&,fixListArr,diags](Rule *r) {
                     bool close = true;
                     for (GlobalCondition *c : r->conditions) {close = close && c->active; /*printf("rule %s cond %p\n", r->name.c_str(), c);*/}
                     //printf("Rule %s %d\n", r->name.c_str(), close ? 1 : 0);
@@ -226,7 +229,7 @@ class RuleClosure {
                                                 else if ((typename SimulationType::TypeOfLocation_t)-1 == fixListArr[i]) break;
                                         });
                         r->previousOpenState = shouldBeOpen;
-                        printf("Rule %s %s\n", r->name.c_str(), (int)shouldBeOpen ? "disabled": "enabled");
+                        if (diags>0) printf("Rule %s %s\n", r->name.c_str(), (int)shouldBeOpen ? "disabled": "enabled");
                     }
                 });
             } else if (rule.name.compare("Masks")==0) {
@@ -236,7 +239,7 @@ class RuleClosure {
                 unsigned homeType = data.home;
                 double maskCoefficient2 = maskCoefficient;
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
-                this->rules.emplace_back(rule.name, conds, [&,homeType,maskCoefficient2](Rule *r) {
+                this->rules.emplace_back(rule.name, conds, [&,homeType,maskCoefficient2,diags](Rule *r) {
                     bool close = true;
                     for (GlobalCondition *c : r->conditions) {close = close && c->active;}
                     bool shouldBeOpen = !close;
@@ -253,7 +256,7 @@ class RuleClosure {
                                             }
                                         });
                         r->previousOpenState = shouldBeOpen;
-                        printf("Masks %s with %g multiplier\n", (int)shouldBeOpen ? "off": "on", maskCoefficient2);
+                        if (diags>0) printf("Masks %s with %g multiplier\n", (int)shouldBeOpen ? "off": "on", maskCoefficient2);
                     }
                 });
             } else if (rule.name.compare("Curfew")==0) {
@@ -261,14 +264,14 @@ class RuleClosure {
                 //Curfew
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
                 auto realThis = static_cast<SimulationType*>(this);
-                this->rules.emplace_back(rule.name, conds, [&, realThis](Rule *r) {
+                this->rules.emplace_back(rule.name, conds, [&, realThis,diags](Rule *r) {
                     bool close = true;
                     for (GlobalCondition *c : r->conditions) {close = close && c->active;}
                     bool shouldBeOpen = !close;
                     if (r->previousOpenState != shouldBeOpen) {
                         realThis->toggleCurfew(close);
                         r->previousOpenState = shouldBeOpen;
-                        printf("Curfew %s\n", (int)shouldBeOpen ? "disabled": "enabled");
+                        if (diags>0) printf("Curfew %s\n", (int)shouldBeOpen ? "disabled": "enabled");
                     }
                 });
             } else if (rule.name.compare("HolidayMode")==0) {
@@ -276,14 +279,14 @@ class RuleClosure {
                 //Curfew
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
                 auto realThis = static_cast<SimulationType*>(this);
-                this->rules.emplace_back(rule.name, conds, [&, realThis](Rule *r) {
+                this->rules.emplace_back(rule.name, conds, [&, realThis,diags](Rule *r) {
                     bool close = true;
                     for (GlobalCondition *c : r->conditions) {close = close && c->active;}
                     bool shouldBeOpen = !close;
                     if (r->previousOpenState != shouldBeOpen) {
                         realThis->toggleHolidayMode(close);
                         r->previousOpenState = shouldBeOpen;
-                        printf("Holiday mode %s\n", (int)shouldBeOpen ? "disabled": "enabled");
+                        if (diags>0) printf("Holiday mode %s\n", (int)shouldBeOpen ? "disabled": "enabled");
                     }
                 });
             }

@@ -54,7 +54,9 @@ cxxopts::Options defineProgramParameters() {
         "Change the states from the agents file with the configRandom file's "
         "stateDistribution.")("outAgentStat",
         "name of the agent stat output file, if not set there will be no print",
-        cxxopts::value<std::string>()->default_value(""));
+        cxxopts::value<std::string>()->default_value(""))("diags",
+        "level of diagnositcs to print",
+        cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))));
     ;
 
     return options;
