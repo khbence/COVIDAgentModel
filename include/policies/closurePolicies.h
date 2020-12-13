@@ -196,7 +196,8 @@ class RuleClosure {
                 const std::vector<int> &locationTypesToClose = rule.locationTypesToClose;
 
                 //Create small fixed size array for listing types to close that can be captured properly 
-                typename SimulationType::TypeOfLocation_t fixListArr[10];
+                //typename SimulationType::TypeOfLocation_t fixListArr[10];
+                std::array<unsigned, 10> fixListArr;
                 if (locationTypesToClose.size()>=10) throw CustomErrors("Error, Closure Rule " + rule.name+ " has over 10 location types to close, please increase implementation limit");
                 for (unsigned i = 0; i < locationTypesToClose.size(); i++) {
                     fixListArr[i] = locationTypesToClose[i];

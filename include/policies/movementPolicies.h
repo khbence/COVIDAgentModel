@@ -926,8 +926,8 @@ namespace RealMovementOps {
         AgentStats *agentStatsPtr, PPValues *agentStatesPtr, bool *quarantinedPtr, unsigned *locationQuarantineUntilPtr, unsigned long *locationOffsetPtr, unsigned *possibleLocationsPtr,
             unsigned *possibleTypesPtr, unsigned home, unsigned work, unsigned school, unsigned classroom, unsigned timestamp, unsigned timeStep, unsigned tracked) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
-        if (i < numberOfAgents) { RealMovementOps::checkSchoolWorkQuarantine(i, noWorkPtr, agentStatsPtr, agentStatesPtr, quarantinedPtr, locationQuarantineUntilPtr, locationStatesPtr, 
-                                    locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, work, school, classroom, timestamp, timeStemp, tracked); }
+        if (i < numberOfAgents) { RealMovementOps::checkSchoolWorkQuarantine(i, agentStatsPtr, agentStatesPtr, quarantinedPtr, locationQuarantineUntilPtr, 
+                                    locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, work, school, classroom, timestamp, timeStep, tracked); }
     }
 #endif
 
@@ -960,10 +960,9 @@ namespace RealMovementOps {
         }
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-    template<typename AgentMeta>
     __global__ void checkSchoolQuarantineDriver(unsigned numSchools, unsigned *schoolsPtr, unsigned *classroomsPtr, unsigned *classroomOffsetsPtr, unsigned *locationQuarantineUntilPtr, unsigned timestamp) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
-        if (i < numSchools) { RealMovementOps::checkSchoolQuarantine(i, schoolsPtr, classroomsPtr, classroomOffsetsPtr, locationQuarantineUntilPtr, quarantineLength, timestamp); }
+        if (i < numSchools) { RealMovementOps::checkSchoolQuarantine(i, schoolsPtr, classroomsPtr, classroomOffsetsPtr, locationQuarantineUntilPtr, timestamp); }
     }
 #endif
 }// namespace RealMovementOps

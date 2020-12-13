@@ -104,7 +104,8 @@ namespace DetailedTestingOps {
                 printf("Testing: Agent %d was diagnosed in last 24 hours, marking home %d, work %d school %d classroom %d\n",
                     i, home, 
                     work==std::numeric_limits<unsigned>::max()?-1:(int)work,
-                    school==std::numeric_limits<unsigned>::max()?-1:(int)school);
+                    school==std::numeric_limits<unsigned>::max()?-1:(int)school,
+                    classroom==std::numeric_limits<unsigned>::max()?-1:(int)classroom);
             }
         }
 
