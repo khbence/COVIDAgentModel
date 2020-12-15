@@ -342,23 +342,21 @@ public:
         PROFILE_FUNCTION();
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
-        refreshAndPrintStatistics(simTime);
         while (simTime < endOfSimulation) {
+            std::cout << simTime.getTimestamp() << std::endl;
             if (simTime.isMidnight()) {
                 if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
                 MovementPolicy<Simulation>::planLocations(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 if (enableOtherDisease) otherDisease(simTime,timeStep);
                 auto stats = refreshAndPrintStatistics(simTime);
-                if (simTime.getTimestamp() > 0) ClosurePolicy<Simulation>::midnight(simTime, timeStep, stats);
+                ClosurePolicy<Simulation>::midnight(simTime, timeStep, stats);
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
             ClosurePolicy<Simulation>::step(simTime, timeStep);
             InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep);
             ++simTime;
         }
-        // thrust::copy(agents->agentStats.begin(), agents->agentStats.end(),
-        // std::ostream_iterator<AgentStats>(std::cout, ""));
         agents->printAgentStatJSON(outAgentStat);
     }
 

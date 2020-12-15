@@ -125,7 +125,7 @@ class RuleClosure {
                 std::vector<unsigned> none;
                 if (closeAfter >=0 || openAfter<=0) throw CustomErrors("For closure rule 'afterDays', closeAfter must be -1, openAfter must be >0");
                 globalConditions.emplace_back(none, false, [openAfter,threshold](GlobalCondition* c, std::vector<unsigned>& stats){
-                     c->history[0]++; return (c->history[0]>threshold && c->history[0] < threshold + openAfter); });
+                     c->history[0]++; return (c->history[0]>=threshold && c->history[0] <= threshold + openAfter); });
                 globalConditions.back().history.resize(1,0.0);
             } else if (rule.conditionType.compare("hospitalizedFraction")==0) {
                 if (closeAfter <=0 || openAfter<=0) throw CustomErrors("For closure rule 'hospitalizedFraction', closeAfter and openAfter must be >0");
