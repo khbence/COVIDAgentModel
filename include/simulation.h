@@ -343,7 +343,7 @@ public:
         Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
         while (simTime < endOfSimulation) {
-            std::cout << simTime.getTimestamp() << std::endl;
+            //std::cout << simTime.getTimestamp() << std::endl;
             if (simTime.isMidnight()) {
                 if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
                 MovementPolicy<Simulation>::planLocations(simTime, timeStep);
