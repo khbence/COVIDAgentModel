@@ -21,6 +21,7 @@ namespace parser {
             DECODABLE_MEMBER(int, typeID);
             DECODABLE_MEMBER(std::vector<Location>, locations);
             END_MEMBER_DECLARATIONS();
+            bool diagnosed;
         };
 
         BEGIN_MEMBER_DECLARATIONS();

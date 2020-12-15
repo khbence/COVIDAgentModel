@@ -54,7 +54,18 @@ class DataProvider {
         return it->value;
     }
 
-    [[nodiscard]] std::string calculateSingleRandomState(unsigned age) const;
+    template<typename Iter>
+    [[nodiscard]] auto randomSelectPair(Iter it) const {
+        double r = RandomGenerator::randomUnit();
+        long double preSum = it->chance;
+        while (preSum < r) {
+            ++it;
+            preSum += it->chance;
+        }
+        return std::make_pair(it->value, it->diagnosedChance);
+    }
+
+    [[nodiscard]] std::pair<std::string, double> calculateSingleRandomState(unsigned age) const;
 
     void randomLocations(unsigned N);
     void randomAgents(unsigned N);

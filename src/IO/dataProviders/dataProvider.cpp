@@ -96,11 +96,11 @@ void DataProvider::readAgents(const std::string& fileName) {
     agents = DECODE_JSON_FILE(fileName, decltype(agents));
 }
 
-std::string DataProvider::calculateSingleRandomState(unsigned age) const {
+std::pair<std::string, double> DataProvider::calculateSingleRandomState(unsigned age) const {
     auto it = std::find_if(configRandom.stateDistibution.begin(),
         configRandom.stateDistibution.end(),
         [age](const auto& e) { return (e.ageStart <= age) && (age < e.ageEnd); });
-    return randomSelect(it->distribution.begin());
+    return randomSelectPair(it->distribution.begin());
 }
 
 
@@ -136,7 +136,9 @@ void DataProvider::randomAgents(unsigned N) {
         current.sex = (RandomGenerator::randomUnit() < 0.5) ? "M" : "F";
         current.preCond = randomSelect(configRandom.preCondDistibution.begin());
         auto ageToCapture = current.age;
-        current.state = calculateSingleRandomState(current.age);
+        auto statediag = calculateSingleRandomState(current.age);
+        current.state = statediag.first;
+        current.diagnosed = RandomGenerator::randomUnit() < statediag.second;
         current.typeID = randomSelect(configRandom.agentTypeDistribution.begin());
         const auto& requestedLocations = aTypeToLocationTypes[current.typeID];
         current.locations.reserve(requestedLocations.size());
@@ -159,7 +161,11 @@ void DataProvider::randomAgents(unsigned N) {
 }
 
 void DataProvider::randomStates() {
-    for (auto& a : agents.people) { a.state = calculateSingleRandomState(a.age); }
+    for (auto& a : agents.people) { 
+        auto statediag = calculateSingleRandomState(a.age);
+        a.state = statediag.first;
+        a.diagnosed = RandomGenerator::randomUnit() < statediag.second;
+    }
 }
 
 DataProvider::DataProvider(const cxxopts::ParseResult& result) {

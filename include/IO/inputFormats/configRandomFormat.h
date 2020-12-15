@@ -24,6 +24,7 @@ namespace parser {
                 BEGIN_MEMBER_DECLARATIONS();
                 DECODABLE_MEMBER(std::string, value);
                 DECODABLE_MEMBER(long double, chance);
+                DECODABLE_MEMBER(long double, diagnosedChance);
                 END_MEMBER_DECLARATIONS();
             };
             BEGIN_MEMBER_DECLARATIONS();

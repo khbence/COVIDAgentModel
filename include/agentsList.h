@@ -83,6 +83,9 @@ public:
 
     unsigned disableTourists;
     unsigned diagnosticLevel;
+    unsigned quarantinePolicy = 0;
+    unsigned quarantineLength = 0;
+    unsigned timeStep;
 
     void initAgentMeta(const parser::Parameters& data) { AgentMeta::initData(data); }
 
@@ -124,6 +127,12 @@ public:
     void initializeArgs(const cxxopts::ParseResult& result) {
         disableTourists = result["disableTourists"].as<unsigned>();
         diagnosticLevel = result["diags"].as<unsigned>();
+        try {
+            quarantinePolicy = result["quarantinePolicy"].as<unsigned>();
+            quarantineLength = result["quarantineLength"].as<unsigned>();
+        } catch (std::exception &e) {}
+        timeStep = result["deltat"].as<unsigned>();
+
     }
 
     void initAgents(parser::Agents& inputData,
@@ -175,6 +184,14 @@ public:
                 stat.worstState = PPValues_h.back().getStateIdx();
                 stat.worstStateTimestamp = 0;
             }
+            if (person.diagnosed) {
+                stat.diagnosedTimestamp = 1; //0 means was not diagnosed
+                if (quarantinePolicy>0) {
+                    stat.quarantinedTimestamp = 0;
+                    stat.quarantinedUntilTimestamp = quarantineLength * 24 * 60 / timeStep;
+                    stat.daysInQuarantine = quarantineLength;
+                }
+            }
             agentStats_h.push_back(stat);
 
             if (person.sex.size() != 1) { throw IOAgents::InvalidGender(person.sex); }
@@ -182,8 +199,8 @@ public:
                 BasicAgentMeta(person.sex.front(), person.age, person.preCond));
 
             // I don't know if we should put any data about it in the input
-            diagnosed_h.push_back(false);
-            quarantined_h.push_back(false);
+            diagnosed_h.push_back(person.diagnosed);
+            quarantined_h.push_back(person.diagnosed && quarantinePolicy>0);
             
             agents_h.push_back(Agent<AgentList>{ static_cast<unsigned>(agents.size()) });
 

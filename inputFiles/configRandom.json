@@ -71,51 +71,63 @@
             "distribution": [
                 {
                     "value": "S",
-                    "chance": 0.99960000000000004405
+                    "chance": 0.99960000000000004405,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "E",
-                    "chance": 0.000195648905663827
+                    "chance": 0.000195648905663827,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "I1",
-                    "chance": 0.000171086453203937
+                    "chance": 0.000171086453203937,
+                    "diagnosedChance": 0.05
                 },
                 {
                     "value": "I2",
-                    "chance": 0.0000762152376846830
+                    "chance": 0.0000762152376846830,
+                    "diagnosedChance": 0.1
                 },
                 {
                     "value": "I3",
-                    "chance": 0.0000762152376846830
+                    "chance": 0.0000762152376846830,
+                    "diagnosedChance": 0.2
                 },
                 {
                     "value": "I4",
-                    "chance": 0.0000762152376846830
+                    "chance": 0.0000762152376846830,
+                    "diagnosedChance": 0.7
                 },
                 {
                     "value": "I5_h",
-                    "chance": 0.00000265156347579970
+                    "chance": 0.00000265156347579970,
+                    "diagnosedChance": 1.0
                 },
                 {
                     "value": "I6_h",
-                    "chance": 0.00000110419215564955
+                    "chance": 0.00000110419215564955,
+                    "diagnosedChance": 1.0
                 },
                 {
                     "value": "R_h",
-                    "chance": 0.000000393409221211067
+                    "chance": 0.000000393409221211067,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "R",
-                    "chance": 0.000299119048478177
+                    "chance": 0.000299119048478177,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "D1",
-                    "chance": 0.000000260386370533970
+                    "chance": 0.000000260386370533970,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "D2",
-                    "chance": 0
+                    "chance": 0,
+                    "diagnosedChance": 0.0
                 }
             ]
         },
@@ -125,51 +137,63 @@
             "distribution": [
                 {
                     "value": "S",
-                    "chance": 0.99960000000000004405
+                    "chance": 0.99960000000000004405,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "E",
-                    "chance": 0.000195648905663827
+                    "chance": 0.000195648905663827,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "I1",
-                    "chance": 0.000171086453203937
+                    "chance": 0.000171086453203937,
+                    "diagnosedChance": 0.05
                 },
                 {
                     "value": "I2",
-                    "chance": 0.0000762152376846830
+                    "chance": 0.0000762152376846830,
+                    "diagnosedChance": 0.1
                 },
                 {
                     "value": "I3",
-                    "chance": 0.0000762152376846830
+                    "chance": 0.0000762152376846830,
+                    "diagnosedChance": 0.2
                 },
                 {
                     "value": "I4",
-                    "chance": 0.0000762152376846830
+                    "chance": 0.0000762152376846830,
+                    "diagnosedChance": 0.7
                 },
                 {
                     "value": "I5_h",
-                    "chance": 0.00000265156347579970
+                    "chance": 0.00000265156347579970,
+                    "diagnosedChance": 1.0
                 },
                 {
                     "value": "I6_h",
-                    "chance": 0.00000110419215564955
+                    "chance": 0.00000110419215564955,
+                    "diagnosedChance": 1.0
                 },
                 {
                     "value": "R_h",
-                    "chance": 0.000000393409221211067
+                    "chance": 0.000000393409221211067,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "R",
-                    "chance": 0.000299119048478177
+                    "chance": 0.000299119048478177,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "D1",
-                    "chance": 0.000000260386370533970
+                    "chance": 0.000000260386370533970,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "D2",
-                    "chance": 0
+                    "chance": 0,
+                    "diagnosedChance": 0.0
                 }
             ]
         }
