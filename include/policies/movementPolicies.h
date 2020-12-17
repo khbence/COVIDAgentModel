@@ -75,7 +75,7 @@ namespace RealMovementOps {
         unsigned locType,
         unsigned long* locationOffsetPtr,
         unsigned* possibleLocationsPtr,
-        unsigned* possibleTypesPtr, unsigned homeType, unsigned schoolType, unsigned workType) {
+        unsigned* possibleTypesPtr, unsigned homeType, unsigned schoolType, unsigned workType, int retry, bool*locationStatesPtr) {
         if (locType == homeType || locType == schoolType || locType == workType) {
             for (unsigned i = locationOffsetPtr[agent]; i < locationOffsetPtr[agent + 1]; i++) {
                 if (locType == possibleTypesPtr[i]) return possibleLocationsPtr[i];
@@ -94,12 +94,19 @@ namespace RealMovementOps {
         if (counter == 1) return possibleLocationsPtr[pos];
         else if (counter > 1) {
             //Pick one at random
-            unsigned randIdx = RandomGenerator::randomUnsigned(counter);
-            counter = 0;
-            for (unsigned i = pos; i < locationOffsetPtr[agent + 1]; i++) {
-                if (locType == possibleTypesPtr[i]) {
-                    if (counter == randIdx) return possibleLocationsPtr[i];
-                    counter++;
+            unsigned counter2 = counter;
+            unsigned randIdx = counter2;
+            while (true) {
+                while (randIdx == counter2) randIdx = RandomGenerator::randomUnsigned(counter);
+                counter2 = 0;
+                for (unsigned i = pos; i < locationOffsetPtr[agent + 1]; i++) {
+                    if (locType == possibleTypesPtr[i]) {
+                        if (counter2 == randIdx) {
+                            if (retry && locationStatesPtr[possibleLocationsPtr[i]]==false) {retry = 0; break;}
+                            else return possibleLocationsPtr[i];
+                        }
+                        counter2++;
+                    }
                 }
             }
         }
@@ -173,7 +180,7 @@ namespace RealMovementOps {
             // Place home under quarantine
             unsigned myHome = RealMovementOps::findActualLocationForType(
                 i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                a.homeType, a.schoolType, a.workType);
+                a.homeType, a.schoolType, a.workType,0,nullptr);
             if (a.quarantinePolicy > 1) {// Home under quarantine for 2 weeks from now
                 a.locationQuarantineUntilPtr[myHome] = until;// TODO: quarantine period
                 if (i == a.tracked) printf("\tFlagging home as quarantined: %d\n", myHome);
@@ -187,10 +194,10 @@ namespace RealMovementOps {
                     a.locationOffsetPtr,
                     a.possibleLocationsPtr,
                     a.possibleTypesPtr,
-                    a.homeType, a.schoolType, a.workType);
+                    a.homeType, a.schoolType, a.workType,0,nullptr);
                 unsigned work = RealMovementOps::findActualLocationForType(
                     i, a.workType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                    a.homeType, a.schoolType, a.workType);
+                    a.homeType, a.schoolType, a.workType,0,nullptr);
                 unsigned toClose[2] = { classroom, work };
                 for (unsigned loc : toClose) {
                     if (loc != std::numeric_limits<unsigned>::max()
@@ -238,7 +245,7 @@ namespace RealMovementOps {
               a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
               a.agentLocationsPtr[i] =
                 RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                                                            a.homeType, a.schoolType, a.workType);
+                                                            a.homeType, a.schoolType, a.workType,0,nullptr);
               if (a.tracked == i)
                 printf("Agent %d day %d at %d:%d WBState %d moved to home %d due to curfew\n",
                 i,
@@ -276,7 +283,7 @@ namespace RealMovementOps {
                                          a.simTime.getStepsUntilMidnight(a.timeStep));
             a.agentLocationsPtr[i] =
                 RealMovementOps::findActualLocationForType(i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                                                            a.homeType, a.schoolType, a.workType);
+                                                            a.homeType, a.schoolType, a.workType,0,nullptr);
             if (i == a.tracked) {
                 printf("Agent %d of type %d day %d at %d:%d WBState %d in hospital %d due to non-COVID hospitalization between %d-%d\n",
                 i,
@@ -298,7 +305,7 @@ namespace RealMovementOps {
             a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
             a.agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(
                 i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                a.homeType, a.schoolType, a.workType);
+                a.homeType, a.schoolType, a.workType,0,nullptr);
             if (i == a.tracked) {
                 printf(
                     "Agent %d of type %d day %d at %d:%d WBState %d in "
@@ -379,7 +386,7 @@ namespace RealMovementOps {
                 // If not home, send home
                 unsigned homeLocation = RealMovementOps::findActualLocationForType(
                     i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                    a.homeType, a.schoolType, a.workType);
+                    a.homeType, a.schoolType, a.workType,0,nullptr);
                 if (homeLocation != a.agentLocationsPtr[i]) {
                     a.agentLocationsPtr[i] = homeLocation;
                     // TODO: quarantine whole home??
@@ -426,7 +433,7 @@ namespace RealMovementOps {
                 // Stay in quarantine at home
                 a.agentLocationsPtr[i] = RealMovementOps::findActualLocationForType(
                     i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                    a.homeType, a.schoolType, a.workType);
+                    a.homeType, a.schoolType, a.workType,0,nullptr);
 
                 // if less than 2 weeks since diagnosis/quarantine, stay where agent
                 // already is
@@ -508,7 +515,7 @@ namespace RealMovementOps {
                 a.locationOffsetPtr,
                 a.possibleLocationsPtr,
                 a.possibleTypesPtr,
-                a.homeType, a.schoolType, a.workType);
+                a.homeType, a.schoolType, a.workType,0,nullptr);
             a.agentLocationsPtr[i] = myHome;
             a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
             checkLarger(i,a);
@@ -522,7 +529,8 @@ namespace RealMovementOps {
         }
         // Case 2 and 4
         if (activeEventsBegin != -1) {
-            unsigned numPotentialEvents = eventsEnd - activeEventsBegin;
+            unsigned numPotentialEvents = (activeEventsEnd==-1?activeEventsBegin+1:activeEventsEnd) - activeEventsBegin;
+            unsigned pickedEventIdx = 0;
             TimeDayDuration basicDuration(0.0);
             if (numPotentialEvents == 1) {
                 newLocationType = a.eventsPtr[activeEventsBegin].locationType;
@@ -535,6 +543,14 @@ namespace RealMovementOps {
                     i++;
                     threshhold += a.eventsPtr[activeEventsBegin + i].chance;
                 }
+                if (i==numPotentialEvents) {
+                    /*printf("Error, overrun1: %g, agentType %d WB %d, day %d, time %d:%d\n",rand, agentType + 1, wBState,
+                (int)a.day,
+                a.simTime.getMinutes() / 60,
+                a.simTime.getMinutes() % 60);*/
+                    i--;
+                }
+                pickedEventIdx = i;
                 newLocationType = a.eventsPtr[activeEventsBegin + i].locationType;
                 basicDuration = a.eventsPtr[activeEventsBegin + i].duration;
             }
@@ -542,6 +558,7 @@ namespace RealMovementOps {
             //if agent has to stay home with children, then check to see if is work, and set it to home
             if (a.noWorkAgentPtr[i]!=0 && newLocationType == a.workType) {
                 newLocationType = a.homeType;
+                numPotentialEvents = 1;
                 if (a.quarantinedPtr[i] == false) a.agentStatsPtr[i].daysInQuarantine++;
                 if (i == a.tracked) printf("Agent %d not going to work because child at home\n", i);
             }
@@ -551,25 +568,55 @@ namespace RealMovementOps {
                 a.locationOffsetPtr,
                 a.possibleLocationsPtr,
                 a.possibleTypesPtr,
-                a.homeType, a.schoolType, a.workType);
+                a.homeType, a.schoolType, a.workType, numPotentialEvents==1, a.locationStatesPtr);
             // Check if location is open/closed. If closed, go home instead
             unsigned wasClosed = std::numeric_limits<unsigned>::max();
             if (a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) {
-                wasClosed = newLocation;
-                newLocation = RealMovementOps::findActualLocationForType(
-                    i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                    a.homeType, a.schoolType, a.workType);
+                //If closed, but there is another option to go to different type location, try that
+                if (numPotentialEvents>1) {
+                    unsigned nextLocationType = newLocationType;
+                    double rand = RandomGenerator::randomReal(1.0);
+                    double threshhold = (pickedEventIdx == 0) ? 0.0 : a.eventsPtr[activeEventsBegin].chance/(1.0-a.eventsPtr[activeEventsBegin+pickedEventIdx].chance);
+                    unsigned i = 0;
+                    while (rand > threshhold && i < numPotentialEvents) {
+                        i++;
+                        threshhold += (pickedEventIdx == i) ? 0.0 : a.eventsPtr[activeEventsBegin + i].chance/(1.0-a.eventsPtr[activeEventsBegin+pickedEventIdx].chance);
+                    }
+                    if (i==numPotentialEvents) {
+                        i--;
+                    }
+                    nextLocationType = a.eventsPtr[activeEventsBegin + i].locationType;
+                    basicDuration = a.eventsPtr[activeEventsBegin + i].duration;
+                    newLocation = RealMovementOps::findActualLocationForType(i,
+                        nextLocationType,
+                        a.locationOffsetPtr,
+                        a.possibleLocationsPtr,
+                        a.possibleTypesPtr,
+                        a.homeType, a.schoolType, a.workType, 0, nullptr);
+                    //is that closed too?
+                    if (a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) {
+                        wasClosed = newLocation;
+                        newLocation = RealMovementOps::findActualLocationForType(
+                            i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
+                            a.homeType, a.schoolType, a.workType, 0, nullptr);
+                    }
+                } else {
+                    wasClosed = newLocation;
+                    newLocation = RealMovementOps::findActualLocationForType(
+                        i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
+                        a.homeType, a.schoolType, a.workType, 0, nullptr);
+                }
             } else if (newLocationType == a.schoolType) {
                 //if classroom closed, don't go to school either
                 unsigned myClassroom = RealMovementOps::findActualLocationForType(
                     i, a.classroomType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                    a.homeType, a.schoolType, a.workType);
+                    a.homeType, a.schoolType, a.workType, 0, nullptr);
                 if (myClassroom != std::numeric_limits<unsigned>::max() &&
                     a.closedUntilPtr[myClassroom] > a.timestamp) {
                         wasClosed = newLocation;
                         newLocation = RealMovementOps::findActualLocationForType(
                             i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                            a.homeType, a.schoolType, a.workType); 
+                            a.homeType, a.schoolType, a.workType, 0, nullptr); 
                     }
             }
             
@@ -646,7 +693,7 @@ namespace RealMovementOps {
                     a.locationOffsetPtr,
                     a.possibleLocationsPtr,
                     a.possibleTypesPtr,
-                    a.homeType, a.schoolType, a.workType);
+                    a.homeType, a.schoolType, a.workType, 0, nullptr);
                 a.agentLocationsPtr[i] = myPublicPlace;
                 if (i == a.tracked)
                     printf(
@@ -658,7 +705,7 @@ namespace RealMovementOps {
                 newLocationType = a.homeType;
                 unsigned myHome = RealMovementOps::findActualLocationForType(
                     i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                    a.homeType, a.schoolType, a.workType);
+                    a.homeType, a.schoolType, a.workType, 0, nullptr);
                 a.agentLocationsPtr[i] = myHome;
                 if (i == a.tracked)
                     printf(
@@ -722,7 +769,7 @@ namespace RealMovementOps {
                 // If not home, send home
                 unsigned homeLocation = RealMovementOps::findActualLocationForType(
                     i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                    a.homeType, a.schoolType, a.workType);
+                    a.homeType, a.schoolType, a.workType, 0, nullptr);
                 if (homeLocation != a.agentLocationsPtr[i]) {
                     // unsigned until =
                     // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]];
@@ -801,24 +848,24 @@ namespace RealMovementOps {
                     //If quarantined
                     unsigned homeLocation = RealMovementOps::findActualLocationForType(
                             i, home, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr,
-                            home, school, classroom);
+                            home, school, classroom, 0, nullptr);
                     if (homeLocation != std::numeric_limits<unsigned>::max())
                         noWorkPtr[homeLocation] = 1;
                 } else {
                     //Check if school open/closed
                     unsigned schoolLocation = RealMovementOps::findActualLocationForType(
                     i, school, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr,
-                    home, school, classroom);
+                    home, school, classroom, 0, nullptr);
                     unsigned classroomLocation = RealMovementOps::findActualLocationForType(
                     i, classroom, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr,
-                    home, school, classroom);
+                    home, school, classroom, 0, nullptr);
                     if ((schoolLocation != std::numeric_limits<unsigned>::max() &&
                         (locationStatesPtr[schoolLocation]==false || closedUntilPtr[schoolLocation]>timestamp))
                         || (classroomLocation != std::numeric_limits<unsigned>::max() &&
                         (locationStatesPtr[classroomLocation]==false || closedUntilPtr[classroomLocation]>timestamp))) { //School closed
                         unsigned homeLocation = RealMovementOps::findActualLocationForType(
                                 i, home, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr,
-                                home, school, classroom);
+                                home, school, classroom, 0, nullptr);
                         if (homeLocation != std::numeric_limits<unsigned>::max())
                             noWorkPtr[homeLocation] = 1;
                         }
@@ -846,7 +893,7 @@ namespace RealMovementOps {
                 if (agentMetaDataPtr[i].getAge() > 26 && agentMetaDataPtr[i].getAge() < 65) {
                     unsigned homeLocation = RealMovementOps::findActualLocationForType(
                                 i, home, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr,
-                                home, home, home);
+                                home, home, home, 0, nullptr);
                         if (homeLocation != std::numeric_limits<unsigned>::max())
                             if (noWorkLocPtr[homeLocation] == 1) { //TODO this is not exactly thread safe on the CPU....
                             #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
@@ -883,13 +930,13 @@ namespace RealMovementOps {
             //Get work/school/classroom ID
             unsigned workLocation = RealMovementOps::findActualLocationForType(
             i, work, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr,
-            home, school, classroom);
+            home, school, classroom, 0, nullptr);
             unsigned schoolLocation = RealMovementOps::findActualLocationForType(
             i, school, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr,
-            home, school, classroom);
+            home, school, classroom, 0, nullptr);
             unsigned classroomLocation = RealMovementOps::findActualLocationForType(
             i, classroom, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr,
-            home, school, classroom);
+            home, school, classroom, 0, nullptr);
 
             //Check if school/classroom/work quarantined
             unsigned until = 0;

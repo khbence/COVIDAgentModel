@@ -2307,14 +2307,14 @@
                         }, 
                         {
                             "type":44, 
-                            "chance":0.05, 
+                            "chance":0.1, 
                             "start":8, 
                             "end":10, 
                             "duration":8
                         }, 
                         {
                             "type":7, 
-                            "chance":0.025, 
+                            "chance":0.075, 
                             "start":8, 
                             "end":10, 
                             "duration":0.3

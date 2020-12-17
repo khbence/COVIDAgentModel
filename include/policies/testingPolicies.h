@@ -66,12 +66,12 @@ namespace DetailedTestingOps {
         if (a.agentStatsPtr[i].diagnosedTimestamp > a.timestamp - 24 * 60 / a.timeStep) {
             //Mark home
             unsigned home = RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                                                                        a.homeType, a.schoolType, a.workType);
+                                                                        a.homeType, a.schoolType, a.workType, 0, nullptr);
             if (home != std::numeric_limits<unsigned>::max())
                 a.locationFlagsPtr[home] = true;
             //Mark work
             unsigned work = RealMovementOps::findActualLocationForType(i, a.workType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                                                                        a.homeType, a.schoolType, a.workType);
+                                                                        a.homeType, a.schoolType, a.workType, 0, nullptr);
             if (work != std::numeric_limits<unsigned>::max() &&
                 (a.locationQuarantineUntilPtr[work] == 0 || //Should test if it was not quarantined, OR
                     (a.locationQuarantineUntilPtr[work] != 0 && //It has been quarantined - either in last 24 hours, OR it's already over
@@ -80,7 +80,7 @@ namespace DetailedTestingOps {
                 a.locationFlagsPtr[work] = true;
             //Mark school
             unsigned school = RealMovementOps::findActualLocationForType(i, a.schoolType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                                                                        a.homeType, a.schoolType, a.workType);
+                                                                        a.homeType, a.schoolType, a.workType, 0, nullptr);
             unsigned classroom = std::numeric_limits<unsigned>::max();
             if (school != std::numeric_limits<unsigned>::max() &&
                 (a.locationQuarantineUntilPtr[school] == 0 || //Should test if it was not quarantined, OR
@@ -90,7 +90,7 @@ namespace DetailedTestingOps {
                 a.locationFlagsPtr[school] = true;
                 //Mark classroom too
                 classroom = RealMovementOps::findActualLocationForType(i, a.classroomType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                                                                        a.homeType, a.schoolType, a.workType);
+                                                                        a.homeType, a.schoolType, a.workType, 0, nullptr);
                 if (classroom != std::numeric_limits<unsigned>::max() &&
                     (a.locationQuarantineUntilPtr[classroom] == 0 || //Should test if it was not quarantined, OR
                     (a.locationQuarantineUntilPtr[classroom] != 0 && //It has been quarantined - either in last 24 hours, OR it's already over
@@ -131,26 +131,26 @@ template<typename PPState, typename LocationType>
     
         //Check home
         unsigned home = RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                                                                        a.homeType, a.schoolType, a.workType);
+                                                                        a.homeType, a.schoolType, a.workType, 0, nullptr);
         bool homeFlag = false;
         if (home != std::numeric_limits<unsigned>::max())
             homeFlag = a.locationFlagsPtr[home];
         //Check work
         unsigned work = RealMovementOps::findActualLocationForType(i, a.workType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                                                                        a.homeType, a.schoolType, a.workType);
+                                                                        a.homeType, a.schoolType, a.workType, 0, nullptr);
         bool workFlag = false;
         if (work != std::numeric_limits<unsigned>::max())
             workFlag = a.locationFlagsPtr[work];
         //Check school
         unsigned school = RealMovementOps::findActualLocationForType(i, a.schoolType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                                                                        a.homeType, a.schoolType, a.workType);
+                                                                        a.homeType, a.schoolType, a.workType, 0, nullptr);
         unsigned classroom = std::numeric_limits<unsigned>::max();
         bool schoolFlag = false;
         bool classroomFlag = false;
         if (school != std::numeric_limits<unsigned>::max()) {
             schoolFlag = a.locationFlagsPtr[school];
             classroom = RealMovementOps::findActualLocationForType(i, a.classroomType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                                                                        a.homeType, a.schoolType, a.workType);
+                                                                        a.homeType, a.schoolType, a.workType, 0, nullptr);
             if (classroom != std::numeric_limits<unsigned>::max())
                 classroomFlag = true;
         }
