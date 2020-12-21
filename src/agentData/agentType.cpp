@@ -10,7 +10,7 @@ AgentTypeList::Event::Event(const parser::AgentTypes::Type::ScheduleUnique::Even
       start(static_cast<float>(in.start)),
       end(static_cast<float>(in.end)),
       duration(static_cast<float>(in.duration)) {}
-
+// (4+1(dead)) WB state, 9 agent types, 7 days
 HD unsigned AgentTypeList::getOffsetIndex(unsigned ID, states::WBStates state, Days day) {
     return (7 * static_cast<unsigned>(state)) + static_cast<unsigned>(day) + ID * 28;
 }

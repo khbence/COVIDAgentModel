@@ -538,21 +538,21 @@ namespace RealMovementOps {
             } else {
                 double rand = RandomGenerator::randomReal(1.0);
                 double threshhold = a.eventsPtr[activeEventsBegin].chance;
-                unsigned i = 0;
-                while (rand > threshhold && i < numPotentialEvents) {
-                    i++;
-                    threshhold += a.eventsPtr[activeEventsBegin + i].chance;
+                unsigned idx = 0;
+                while (rand > threshhold && idx < numPotentialEvents) {
+                    idx++;
+                    threshhold += a.eventsPtr[activeEventsBegin + idx].chance;
                 }
-                if (i==numPotentialEvents) {
+                if (idx==numPotentialEvents) {
                     /*printf("Error, overrun1: %g, agentType %d WB %d, day %d, time %d:%d\n",rand, agentType + 1, wBState,
                 (int)a.day,
                 a.simTime.getMinutes() / 60,
                 a.simTime.getMinutes() % 60);*/
-                    i--;
+                    idx--;
                 }
-                pickedEventIdx = i;
-                newLocationType = a.eventsPtr[activeEventsBegin + i].locationType;
-                basicDuration = a.eventsPtr[activeEventsBegin + i].duration;
+                pickedEventIdx = idx;
+                newLocationType = a.eventsPtr[activeEventsBegin + idx].locationType;
+                basicDuration = a.eventsPtr[activeEventsBegin + idx].duration;
             }
 
             //if agent has to stay home with children, then check to see if is work, and set it to home
@@ -577,16 +577,16 @@ namespace RealMovementOps {
                     unsigned nextLocationType = newLocationType;
                     double rand = RandomGenerator::randomReal(1.0);
                     double threshhold = (pickedEventIdx == 0) ? 0.0 : a.eventsPtr[activeEventsBegin].chance/(1.0-a.eventsPtr[activeEventsBegin+pickedEventIdx].chance);
-                    unsigned i = 0;
-                    while (rand > threshhold && i < numPotentialEvents) {
-                        i++;
-                        threshhold += (pickedEventIdx == i) ? 0.0 : a.eventsPtr[activeEventsBegin + i].chance/(1.0-a.eventsPtr[activeEventsBegin+pickedEventIdx].chance);
+                    unsigned idx = 0;
+                    while (rand > threshhold && idx < numPotentialEvents) {
+                        idx++;
+                        threshhold += (pickedEventIdx == idx) ? 0.0 : a.eventsPtr[activeEventsBegin + idx].chance/(1.0-a.eventsPtr[activeEventsBegin+pickedEventIdx].chance);
                     }
-                    if (i==numPotentialEvents) {
-                        i--;
+                    if (idx==numPotentialEvents) {
+                        idx--;
                     }
-                    nextLocationType = a.eventsPtr[activeEventsBegin + i].locationType;
-                    basicDuration = a.eventsPtr[activeEventsBegin + i].duration;
+                    nextLocationType = a.eventsPtr[activeEventsBegin + idx].locationType;
+                    basicDuration = a.eventsPtr[activeEventsBegin + idx].duration;
                     newLocation = RealMovementOps::findActualLocationForType(i,
                         nextLocationType,
                         a.locationOffsetPtr,
