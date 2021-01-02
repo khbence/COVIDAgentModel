@@ -346,11 +346,11 @@ public:
             //std::cout << simTime.getTimestamp() << std::endl;
             if (simTime.isMidnight()) {
                 if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
-                MovementPolicy<Simulation>::planLocations(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 if (enableOtherDisease) otherDisease(simTime,timeStep);
                 auto stats = refreshAndPrintStatistics(simTime);
                 ClosurePolicy<Simulation>::midnight(simTime, timeStep, stats);
+                MovementPolicy<Simulation>::planLocations(simTime, timeStep);
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
             ClosurePolicy<Simulation>::step(simTime, timeStep);
@@ -360,8 +360,11 @@ public:
         agents->printAgentStatJSON(outAgentStat);
     }
 
-    void toggleCurfew(bool enable) {
+    void toggleCurfew(bool enable, unsigned curfewBegin, unsigned curfewEnd) {
         MovementPolicy<Simulation>::enableCurfew = enable;
+        MovementPolicy<Simulation>::curfewBegin = curfewBegin;
+        MovementPolicy<Simulation>::curfewEnd = curfewEnd;
+        MovementPolicy<Simulation>::curfewTimeConverted = false;
     }
     void setSchoolAgeRestriction(unsigned limit) {
         MovementPolicy<Simulation>::schoolAgeRestriction = limit;

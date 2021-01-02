@@ -1034,12 +1034,12 @@ class RealMovement {
     unsigned school;
     unsigned classroom;
     unsigned work;
+
+public:
+    bool enableCurfew = false;
     unsigned curfewBegin=0;
     unsigned curfewEnd=0;
     bool curfewTimeConverted = false;
-
-public:
-    bool enableCurfew;
     unsigned schoolAgeRestriction = 99;
     bool holidayModeActive = false;
     // add program parameters if we need any, this function got called already
@@ -1054,25 +1054,12 @@ public:
             cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))))
             ("quarantineLength",
             "Length of quarantine in days",
-            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(14))))
-            ("curfew",
-            "begin and end times of curfew (hhmm-hhmm), e.g. 2000-0500. Needs to be paired with a Curfew closure policy",
-            cxxopts::value<std::string>()->default_value(""));
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(14))));
     }
     void initializeArgs(const cxxopts::ParseResult& result) {
         tracked = result["trace"].as<unsigned>();
         quarantinePolicy = result["quarantinePolicy"].as<unsigned>();
         quarantineLength = result["quarantineLength"].as<unsigned>();
-        enableCurfew = false;
-        std::string curfewString = result["curfew"].as<std::string>();
-        if (curfewString.length()==9) {
-            unsigned bhours = atoi(curfewString.substr(0,2).c_str());
-            unsigned bminutes = atoi(curfewString.substr(2,2).c_str());
-            curfewBegin = bhours*60+bminutes;
-            unsigned ehours = atoi(curfewString.substr(5,2).c_str());
-            unsigned eminutes = atoi(curfewString.substr(7,2).c_str());
-            curfewEnd = ehours*60+eminutes;
-        } else if (curfewString.length()>0) throw CustomErrors("curfew parameter string needs to be exactly 9 characters long");
     }
     void init(const parser::LocationTypes& data, unsigned cemeteryID) {
         publicSpace = data.publicSpace;

@@ -78,17 +78,11 @@ class RuleClosure {
             "enable/disable holiday mode - in cojunction with a HolidayMode closure policy");
     }
     unsigned enableClosures;
-    bool curfewExists;
     bool holidayModeExists;
     unsigned diagnosticLevel=0;
     void initializeArgs(const cxxopts::ParseResult& result) {
         enableClosures = result["enableClosures"].as<unsigned>();
         diagnosticLevel = result["diags"].as<unsigned>();
-        try {
-            curfewExists = result["curfew"].as<std::string>().length()>0;
-        } catch (std::exception &e) {
-            curfewExists = false;
-        }
         holidayModeExists = result["holidayMode"].as<bool>();
     }
     void init(const parser::LocationTypes& data, const parser::ClosureRules& rules, std::string header) {
@@ -191,7 +185,7 @@ class RuleClosure {
                 thrust::device_vector<double>& locInfectiousness = realThis->locs->infectiousness;
                 thrust::device_vector<typename SimulationType::TypeOfLocation_t>& locTypes = realThis->locs->locType;
                 unsigned homeType = data.home;
-                double maskCoefficient2 = rule.parameter;
+                double maskCoefficient2 = std::stod(rule.parameter);
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
                 this->rules.emplace_back(rule.name, conds, [&,homeType,maskCoefficient2,diags](Rule *r) {
                     bool close = true;
@@ -214,16 +208,26 @@ class RuleClosure {
                     }
                 });
             } else if (rule.name.compare("Curfew")==0) {
-                if (!curfewExists) continue;
+                unsigned curfewBegin;
+                unsigned curfewEnd;
+                if (rule.parameter.length()==9) {
+                    unsigned bhours = atoi(rule.parameter.substr(0,2).c_str());
+                    unsigned bminutes = atoi(rule.parameter.substr(2,2).c_str());
+                    curfewBegin = bhours*60+bminutes;
+                    unsigned ehours = atoi(rule.parameter.substr(5,2).c_str());
+                    unsigned eminutes = atoi(rule.parameter.substr(7,2).c_str());
+                    curfewEnd = ehours*60+eminutes;
+                } else if (rule.parameter.length()>0) throw CustomErrors("curfew parameter string needs to be exactly 9 characters long");
+                
                 //Curfew
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
                 auto realThis = static_cast<SimulationType*>(this);
-                this->rules.emplace_back(rule.name, conds, [&, realThis,diags](Rule *r) {
+                this->rules.emplace_back(rule.name, conds, [&, realThis,diags,curfewBegin,curfewEnd](Rule *r) {
                     bool close = true;
                     for (GlobalCondition *c : r->conditions) {close = close && c->active;}
                     bool shouldBeOpen = !close;
                     if (r->previousOpenState != shouldBeOpen) {
-                        realThis->toggleCurfew(close);
+                        realThis->toggleCurfew(close,curfewBegin,curfewEnd);
                         r->previousOpenState = shouldBeOpen;
                         if (diags>0) printf("Curfew %s\n", (int)shouldBeOpen ? "disabled": "enabled");
                     }

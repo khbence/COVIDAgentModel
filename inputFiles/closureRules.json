@@ -55,7 +55,18 @@
         "threshold": 0,
         "openAfter": 300,
         "closeAfter": -1,
-        "parameter": 0.8,
+        "parameter": "0.8",
+        "locationTypesToClose": [
+          
+        ]
+      },
+      {
+        "name": "Curfew",
+        "conditionType": "afterDays",
+        "threshold": 0,
+        "openAfter": 300,
+        "closeAfter": -1,
+        "parameter": "2000-0500",
         "locationTypesToClose": [
           
         ]
