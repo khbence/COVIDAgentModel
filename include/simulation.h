@@ -363,7 +363,11 @@ public:
     void toggleCurfew(bool enable) {
         MovementPolicy<Simulation>::enableCurfew = enable;
     }
+    void setSchoolAgeRestriction(unsigned limit) {
+        MovementPolicy<Simulation>::schoolAgeRestriction = limit;
+    }
     void toggleHolidayMode(bool enable) {
         MovementPolicy<Simulation>::holidayModeActive = enable;
+        printf("holiday Turned %d\n", (int)enable);
     }
 };

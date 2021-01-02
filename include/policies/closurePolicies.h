@@ -73,21 +73,17 @@ class RuleClosure {
         options.add_options()("enableClosures",
             "Enable(1)/disable(0) closure rules defined in closureRules.json",
             cxxopts::value<unsigned>()->default_value("0"));
-        options.add_options()("maskCoefficient",
-            "0.0-1.0 multiplier on infectiousness at non-home locations",
-            cxxopts::value<double>()->default_value("1.0"))
+        options.add_options()
             ("holidayMode",
             "enable/disable holiday mode - in cojunction with a HolidayMode closure policy");
     }
     unsigned enableClosures;
     bool curfewExists;
-    double maskCoefficient;
     bool holidayModeExists;
     unsigned diagnosticLevel=0;
     void initializeArgs(const cxxopts::ParseResult& result) {
         enableClosures = result["enableClosures"].as<unsigned>();
         diagnosticLevel = result["diags"].as<unsigned>();
-        maskCoefficient = result["maskCoefficient"].as<double>();
         try {
             curfewExists = result["curfew"].as<std::string>().length()>0;
         } catch (std::exception &e) {
@@ -113,8 +109,7 @@ class RuleClosure {
         for (const parser::ClosureRules::Rule& rule : rules.rules) {
 
             //check if masks/closures are enabled
-            if (!enableClosures && !(maskCoefficient<1.0 && rule.name.compare("Masks")==0) && !rule.name.compare("Curfew")==0 && !rule.name.compare("HolidayMode")==0) continue;
-            if (maskCoefficient==1.0 && rule.name.compare("Masks")==0) continue;
+            if (!enableClosures && !rule.name.compare("Masks")==0 && !rule.name.compare("Curfew")==0 && !rule.name.compare("HolidayMode")==0 && !rule.name.compare("SchoolAgeRestriction")==0) continue;
 
             //Create condition
 
@@ -191,53 +186,12 @@ class RuleClosure {
                 throw CustomErrors("Unknown closure type "+rule.conditionType);
             }
 
-            if (rule.name.compare("Masks")!=0 && rule.name.compare("Curfew")!=0 && rule.name.compare("HolidayMode")!=0) { //Not masks or curfew
-                //Create rule
-                thrust::device_vector<typename SimulationType::TypeOfLocation_t>& locTypes = realThis->locs->locType;
-                thrust::device_vector<bool>& locationOpenState = realThis->locs->states;
-                thrust::device_vector<uint8_t>& locationEssential = realThis->locs->essential;
-                const std::vector<int> &locationTypesToClose = rule.locationTypesToClose;
-
-                //Create small fixed size array for listing types to close that can be captured properly 
-                //typename SimulationType::TypeOfLocation_t fixListArr[10];
-                std::array<unsigned, 10> fixListArr;
-                if (locationTypesToClose.size()>=10) throw CustomErrors("Error, Closure Rule " + rule.name+ " has over 10 location types to close, please increase implementation limit");
-                for (unsigned i = 0; i < locationTypesToClose.size(); i++) {
-                    fixListArr[i] = locationTypesToClose[i];
-                }
-                for (unsigned i = locationTypesToClose.size(); i < 10; i++) fixListArr[i] = (typename SimulationType::TypeOfLocation_t)-1;
-
-                //printf("cond %p\n",&globalConditions[globalConditions.size()-1]);
-                std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
-                this->rules.emplace_back(rule.name, conds, [&,fixListArr,diags](Rule *r) {
-                    bool close = true;
-                    for (GlobalCondition *c : r->conditions) {close = close && c->active; /*printf("rule %s cond %p\n", r->name.c_str(), c);*/}
-                    //printf("Rule %s %d\n", r->name.c_str(), close ? 1 : 0);
-                    bool shouldBeOpen = !close;
-                    if (r->previousOpenState != shouldBeOpen) {
-                        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(locTypes.begin(), locationOpenState.begin(), locationEssential.begin())),
-                                        thrust::make_zip_iterator(thrust::make_tuple(locTypes.end(), locationOpenState.end(), locationEssential.end())),
-                                        [fixListArr,shouldBeOpen]HD(thrust::tuple<typename SimulationType::TypeOfLocation_t&, bool&, uint8_t&> tup)
-                                        {
-                                            auto& type = thrust::get<0>(tup);
-                                            auto& isOpen = thrust::get<1>(tup);
-                                            auto& isEssential = thrust::get<2>(tup);
-                                            if (isEssential==1) return;
-                                            for (unsigned i = 0; i < 10; i++)
-                                                if (type == fixListArr[i])
-                                                    isOpen = shouldBeOpen;
-                                                else if ((typename SimulationType::TypeOfLocation_t)-1 == fixListArr[i]) break;
-                                        });
-                        r->previousOpenState = shouldBeOpen;
-                        if (diags>0) printf("Rule %s %s\n", r->name.c_str(), (int)shouldBeOpen ? "disabled": "enabled");
-                    }
-                });
-            } else if (rule.name.compare("Masks")==0) {
+            if (rule.name.compare("Masks")==0) {
                 //Masks
                 thrust::device_vector<double>& locInfectiousness = realThis->locs->infectiousness;
                 thrust::device_vector<typename SimulationType::TypeOfLocation_t>& locTypes = realThis->locs->locType;
                 unsigned homeType = data.home;
-                double maskCoefficient2 = maskCoefficient;
+                double maskCoefficient2 = rule.parameter;
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
                 this->rules.emplace_back(rule.name, conds, [&,homeType,maskCoefficient2,diags](Rule *r) {
                     bool close = true;
@@ -289,7 +243,63 @@ class RuleClosure {
                         if (diags>0) printf("Holiday mode %s\n", (int)shouldBeOpen ? "disabled": "enabled");
                     }
                 });
-            }
+            } else if (rule.name.compare("SchoolAgeRestriction")==0) {
+                //Curfew
+                std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
+                auto realThis = static_cast<SimulationType*>(this);
+                unsigned ageLimit = std::stoi(rule.parameter);
+                this->rules.emplace_back(rule.name, conds, [&, realThis,diags,ageLimit](Rule *r) {
+                    bool close = true;
+                    for (GlobalCondition *c : r->conditions) {close = close && c->active;}
+                    bool shouldBeOpen = !close;
+                    if (r->previousOpenState != shouldBeOpen) {
+                        realThis->setSchoolAgeRestriction(close?ageLimit:99);
+                        r->previousOpenState = shouldBeOpen;
+                        if (diags>0) printf("School age restriction %s - only under %d years go to school\n", (int)shouldBeOpen ? "disabled": "enabled", ageLimit);
+                    }
+                });
+            } else { //Not masks, curfew, holiday
+                //Create rule
+                thrust::device_vector<typename SimulationType::TypeOfLocation_t>& locTypes = realThis->locs->locType;
+                thrust::device_vector<bool>& locationOpenState = realThis->locs->states;
+                thrust::device_vector<uint8_t>& locationEssential = realThis->locs->essential;
+                const std::vector<int> &locationTypesToClose = rule.locationTypesToClose;
+
+                //Create small fixed size array for listing types to close that can be captured properly 
+                //typename SimulationType::TypeOfLocation_t fixListArr[10];
+                std::array<unsigned, 10> fixListArr;
+                if (locationTypesToClose.size()>=10) throw CustomErrors("Error, Closure Rule " + rule.name+ " has over 10 location types to close, please increase implementation limit");
+                for (unsigned i = 0; i < locationTypesToClose.size(); i++) {
+                    fixListArr[i] = locationTypesToClose[i];
+                }
+                for (unsigned i = locationTypesToClose.size(); i < 10; i++) fixListArr[i] = (typename SimulationType::TypeOfLocation_t)-1;
+
+                //printf("cond %p\n",&globalConditions[globalConditions.size()-1]);
+                std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
+                this->rules.emplace_back(rule.name, conds, [&,fixListArr,diags](Rule *r) {
+                    bool close = true;
+                    for (GlobalCondition *c : r->conditions) {close = close && c->active; /*printf("rule %s cond %p\n", r->name.c_str(), c);*/}
+                    //printf("Rule %s %d\n", r->name.c_str(), close ? 1 : 0);
+                    bool shouldBeOpen = !close;
+                    if (r->previousOpenState != shouldBeOpen) {
+                        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(locTypes.begin(), locationOpenState.begin(), locationEssential.begin())),
+                                        thrust::make_zip_iterator(thrust::make_tuple(locTypes.end(), locationOpenState.end(), locationEssential.end())),
+                                        [fixListArr,shouldBeOpen]HD(thrust::tuple<typename SimulationType::TypeOfLocation_t&, bool&, uint8_t&> tup)
+                                        {
+                                            auto& type = thrust::get<0>(tup);
+                                            auto& isOpen = thrust::get<1>(tup);
+                                            auto& isEssential = thrust::get<2>(tup);
+                                            if (isEssential==1) return;
+                                            for (unsigned i = 0; i < 10; i++)
+                                                if (type == fixListArr[i])
+                                                    isOpen = shouldBeOpen;
+                                                else if ((typename SimulationType::TypeOfLocation_t)-1 == fixListArr[i]) break;
+                                        });
+                        r->previousOpenState = shouldBeOpen;
+                        if (diags>0) printf("Rule %s %s\n", r->name.c_str(), (int)shouldBeOpen ? "disabled": "enabled");
+                    }
+                });
+            } 
         }
     }
 

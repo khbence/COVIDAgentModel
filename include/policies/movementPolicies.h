@@ -158,6 +158,7 @@ namespace RealMovementOps {
         unsigned curfewBegin;
         unsigned curfewEnd;
         bool enableCurfew;
+        unsigned schoolAgeRestriction;
 
     };
 
@@ -571,7 +572,8 @@ namespace RealMovementOps {
                 a.homeType, a.schoolType, a.workType, numPotentialEvents==1, a.locationStatesPtr);
             // Check if location is open/closed. If closed, go home instead
             unsigned wasClosed = std::numeric_limits<unsigned>::max();
-            if (a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) {
+            bool schoolAndTooOld = (newLocationType == a.schoolType || newLocationType == a.classroomType) && a.agentMetaDataPtr[i].getAge() >= a.schoolAgeRestriction;
+            if (schoolAndTooOld || a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) {
                 //If closed, but there is another option to go to different type location, try that
                 if (numPotentialEvents>1) {
                     unsigned nextLocationType = newLocationType;
@@ -842,7 +844,7 @@ namespace RealMovementOps {
 #endif
         void
         checkUnderageAtHome(unsigned i, unsigned *noWorkPtr, AgentMeta *agentMetaDataPtr, bool *quarantinedPtr, bool *locationStatesPtr, unsigned *closedUntilPtr, unsigned long *locationOffsetPtr, 
-            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned school, unsigned classroom, unsigned timestamp) {
+            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned school, unsigned classroom, unsigned timestamp, unsigned schoolAgeRestriction) {
                 if (agentMetaDataPtr[i].getAge() > 14) return; //Only underage
                 if (quarantinedPtr[i]) {
                     //If quarantined
@@ -859,7 +861,9 @@ namespace RealMovementOps {
                     unsigned classroomLocation = RealMovementOps::findActualLocationForType(
                     i, classroom, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr,
                     home, school, classroom, 0, nullptr);
-                    if ((schoolLocation != std::numeric_limits<unsigned>::max() &&
+                    bool schoolAndTooOld = agentMetaDataPtr[i].getAge() >= schoolAgeRestriction;
+                    if (schoolAndTooOld ||
+                        (schoolLocation != std::numeric_limits<unsigned>::max() &&
                         (locationStatesPtr[schoolLocation]==false || closedUntilPtr[schoolLocation]>timestamp))
                         || (classroomLocation != std::numeric_limits<unsigned>::max() &&
                         (locationStatesPtr[classroomLocation]==false || closedUntilPtr[classroomLocation]>timestamp))) { //School closed
@@ -876,10 +880,10 @@ namespace RealMovementOps {
     template<typename AgentMeta>
     __global__ void checkUnderageAtHomeDriver(unsigned numberOfAgents,
         unsigned *noWorkPtr, AgentMeta *agentMetaDataPtr, bool *quarantinedPtr, bool *locationStatesPtr, unsigned *closedUntilPtr, unsigned long *locationOffsetPtr, 
-            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned school, unsigned classroom, unsigned timestamp) {
+            unsigned *possibleLocationsPtr, unsigned *possibleTypesPtr, unsigned home, unsigned school, unsigned classroom, unsigned timestamp, unsigned schoolAgeRestriction) {
         unsigned i = threadIdx.x + blockIdx.x * blockDim.x;
         if (i < numberOfAgents) { RealMovementOps::checkUnderageAtHome(i, noWorkPtr, agentMetaDataPtr, quarantinedPtr, locationStatesPtr, closedUntilPtr,
-                                    locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, school, classroom, timestamp); }
+                                    locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, school, classroom, timestamp, schoolAgeRestriction); }
     }
 #endif
 
@@ -1036,6 +1040,7 @@ class RealMovement {
 
 public:
     bool enableCurfew;
+    unsigned schoolAgeRestriction = 99;
     bool holidayModeActive = false;
     // add program parameters if we need any, this function got called already
     // from Simulation
@@ -1184,11 +1189,11 @@ public:
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
         #pragma omp parallel for
         for (unsigned i = 0; i < numberOfAgents; i++) { RealMovementOps::checkUnderageAtHome(i, noWorkLocPtr, agentMetaDataPtr,
-                        quarantinedPtr, locationStatesPtr, closedUntilPtr, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, school, classroom,timestamp); }
+                        quarantinedPtr, locationStatesPtr, closedUntilPtr, locationOffsetPtr, possibleLocationsPtr, possibleTypesPtr, home, school, classroom,timestamp,schoolAgeRestriction); }
 #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
         RealMovementOps::checkUnderageAtHomeDriver<<<(numberOfAgents - 1) / 256 + 1, 256>>>(
             numberOfAgents, noWorkLocPtr, agentMetaDataPtr, quarantinedPtr, locationStatesPtr, closedUntilPtr, locationOffsetPtr, 
-            possibleLocationsPtr, possibleTypesPtr, home, school, classroom,timestamp);
+            possibleLocationsPtr, possibleTypesPtr, home, school, classroom,timestamp,schoolAgeRestriction);
         cudaDeviceSynchronize();
 #endif
 
@@ -1230,6 +1235,7 @@ public:
         a.enableCurfew = enableCurfew;
         a.curfewBegin = curfewBegin;
         a.curfewEnd = curfewEnd;
+        a.schoolAgeRestriction = schoolAgeRestriction;
 
         // Location-based data
         thrust::device_vector<unsigned>& locationAgentList = realThis->locs->locationAgentList;
@@ -1290,7 +1296,10 @@ public:
         unsigned numberOfLocations = locationListOffsets.size() - 1;
 
         a.day = simTime.getDay();
-        if (holidayModeActive) a.day = Days::SUNDAY;
+        if (holidayModeActive) {
+  a.day = Days::SUNDAY;
+printf("holiday step\n");
+}
         a.timestamp = simTime.getTimestamp();
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
