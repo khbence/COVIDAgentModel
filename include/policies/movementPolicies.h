@@ -477,6 +477,10 @@ namespace RealMovementOps {
                 activeEventsEnd = j;
                 break;
             }
+            if (j == eventsEnd-1) {
+                if (a.simTime >= a.eventsPtr[j].start && a.simTime < a.eventsPtr[j].end)
+                    activeEventsEnd = eventsEnd;
+            }
         }
         if (i == a.tracked)
             printf(
