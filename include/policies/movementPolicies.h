@@ -580,7 +580,6 @@ namespace RealMovementOps {
             if (schoolAndTooOld || a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) {
                 //If closed, but there is another option to go to different type location, try that
                 if (numPotentialEvents>1) {
-                    unsigned nextLocationType = newLocationType;
                     double rand = RandomGenerator::randomReal(1.0);
                     double threshhold = (pickedEventIdx == 0) ? 0.0 : a.eventsPtr[activeEventsBegin].chance/(1.0-a.eventsPtr[activeEventsBegin+pickedEventIdx].chance);
                     unsigned idx = 0;
@@ -591,14 +590,15 @@ namespace RealMovementOps {
                     if (idx==numPotentialEvents) {
                         idx--;
                     }
-                    nextLocationType = a.eventsPtr[activeEventsBegin + idx].locationType;
+                    newLocationType = a.eventsPtr[activeEventsBegin + idx].locationType;
                     basicDuration = a.eventsPtr[activeEventsBegin + idx].duration;
                     newLocation = RealMovementOps::findActualLocationForType(i,
-                        nextLocationType,
+                        newLocationType,
                         a.locationOffsetPtr,
                         a.possibleLocationsPtr,
                         a.possibleTypesPtr,
                         a.homeType, a.schoolType, a.workType, 0, nullptr);
+                    wasClosed = std::numeric_limits<unsigned>::max();
                     //is that closed too?
                     if (a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) {
                         wasClosed = newLocation;
