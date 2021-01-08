@@ -24,7 +24,8 @@ class Immunization {
     Simulation *sim;
     thrust::device_vector<uint8_t> immunizationRound;
     unsigned currentCategory = 0;
-    unsigned numberOfCategories = 0;
+#define numberOfCategories 6
+    std::vector<uint8_t> vaccinationOrder;
     unsigned startAfterDay = 0;
     unsigned dailyDoses = 0;
 
@@ -43,12 +44,36 @@ class Immunization {
             cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))))
             ("immunizationsPerDay",
             "number of immunizations per day",
-            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))));
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))))
+            ("immunizationOrder",
+            "Order of immunization (starting at 1, 0 to skip) for agents in different categories health workers, nursery home worker/resident, 60+, 16-60 with underlying condition, essential worker, 18+",
+            cxxopts::value<std::string>()->default_value("1,2,3,4,5,6"));
     }
 
     void initializeArgs(const cxxopts::ParseResult& result) {
         startAfterDay = result["immunizationStart"].as<unsigned>();
         dailyDoses = result["immunizationsPerDay"].as<unsigned>();
+        std::string orderString = result["immunizationOrder"].as<std::string>();
+        std::stringstream ss(orderString);
+        std::string arg;
+        for (char i; ss >> i;) {
+            arg.push_back(i);    
+            if (ss.peek() == ',') {
+                if (arg.length()>0 && isdigit(arg[0])) {
+                    vaccinationOrder.push_back(atoi(arg.c_str()));
+                    arg.clear();
+                }
+                ss.ignore();
+            }
+        }
+        if (arg.length()>0 && isdigit(arg[0])) {
+            vaccinationOrder.push_back(atoi(arg.c_str()));
+            arg.clear();
+        }
+        if (vaccinationOrder.size()!=numberOfCategories) throw CustomErrors("immunizationOrder mush have exactly "+std::to_string(numberOfCategories)+" values");
+        for (int i = 0; i < numberOfCategories; i++)
+            if (vaccinationOrder[i]>numberOfCategories) throw CustomErrors("immunizationOrder values have to be  less or equal to "+std::to_string(numberOfCategories));
+
     }
 
     void initCategories() {
@@ -110,63 +135,56 @@ class Immunization {
             else return thrust::make_pair(false,0.0f);
         };
 
-        numberOfCategories = 6;
-
+        uint8_t lorder[numberOfCategories];
+        for (unsigned i = 0; i < numberOfCategories; i++) lorder[i] = vaccinationOrder[i];
         //Figure out which round of immunizations agent belongs to, and decide if agent wants to get it.
         thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.begin(), thrust::make_counting_iterator(0))),
                          thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.end()  , thrust::make_counting_iterator((int)immunizationRound.size()))),
-                            [cat_healthworker,cat_nursery,cat_elderly,cat_underlying,cat_essential,cat_adult] HD (thrust::tuple<uint8_t&, int> tup) {
+                            [cat_healthworker,cat_nursery,cat_elderly,cat_underlying,cat_essential,cat_adult,lorder] HD (thrust::tuple<uint8_t&, int> tup) {
                                 uint8_t& round = thrust::get<0>(tup);
                                 unsigned id = thrust::get<1>(tup);
 
-                                uint8_t roundidx = 1;
                                 auto ret = cat_healthworker(id);
                                 if (ret.first && round == 0) {
-                                    if (RandomGenerator::randomUnit() < ret.second) round = roundidx;
+                                    if (RandomGenerator::randomUnit() < ret.second) round = lorder[0];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
-                                roundidx++;
 
                                 ret = cat_nursery(id);
                                 if (ret.first && round == 0) {
-                                    if (RandomGenerator::randomUnit() < ret.second) round = roundidx;
+                                    if (RandomGenerator::randomUnit() < ret.second) round = lorder[1];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
-                                roundidx++;
 
                                 ret = cat_elderly(id);
                                 if (ret.first && round == 0) {
-                                    if (RandomGenerator::randomUnit() < ret.second) round = roundidx;
+                                    if (RandomGenerator::randomUnit() < ret.second) round = lorder[2];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
-                                roundidx++;
 
                                 ret = cat_underlying(id);
                                 if (ret.first && round == 0) {
-                                    if (RandomGenerator::randomUnit() < ret.second) round = roundidx;
+                                    if (RandomGenerator::randomUnit() < ret.second) round = lorder[3];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
-                                roundidx++;
 
                                 ret = cat_essential(id);
                                 if (ret.first && round == 0) {
-                                    if (RandomGenerator::randomUnit() < ret.second) round = roundidx;
+                                    if (RandomGenerator::randomUnit() < ret.second) round = lorder[4];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
-                                roundidx++;
 
                                 ret = cat_adult(id);
                                 if (ret.first && round == 0) {
-                                    if (RandomGenerator::randomUnit() < ret.second) round = roundidx;
+                                    if (RandomGenerator::randomUnit() < ret.second) round = lorder[5];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
-                                roundidx++;
                             }
                         );
     }
