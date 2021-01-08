@@ -68,7 +68,7 @@ class Immunization {
         auto cat_healthworker = [locationOffsetPtr, possibleTypesPtr,possibleLocationsPtr,locationTypePtr] HD (unsigned id) -> thrust::pair<bool,float> {
             for (unsigned idx = locationOffsetPtr[id]; idx < locationOffsetPtr[id+1]; idx++) {
                 //TODO pull these params from config
-                if (possibleTypesPtr[idx] == 3 && (locationTypePtr[possibleLocationsPtr[idx]]==12 || locationTypePtr[possibleLocationsPtr[idx]]==14))
+                if (possibleTypesPtr[idx] == 4 && (locationTypePtr[possibleLocationsPtr[idx]]==12 || locationTypePtr[possibleLocationsPtr[idx]]==14))
                     return thrust::make_pair(true, 0.7f);
             }
             return thrust::make_pair(false,0.0f);
@@ -77,7 +77,7 @@ class Immunization {
         //Category nursery home workers & residents
         auto cat_nursery = [locationOffsetPtr, possibleTypesPtr,locationTypePtr,possibleLocationsPtr] HD (unsigned id) -> thrust::pair<bool,float> {
             for (unsigned idx = locationOffsetPtr[id]; idx < locationOffsetPtr[id+1]; idx++) {
-                if ((possibleTypesPtr[idx] == 3 || possibleTypesPtr[idx] == 2) && locationTypePtr[possibleLocationsPtr[idx]]==22) //TODO pull these params from config
+                if ((possibleTypesPtr[idx] == 4 || possibleTypesPtr[idx] == 2) && locationTypePtr[possibleLocationsPtr[idx]]==22) //TODO pull these params from config
                     return thrust::make_pair(true, 0.9f);
             }
             return thrust::make_pair(false,0.0f);
@@ -98,7 +98,7 @@ class Immunization {
         //Category essential workers
         auto cat_essential = [locationOffsetPtr, possibleTypesPtr,essentialPtr,possibleLocationsPtr] HD (unsigned id) -> thrust::pair<bool,float> {
             for (unsigned idx = locationOffsetPtr[id]; idx < locationOffsetPtr[id+1]; idx++) {
-                if ((possibleTypesPtr[idx] == 3 || possibleTypesPtr[idx] == 2) && essentialPtr[possibleLocationsPtr[idx]]==1) //TODO pull these params from config
+                if ((possibleTypesPtr[idx] == 4 || possibleTypesPtr[idx] == 2) && essentialPtr[possibleLocationsPtr[idx]]==1) //TODO pull these params from config
                     return thrust::make_pair(true, 0.9f);
             }
             return thrust::make_pair(false,0.0f);
