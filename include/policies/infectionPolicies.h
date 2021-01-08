@@ -30,13 +30,13 @@ public:
     static void addProgramParameters(cxxopts::Options& options) {
         options.add_options()("m,Imax",
             "Infection: [0 1] :max value ",
-            cxxopts::value<double>()->default_value("0.32559"))("v,Iasymmetry",
+            cxxopts::value<double>()->default_value("0.05664"))("v,Iasymmetry",
             "Infection: 1< :longer small phase [0 1] :longer high phase",
             cxxopts::value<double>()->default_value("1.0"))("H,Ihorizontal",
             "sigmoid: horizotal move of inflexcion point; <-1 or >1 :exponential like",
-            cxxopts::value<double>()->default_value("-0.42991"))("s,Ishape",
+            cxxopts::value<double>()->default_value("-0.48311"))("s,Ishape",
             "shape: bigger, more steep",
-            cxxopts::value<double>()->default_value("22.25235"))("dumpLocationInfections",
+            cxxopts::value<double>()->default_value("48.81962"))("dumpLocationInfections",
             "Dump per-location statistics every N timestep ",
             cxxopts::value<unsigned>()->default_value("0"))("dumpLocationInfectiousList",
             "Dump per-location list of infectious people ",
@@ -86,7 +86,7 @@ public:
                 ppstates,
                 agentLocations,
                 [] HD(const typename SimulationType::PPState_t& ppstate) -> unsigned {
-                    return ppstate.isSusceptible();
+                    return ppstate.getSusceptible()>0;
                 });
         }
         if (dumpToFile > 0 && simTime.getTimestamp() % dumpToFile == 0) {
@@ -139,7 +139,7 @@ public:
                 ppstates,
                 agentLocations,
                 [] HD(const typename SimulationType::PPState_t& ppstate) -> unsigned {
-                    return ppstate.isSusceptible();
+                    return ppstate.getSusceptible()>0;
                 });
             thrust::transform(susceptible1.begin(),
                 susceptible1.end(),

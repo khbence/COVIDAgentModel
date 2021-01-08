@@ -16,7 +16,7 @@ class DynamicPPState {
 
     char state = 0;// a number
     short daysBeforeNextState = -1;
-    bool susceptible = true;
+    float susceptible = 1.0;
 
     static HD ProgressionMatrix& getTransition(unsigned progressionID_p);
 
@@ -41,7 +41,8 @@ public:
     [[nodiscard]] char HD getStateIdx() const { return state; }
     [[nodiscard]] states::WBStates HD getWBState() const;
     [[nodiscard]] float HD isInfectious() const { return infectious; }
-    [[nodiscard]] bool HD isSusceptible() const { return susceptible; }
+    [[nodiscard]] float HD getSusceptible() const { return susceptible; }
+    void HD setSusceptible(float s) { this->susceptible = s; }
     [[nodiscard]] bool HD isInfected() const;
     [[nodiscard]] char HD die(bool covid);
     [[nodiscard]] float HD getAccuracyPCR() const;

@@ -14,6 +14,7 @@ public:
     unsigned daysInQuarantine = 0;
     unsigned hospitalizedTimestamp = 0;
     unsigned hospitalizedUntilTimestamp = 0;
+    unsigned immunizationTimestamp = 0;
     char worstState = 0;
     friend std::ostream& operator<<(std::ostream& os, const AgentStats& s);
 };

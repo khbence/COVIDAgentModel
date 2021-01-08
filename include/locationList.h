@@ -273,7 +273,7 @@ public:
                 unsigned agentID = thrust::get<5>(tuple);
                 bool& infectionAtLocation = thrust::get<6>(tuple);
                 unsigned& newlyInfectedAgent = thrust::get<7>(tuple);
-                if (ppstate.isSusceptible() && RandomGenerator::randomUnit() < infectionRatio) {
+                if (ppstate.getSusceptible()>0.0f && RandomGenerator::randomUnit() < infectionRatio*ppstate.getSusceptible()) {
                     ppstate.gotInfected();
                     agentStat.infectedTimestamp = timestamp;
                     agentStat.infectedLocation = agentLocation;

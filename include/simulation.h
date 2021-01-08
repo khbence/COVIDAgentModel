@@ -10,6 +10,7 @@
 #include "util.h"
 #include <cxxopts.hpp>
 #include "dataProvider.h"
+#include "immunization.h"
 
 template<typename PositionType,
     typename TypeOfLocation,
@@ -74,6 +75,7 @@ public:
     std::string outAgentStat;
     std::string statesHeader;
     int enableOtherDisease = 1;
+    Immunization<Simulation> *immunization;
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -89,6 +91,7 @@ public:
         TestingPolicy<Simulation>::addProgramParameters(options);
         ClosurePolicy<Simulation>::addProgramParameters(options);
         AgentListType::addProgramParameters(options);
+        Immunization<Simulation>::addProgramParameters(options);
     }
 
     void otherDisease(Timehandler& simTime, unsigned timeStep) {
@@ -305,6 +308,8 @@ public:
         MovementPolicy<Simulation>::initializeArgs(result);
         TestingPolicy<Simulation>::initializeArgs(result);
         ClosurePolicy<Simulation>::initializeArgs(result);
+        immunization = new Immunization<Simulation>(this);
+        immunization->initializeArgs(result);
         agents->initializeArgs(result);
         enableOtherDisease = result["otherDisease"].as<int>();
         DataProvider data{ result };
@@ -335,6 +340,7 @@ public:
             succesfullyInitialized = false;
         }
         locs->initialize();
+        immunization->initCategories();
     }
 
     void runSimulation() {
@@ -351,6 +357,7 @@ public:
                 auto stats = refreshAndPrintStatistics(simTime);
                 ClosurePolicy<Simulation>::midnight(simTime, timeStep, stats);
                 MovementPolicy<Simulation>::planLocations(simTime, timeStep);
+                immunization->update(simTime, timeStep);
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
             ClosurePolicy<Simulation>::step(simTime, timeStep);
