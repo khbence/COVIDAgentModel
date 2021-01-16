@@ -76,6 +76,8 @@ public:
     std::string statesHeader;
     int enableOtherDisease = 1;
     Immunization<Simulation> *immunization;
+    float mutationMultiplier;
+    Timehandler simTime;
 
     friend class MovementPolicy<Simulation>;
     friend class InfectionPolicy<Simulation>;
@@ -85,7 +87,11 @@ public:
     static void addProgramParameters(cxxopts::Options& options) {
         options.add_options()("otherDisease",
             "Enable (1) or disable (0) non-COVID related hospitalization and sudden death ",
-            cxxopts::value<int>()->default_value("1"));
+            cxxopts::value<int>()->default_value("1"))
+            ("mutationMultiplier",
+            "infectiousness multiplier for mutated virus ",
+            cxxopts::value<float>()->default_value("1.0"));
+            
         InfectionPolicy<Simulation>::addProgramParameters(options);
         MovementPolicy<Simulation>::addProgramParameters(options);
         TestingPolicy<Simulation>::addProgramParameters(options);
@@ -294,6 +300,25 @@ public:
         stats.push_back(thrust::get<0>(quarant));
         stats.push_back(thrust::get<1>(quarant));
         stats.push_back(thrust::get<2>(quarant));
+
+        if (mutationMultiplier != 1.0f) {
+            unsigned allInfected = thrust::count_if(ppstates.begin(),
+                                                 ppstates.end(),
+                         [] HD (PPState state) {
+                             return state.isInfected();
+                         });
+            unsigned variant1 = thrust::count_if(ppstates.begin(),
+                                                 ppstates.end(),
+                         [] HD (PPState state) {
+                             return state.isInfected() && state.getVariant()==1;
+                         });
+            unsigned percentage = unsigned(double(variant1)/double(allInfected)*100.0);
+            std::cout << percentage;
+            stats.push_back(percentage);
+        } else {
+            std::cout << unsigned(100);
+            stats.push_back(unsigned(100));
+        }
         std::cout << '\n';
         return stats;
     }
@@ -301,7 +326,7 @@ public:
 public:
     explicit Simulation(const cxxopts::ParseResult& result)
         : timeStep(result["deltat"].as<decltype(timeStep)>()),
-          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()) {
+          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()), simTime(timeStep) {
         PROFILE_FUNCTION();
         outAgentStat = result["outAgentStat"].as<std::string>();
         InfectionPolicy<Simulation>::initializeArgs(result);
@@ -312,10 +337,11 @@ public:
         immunization->initializeArgs(result);
         agents->initializeArgs(result);
         enableOtherDisease = result["otherDisease"].as<int>();
+        mutationMultiplier = result["mutationMultiplier"].as<float>();
         DataProvider data{ result };
         try {
             std::string header = PPState_t::initTransitionMatrix(
-                data.acquireProgressionMatrices(), data.acquireProgressionConfig());
+                data.acquireProgressionMatrices(), data.acquireProgressionConfig(),mutationMultiplier);
             agents->initAgentMeta(data.acquireParameters());
             locs->initLocationTypes(data.acquireLocationTypes());
             auto tmp = locs->initLocations(data.acquireLocations(), data.acquireLocationTypes());
@@ -332,7 +358,7 @@ public:
                 data.acquireProgressionMatrices(),
                 data.acquireLocationTypes());
             RandomGenerator::resize(agents->PPValues.size());
-            statesHeader = header + "H\tT\tP1\tP2\tQ\tQT\tNQ";
+            statesHeader = header + "H\tT\tP1\tP2\tQ\tQT\tNQ\tMUT";
             std::cout << statesHeader << '\n';
             ClosurePolicy<Simulation>::init(data.acquireLocationTypes(), data.acquireClosureRules(), statesHeader);
         } catch (const CustomErrors& e) {
@@ -346,7 +372,6 @@ public:
     void runSimulation() {
         if (!succesfullyInitialized) { return; }
         PROFILE_FUNCTION();
-        Timehandler simTime(timeStep);
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
         while (simTime < endOfSimulation) {
             //std::cout << simTime.getTimestamp() << std::endl;
@@ -361,7 +386,9 @@ public:
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
             ClosurePolicy<Simulation>::step(simTime, timeStep);
-            InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep);
+            InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep, 0);
+            if (mutationMultiplier != 1.0f)
+                InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep, 1);
             ++simTime;
         }
         agents->printAgentStatJSON(outAgentStat);
@@ -378,6 +405,8 @@ public:
     }
     void toggleHolidayMode(bool enable) {
         MovementPolicy<Simulation>::holidayModeActive = enable;
-        printf("holiday Turned %d\n", (int)enable);
+    }
+    Timehandler& getSimTime() {
+        return simTime;
     }
 };

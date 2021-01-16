@@ -1288,9 +1288,8 @@ public:
 
         a.day = simTime.getDay();
         if (holidayModeActive) {
-  a.day = Days::SUNDAY;
-printf("holiday step\n");
-}
+            a.day = Days::SUNDAY;
+        }
         a.timestamp = simTime.getTimestamp();
 
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP

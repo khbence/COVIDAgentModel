@@ -73,17 +73,12 @@ class RuleClosure {
         options.add_options()("enableClosures",
             "Enable(1)/disable(0) closure rules defined in closureRules.json",
             cxxopts::value<unsigned>()->default_value("0"));
-        options.add_options()
-            ("holidayMode",
-            "enable/disable holiday mode - in cojunction with a HolidayMode closure policy");
     }
     unsigned enableClosures;
-    bool holidayModeExists;
     unsigned diagnosticLevel=0;
     void initializeArgs(const cxxopts::ParseResult& result) {
         enableClosures = result["enableClosures"].as<unsigned>();
         diagnosticLevel = result["diags"].as<unsigned>();
-        holidayModeExists = result["holidayMode"].as<bool>();
     }
     void init(const parser::LocationTypes& data, const parser::ClosureRules& rules, std::string header) {
         this->header = ClosureHelpers::splitHeader(header);
@@ -103,7 +98,11 @@ class RuleClosure {
         for (const parser::ClosureRules::Rule& rule : rules.rules) {
 
             //check if masks/closures are enabled
-            if (!enableClosures && !rule.name.compare("Masks")==0 && !rule.name.compare("Curfew")==0 && !rule.name.compare("HolidayMode")==0 && !rule.name.compare("SchoolAgeRestriction")==0) continue;
+            if (!enableClosures && !rule.name.compare("Masks")==0 
+                && !rule.name.compare("Curfew")==0 
+                && !rule.name.compare("HolidayMode")==0 
+                && !rule.name.compare("SchoolAgeRestriction")==0
+                && !rule.name.compare("ExposeToMutation")==0) continue;
 
             //Create condition
 
@@ -233,7 +232,6 @@ class RuleClosure {
                     }
                 });
             } else if (rule.name.compare("HolidayMode")==0) {
-                if (!holidayModeExists) continue;
                 //Curfew
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
                 auto realThis = static_cast<SimulationType*>(this);
@@ -248,7 +246,7 @@ class RuleClosure {
                     }
                 });
             } else if (rule.name.compare("SchoolAgeRestriction")==0) {
-                //Curfew
+                //Restrict school going age
                 std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
                 auto realThis = static_cast<SimulationType*>(this);
                 unsigned ageLimit = std::stoi(rule.parameter);
@@ -260,6 +258,44 @@ class RuleClosure {
                         realThis->setSchoolAgeRestriction(close?ageLimit:99);
                         r->previousOpenState = shouldBeOpen;
                         if (diags>0) printf("School age restriction %s - only under %d years go to school\n", (int)shouldBeOpen ? "disabled": "enabled", ageLimit);
+                    }
+                });
+            } else if (rule.name.compare("ExposeToMutation")==0) {
+                //expose population to mutated version
+                std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
+                auto realThis = static_cast<SimulationType*>(this);
+                double fraction = std::stod(rule.parameter);
+                this->rules.emplace_back(rule.name, conds, [&, realThis,diags,fraction](Rule *r) {
+                    bool expose = true;
+                    for (GlobalCondition *c : r->conditions) {expose = expose && c->active;}
+                    if (expose) {
+                        thrust::device_vector<unsigned> exposed(realThis->agents->PPValues.size(),0);
+                        unsigned timestamp = realThis->getSimTime().getTimestamp();
+                        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(realThis->agents->PPValues.begin(),
+                                                                                    realThis->agents->location.begin(),
+                                                                                    exposed.begin(),
+                                                                                    realThis->agents->agentStats.begin())) ,
+                                        thrust::make_zip_iterator(thrust::make_tuple(realThis->agents->PPValues.end(),
+                                                                                    realThis->agents->location.end(),
+                                                                                    exposed.end(),
+                                                                                    realThis->agents->agentStats.end())) ,
+                                [fraction,timestamp]HD(thrust::tuple<typename SimulationType::PPState_t &, unsigned&, unsigned&, AgentStats&> tup) {
+                                    auto &state = thrust::get<0>(tup);
+                                    auto &agentLocation = thrust::get<1>(tup);
+                                    auto &exposed = thrust::get<2>(tup);
+                                    auto &agentStat = thrust::get<3>(tup);
+                                    if (state.getSusceptible()>0.0f && RandomGenerator::randomUnit() < fraction*state.getSusceptible()) {
+                                        state.gotInfected(1);
+                                        agentStat.infectedTimestamp = timestamp;
+                                        agentStat.infectedLocation = agentLocation;
+                                        agentStat.worstState = state.getStateIdx();
+                                        agentStat.worstStateTimestamp = timestamp;
+                                        agentStat.variant = 1;
+                                        exposed = 1;
+                                    }
+                                });
+                        unsigned count = thrust::count(exposed.begin(), exposed.end(), unsigned(1));
+                        if (diags>0) printf("Exposed %d people to mutation\n", count);
                     }
                 });
             } else { //Not masks, curfew, holiday

@@ -225,12 +225,13 @@ public:
         thrust::device_vector<bool>& infectionAtLocation,
         thrust::device_vector<unsigned>& newlyInfectedAgents,
         bool flagInfectionsAtLocation,
-        Timehandler& simTime) {
+        Timehandler& simTime, uint8_t variant) {
         PROFILE_FUNCTION();
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
         auto& agentStats = SimulationType::AgentListType::getInstance()->agentStats;
         unsigned timestamp = simTime.getTimestamp();
         unsigned tracked2 = getInstance()->tracked;
+        unsigned hour = simTime.getMinutes() / 60;
         // DEBUG unsigned count1 =
         // thrust::count_if(ppstates.begin(),ppstates.end(), [](auto &ppstate)
         // {return ppstate.getSIRD() == states::SIRD::I;}); DESC: for (int i =
@@ -258,7 +259,7 @@ public:
                 thrust::make_permutation_iterator(
                                  infectionAtLocation.begin(), agentLocations.end()),
                 newlyInfectedAgents.begin()+ppstates.size())),
-            [timestamp, tracked2,flagInfectionsAtLocation] HD(thrust::tuple<typename SimulationType::PPState_t&,
+            [timestamp, tracked2,flagInfectionsAtLocation,variant] HD(thrust::tuple<typename SimulationType::PPState_t&,
                 double&,
                 TypeOfLocation&,
                 AgentStats&,
@@ -274,19 +275,21 @@ public:
                 bool& infectionAtLocation = thrust::get<6>(tuple);
                 unsigned& newlyInfectedAgent = thrust::get<7>(tuple);
                 if (ppstate.getSusceptible()>0.0f && RandomGenerator::randomUnit() < infectionRatio*ppstate.getSusceptible()) {
-                    ppstate.gotInfected();
+                    ppstate.gotInfected(variant);
                     agentStat.infectedTimestamp = timestamp;
                     agentStat.infectedLocation = agentLocation;
                     agentStat.worstState = ppstate.getStateIdx();
                     agentStat.worstStateTimestamp = timestamp;
+                    agentStat.variant = variant;
                     if (flagInfectionsAtLocation) {
                         infectionAtLocation = true;
                         newlyInfectedAgent = 1;
                     }
                     if (agentID == tracked2) {
                         printf(
-                            "Agent %d got infected at location %d of type %d at timestamp %d\n",
+                            "Agent %d got infected with variant %d at location %d of type %d at timestamp %d\n",
                             agentID,
+                            variant,
                             agentLocation,
                             locType,
                             timestamp);

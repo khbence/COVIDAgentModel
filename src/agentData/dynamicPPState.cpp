@@ -10,6 +10,7 @@ namespace detail {
         char h_nonCOVIDDeadState = 0;
         char h_deadState;
         std::vector<float> h_infectious;
+        std::vector<float> h_variantMultiplier;
         std::vector<float> h_accuracyPCR;
         std::vector<float> h_accuracyAntigen;
         std::vector<bool> h_susceptible;
@@ -22,6 +23,7 @@ namespace detail {
         __constant__ char firstInfectedState = 0;
         __constant__ char nonCOVIDDeadState = 0;
         __constant__ float* infectious;
+        __constant__ float* variantMultiplier;
         __constant__ float* accuracyPCR;
         __constant__ float* accuracyAntigen;
         __constant__ bool* susceptible;
@@ -43,10 +45,10 @@ HD ProgressionMatrix& DynamicPPState::getTransition(unsigned progressionID_p) {
 
 void HD DynamicPPState::updateMeta() {
 #ifdef __CUDA_ARCH__
-    infectious = detail::DynamicPPState::infectious[state];
+    infectious = detail::DynamicPPState::infectious[state] * detail::DynamicPPState::variantMultiplier[variant];
     susceptible = detail::DynamicPPState::susceptible[state];
 #else
-    infectious = detail::DynamicPPState::h_infectious[state];
+    infectious = detail::DynamicPPState::h_infectious[state] * detail::DynamicPPState::h_variantMultiplier[variant];
     susceptible = detail::DynamicPPState::h_susceptible[state];
 #endif
 }
@@ -54,11 +56,13 @@ void HD DynamicPPState::updateMeta() {
 std::string DynamicPPState::initTransitionMatrix(
     std::map<ProgressionType, std::pair<parser::TransitionFormat, unsigned>, std::less<>>&
         inputData,
-    parser::ProgressionDirectory& config) {
+    parser::ProgressionDirectory& config, float multiplier) {
     // init global parameters that are used to be static
     detail::DynamicPPState::h_numberOfStates = config.stateInformation.stateNames.size();
     detail::DynamicPPState::h_infectious =
         decltype(detail::DynamicPPState::h_infectious)(detail::DynamicPPState::h_numberOfStates);
+    detail::DynamicPPState::h_variantMultiplier =
+        decltype(detail::DynamicPPState::h_variantMultiplier)(2);
     detail::DynamicPPState::h_accuracyPCR =
         decltype(detail::DynamicPPState::h_accuracyPCR)(detail::DynamicPPState::h_numberOfStates);
     detail::DynamicPPState::h_accuracyAntigen =
@@ -86,6 +90,9 @@ std::string DynamicPPState::initTransitionMatrix(
         detail::DynamicPPState::h_accuracyPCR[idx] = e.accuracyPCR;
         detail::DynamicPPState::h_accuracyAntigen[idx] = e.accuracyAntigen;
     }
+
+    detail::DynamicPPState::h_variantMultiplier[0] = 1.0;
+    detail::DynamicPPState::h_variantMultiplier[1] = multiplier;
 
     for (const auto& e : config.stateInformation.infectedStates) {
         auto idx = detail::DynamicPPState::nameIndexMap.at(e);
@@ -139,6 +146,14 @@ std::string DynamicPPState::initTransitionMatrix(
         detail::DynamicPPState::h_numberOfStates * sizeof(float),
         cudaMemcpyHostToDevice);
     cudaMemcpyToSymbol(detail::DynamicPPState::infectious, &infTMP, sizeof(float*));
+
+    float* varTMP;
+    cudaMalloc((void**)&varTMP, 2 * sizeof(float));
+    cudaMemcpy(varTMP,
+        detail::DynamicPPState::h_variantMultiplier.data(),
+        2 * sizeof(float),
+        cudaMemcpyHostToDevice);
+    cudaMemcpyToSymbol(detail::DynamicPPState::variantMultiplier, &varTMP, sizeof(float*));
 
     float* accuracyPCRTMP;
     cudaMalloc((void**)&accuracyPCRTMP, detail::DynamicPPState::h_numberOfStates * sizeof(float));
@@ -222,12 +237,13 @@ DynamicPPState::DynamicPPState(const std::string& name, unsigned progressionID_p
     updateMeta();
 }
 
-void HD DynamicPPState::gotInfected() {
+void HD DynamicPPState::gotInfected(uint8_t v) {
 #ifdef __CUDA_ARCH__
     state = detail::DynamicPPState::firstInfectedState;
 #else
     state = detail::DynamicPPState::h_firstInfectedState;
 #endif
+    variant = v;
     daysBeforeNextState = -2;
     updateMeta();
 }

@@ -66,7 +66,7 @@ public:
         thrust::device_vector<PPState_t>& ppstates,
         thrust::device_vector<float>& fullInfectedCounts,
         thrust::device_vector<unsigned>& agentLocations,
-        Timehandler& simTime) {
+        Timehandler& simTime, uint8_t variant) {
         if (susceptible1.size() == 0) {
             susceptible1.resize(locationListOffsets.size() - 1, 0);
         } else {
@@ -90,7 +90,7 @@ public:
                 });
         }
         if (dumpToFile > 0 && simTime.getTimestamp() % dumpToFile == 0) {
-            file.open("locationStats_" + std::to_string(simTime.getTimestamp()) + ".txt");
+            file.open("locationStats_v" +std::to_string(variant) + "_" + std::to_string(simTime.getTimestamp()) + ".txt");
             // Count number of people at each location
             thrust::device_vector<unsigned> location(locationListOffsets.size() - 1);
             thrust::transform(locationListOffsets.begin() + 1,
@@ -130,7 +130,7 @@ public:
         thrust::device_vector<unsigned>& locationAgentList,
         thrust::device_vector<PPState_t>& ppstates,
         thrust::device_vector<unsigned>& agentLocations,
-        Timehandler& simTime) {
+        Timehandler& simTime, uint8_t variant) {
         if (dumpToFile > 0) {// Finish aggregating number of new infections
             thrust::device_vector<unsigned> susceptible2(locationListOffsets.size() - 1, 0);
             reduce_by_location(locationListOffsets,
@@ -171,7 +171,7 @@ public:
         thrust::device_vector<unsigned>& fullInfectedCounts,
         thrust::device_vector<unsigned>& newlyInfectedAgents,
         thrust::device_vector<unsigned>& numberOfNewInfectionsAtLocations,
-        Timehandler& simTime) {
+        Timehandler& simTime, uint8_t variant) {
 
         thrust::device_vector<unsigned> outLocationIdOffsets(infectionFlagAtLocations.size());
         auto b2u = [] HD(bool flag) -> unsigned { return flag ? 1u : 0u; };
@@ -372,7 +372,7 @@ public:
             });
         std::ofstream file;
         file.open(
-            dumpDirectory + "infectiousList_" + std::to_string(simTime.getTimestamp()) + ".txt");
+            dumpDirectory + "infectiousList_v" + std::to_string(variant) + "_" + std::to_string(simTime.getTimestamp()) + ".txt");
         file << numberOfLocsWithInfections << "\n";
         thrust::copy(outLocationIds.begin(),
             outLocationIds.end(),
@@ -397,7 +397,7 @@ public:
     }
 
 
-    void infectionsAtLocations(Timehandler& simTime, unsigned timeStep) {
+    void infectionsAtLocations(Timehandler& simTime, unsigned timeStep, uint8_t variant) {
         PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
         thrust::device_vector<unsigned>& locationListOffsets =
@@ -429,8 +429,8 @@ public:
             fullInfectedCounts,
             ppstates,
             agentLocations,
-            [] HD(const typename SimulationType::PPState_t& ppstate) -> float {
-                return ppstate.isInfectious();
+            [variant] HD(const typename SimulationType::PPState_t& ppstate) -> float {
+                return ppstate.isInfectious(variant);
             });
 
         dumpToFileStep1(locationListOffsets,
@@ -438,7 +438,7 @@ public:
             ppstates,
             fullInfectedCounts,
             agentLocations,
-            simTime);
+            simTime, variant);
 
         //
         // Step 2 - calculate infection ratios, based on density of infected people
@@ -479,7 +479,7 @@ public:
             infectionFlagAtLocations,
             newlyInfectedAgents,
             flagInfectionAtLocations,
-            simTime);
+            simTime, variant);
         if (flagInfectionAtLocations) {
             thrust::device_vector<unsigned> fullInfectedCounts2(fullInfectedCounts.size(), 0);
             reduce_by_location(locationListOffsets,
@@ -503,9 +503,9 @@ public:
                 fullInfectedCounts2,
                 newlyInfectedAgents,
                 numberOfNewInfectionsAtLocations,
-                simTime);
+                simTime, variant);
         }
 
-        dumpToFileStep2(locationListOffsets, locationAgentList, ppstates, agentLocations, simTime);
+        dumpToFileStep2(locationListOffsets, locationAgentList, ppstates, agentLocations, simTime, variant);
     }
 };
