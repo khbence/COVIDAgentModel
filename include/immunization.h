@@ -213,11 +213,12 @@ class Immunization {
             unsigned count = 0;
             while (count == 0 && currentCategory < numberOfCategories) {
                 unsigned currentCategoryLocal = currentCategory+1; //agents' categories start at 1
-                count = thrust::count_if(thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.begin(), sim->agents->agentStats.begin())),
-                             thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.end(), sim->agents->agentStats.end())),
-                             [currentCategoryLocal,timeStep,timestamp]HD(thrust::tuple<uint8_t, AgentStats> tup) {
+                count = thrust::count_if(thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.begin(), sim->agents->agentStats.begin(),sim->agents->PPValues.begin())),
+                             thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.end(), sim->agents->agentStats.end(),sim->agents->PPValues.end())),
+                             [currentCategoryLocal,timeStep,timestamp]HD(thrust::tuple<uint8_t, AgentStats, typename Simulation::PPState_t> tup) {
                                  if (thrust::get<0>(tup) == currentCategoryLocal &&  //TODO how many days since diagnosis?
                                      thrust::get<1>(tup).immunizationTimestamp == 0 &&
+                                     thrust::get<2>(tup).getWBState() == states::WBStates::W &&
                                      ((timestamp < (24*60/timeStep)*6*30 && thrust::get<1>(tup).diagnosedTimestamp == 0) ||
                                       (timestamp >= (24*60/timeStep)*6*30 && thrust::get<1>(tup).diagnosedTimestamp < timestamp - (24*60/timeStep)*6*30))) {
                                           return true;
@@ -236,11 +237,12 @@ class Immunization {
 
             //immunize available number of people in current category
             unsigned currentCategoryLocal = currentCategory+1;
-            thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.begin(), sim->agents->agentStats.begin())),
-                             thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.end(), sim->agents->agentStats.end())),
-                             [currentCategoryLocal,timeStep,timestamp,prob]HD(thrust::tuple<uint8_t&, AgentStats&> tup) {
+            thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.begin(), sim->agents->agentStats.begin(),sim->agents->PPValues.begin())),
+                             thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.end(), sim->agents->agentStats.end(),sim->agents->PPValues.end())),
+                             [currentCategoryLocal,timeStep,timestamp,prob]HD(thrust::tuple<uint8_t&, AgentStats&, typename Simulation::PPState_t&> tup) {
                                  if (thrust::get<0>(tup) == currentCategoryLocal &&  //TODO how many days since diagnosis?
                                      thrust::get<1>(tup).immunizationTimestamp == 0 &&
+                                     thrust::get<2>(tup).getWBState() == states::WBStates::W &&
                                      ((timestamp < (24*60/timeStep)*6*30 && thrust::get<1>(tup).diagnosedTimestamp == 0) ||
                                       (timestamp >= (24*60/timeStep)*6*30 && thrust::get<1>(tup).diagnosedTimestamp < timestamp - (24*60/timeStep)*6*30))) {
                                           if (prob == 1.0f || RandomGenerator::randomUnit() < prob)
