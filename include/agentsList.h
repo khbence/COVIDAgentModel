@@ -32,6 +32,7 @@ class AgentList {
         quarantined.reserve(s);
         location.reserve(s);
         agents.reserve(s);
+        stayedHome.reserve(s);
     }
 
 public:
@@ -44,6 +45,7 @@ public:
     thrust::device_vector<unsigned> types;
     thrust::device_vector<AgentStats> agentStats;
     thrust::device_vector<bool> quarantined;
+    thrust::device_vector<bool> stayedHome;
 
     thrust::device_vector<unsigned long> locationOffset;
     // longer, every agents' every locations, indexed by the offset
@@ -152,6 +154,7 @@ public:
         thrust::host_vector<AgentMeta> agentMetaData_h;
         thrust::host_vector<bool> diagnosed_h;
         thrust::host_vector<bool> quarantined_h;
+        thrust::host_vector<bool> stayedHome_h;
         thrust::host_vector<unsigned> location_h;
         thrust::host_vector<unsigned> types_h;
         thrust::host_vector<Agent<AgentList>> agents_h;
@@ -201,7 +204,8 @@ public:
             // I don't know if we should put any data about it in the input
             diagnosed_h.push_back(person.diagnosed);
             quarantined_h.push_back(person.diagnosed && quarantinePolicy>0);
-            
+            stayedHome_h.push_back(true);
+
             agents_h.push_back(Agent<AgentList>{ static_cast<unsigned>(agents.size()) });
 
             // agentType
@@ -273,6 +277,7 @@ public:
         possibleLocations = possibleLocations_h;
         possibleTypes = possibleTypes_h;
         agentStats = agentStats_h;
+        stayedHome = stayedHome_h;
     }
 
     [[nodiscard]] static AgentList* getInstance() {

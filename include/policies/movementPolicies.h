@@ -135,6 +135,7 @@ namespace RealMovementOps {
         unsigned* possibleLocationsPtr;
         unsigned* possibleTypesPtr;
         bool* locationStatesPtr;
+        bool* stayedHomePtr;
         unsigned *closedUntilPtr;
         unsigned* locationCapacitiesPtr;
         unsigned* locationQuarantineUntilPtr;
@@ -274,6 +275,10 @@ namespace RealMovementOps {
             a.agentLocationsPtr[i] = a.cemeteryLoc;
             return;
         }
+
+        unsigned agentHome = RealMovementOps::findActualLocationForType(
+                i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
+                a.homeType, a.schoolType, a.workType,0,nullptr);
         
         //if non-COVID hospitalization, go to hospital
         if (a.agentStatsPtr[i].hospitalizedTimestamp <= a.timestamp && 
@@ -396,6 +401,10 @@ namespace RealMovementOps {
                     // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = until;
                 }
                 checkLarger(i,a);
+                if (agentHome != std::numeric_limits<unsigned>::max() 
+                        && a.agentLocationsPtr[i] != agentHome 
+                        && a.stepsUntilMovePtr[i] > 60 / a.timeStep)
+                        a.stayedHomePtr[i] = false;
                 return;
             }
         }
@@ -456,6 +465,10 @@ namespace RealMovementOps {
                         a.timestamp);
                 }
                 checkLarger(i,a);
+                if (agentHome != std::numeric_limits<unsigned>::max() 
+                        && a.agentLocationsPtr[i] != agentHome 
+                        && a.stepsUntilMovePtr[i] > 60 / a.timeStep)
+                        a.stayedHomePtr[i] = false;
                 return;
             }
         }
@@ -784,6 +797,10 @@ namespace RealMovementOps {
                     // a.locationQuarantineUntilPtr[a.agentLocationsPtr[i]] = until;
                 }
                 checkLarger(i,a);
+                if (agentHome != std::numeric_limits<unsigned>::max() 
+                        && a.agentLocationsPtr[i] != agentHome 
+                        && a.stepsUntilMovePtr[i] > 60 / a.timeStep)
+                        a.stayedHomePtr[i] = false;
                 return;
             }
         }
@@ -830,6 +847,10 @@ namespace RealMovementOps {
             }
         }
         checkLarger(i,a);
+        if (agentHome != std::numeric_limits<unsigned>::max() 
+                        && a.agentLocationsPtr[i] != agentHome 
+                        && a.stepsUntilMovePtr[i] > 60 / a.timeStep)
+                        a.stayedHomePtr[i] = false;
         a.stepsUntilMovePtr[i]--;
     }
 
@@ -1095,6 +1116,7 @@ public:
         }
         //If curfew, noone moves before curfew ends
         thrust::fill(stepsUntilMove.begin(), stepsUntilMove.end(), curfewEnd);
+        thrust::fill(realThis->agents->stayedHome.begin(),realThis->agents->stayedHome.end(),true);
 
         //For each agent that is under 14 years, check if quarantined or school closed, if so flag home as noWork
         thrust::fill(noWorkLoc.begin(), noWorkLoc.end(), (uint8_t)0u);
@@ -1260,6 +1282,8 @@ public:
         a.agentMetaDataPtr = thrust::raw_pointer_cast(agentMetaData.data());
         thrust::device_vector<bool>& diagnosed = realThis->agents->diagnosed;
         a.diagnosedPtr = thrust::raw_pointer_cast(diagnosed.data());
+        thrust::device_vector<bool>& stayedHome = realThis->agents->stayedHome;
+        a.stayedHomePtr = thrust::raw_pointer_cast(stayedHome.data());
         thrust::device_vector<bool>& quarantined = realThis->agents->quarantined;
         a.quarantinedPtr = thrust::raw_pointer_cast(quarantined.data());
         thrust::device_vector<AgentStats>& agentStats = realThis->agents->agentStats;

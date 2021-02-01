@@ -283,6 +283,7 @@ public:
                                  timestamp < agentStat.hospitalizedUntilTimestamp) return true;
                              else return false;
                          });
+        unsigned stayedHome = thrust::count(agents->stayedHome.begin(), agents->stayedHome.end(), true);
         std::vector<unsigned> stats(result);
         stats.push_back(hospitalized);
         std::cout << hospitalized << "\t";
@@ -313,12 +314,17 @@ public:
                              return state.isInfected() && state.getVariant()==1;
                          });
             unsigned percentage = unsigned(double(variant1)/double(allInfected)*100.0);
-            std::cout << percentage;
+            std::cout << percentage << "\t";
             stats.push_back(percentage);
         } else {
-            std::cout << unsigned(100);
-            stats.push_back(unsigned(100));
+            std::cout << unsigned(0) << "\t";
+            stats.push_back(unsigned(0));
         }
+
+        //Stayed home count
+        std::cout << stayedHome;
+        stats.push_back(stayedHome);
+
         std::cout << '\n';
         return stats;
     }
@@ -358,7 +364,7 @@ public:
                 data.acquireProgressionMatrices(),
                 data.acquireLocationTypes());
             RandomGenerator::resize(agents->PPValues.size());
-            statesHeader = header + "H\tT\tP1\tP2\tQ\tQT\tNQ\tMUT";
+            statesHeader = header + "H\tT\tP1\tP2\tQ\tQT\tNQ\tMUT\tHOM";
             std::cout << statesHeader << '\n';
             ClosurePolicy<Simulation>::init(data.acquireLocationTypes(), data.acquireClosureRules(), statesHeader);
         } catch (const CustomErrors& e) {
