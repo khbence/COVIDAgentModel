@@ -102,7 +102,8 @@ class RuleClosure {
                 && !rule.name.compare("Curfew")==0 
                 && !rule.name.compare("HolidayMode")==0 
                 && !rule.name.compare("SchoolAgeRestriction")==0
-                && !rule.name.compare("ExposeToMutation")==0) continue;
+                && !rule.name.compare("ExposeToMutation")==0
+                && !rule.name.compare("ReduceMovement")==0) continue;
 
             //Create condition
 
@@ -296,6 +297,25 @@ class RuleClosure {
                                 });
                         unsigned count = thrust::count(exposed.begin(), exposed.end(), unsigned(1));
                         if (diags>0) printf("Exposed %d people to mutation\n", count);
+                    }
+                });
+            } else if (rule.name.compare("ReduceMovement")==0) {
+                //Masks
+                unsigned homeType = data.home;
+                AgentTypeList &agentTypes = realThis->agents->agentTypes;
+                double fraction = std::stod(rule.parameter);
+                std::vector<GlobalCondition*> conds = {&globalConditions[globalConditions.size()-1]};
+                this->rules.emplace_back(rule.name, conds, [homeType,fraction,diags,&agentTypes](Rule *r) {
+                    bool close = true;
+                    for (GlobalCondition *c : r->conditions) {close = close && c->active;}
+                    bool shouldBeOpen = !close;
+                    if (r->previousOpenState != shouldBeOpen) {
+                        if (shouldBeOpen)
+                            agentTypes.unsetStayHome(fraction, homeType);
+                        else
+                            agentTypes.setStayHome(fraction, homeType);
+                        r->previousOpenState = shouldBeOpen;
+                        if (diags>0) printf("Reduced movement %s with %g multiplier\n", (int)shouldBeOpen ? "off": "on", fraction);
                     }
                 });
             } else { //Not masks, curfew, holiday

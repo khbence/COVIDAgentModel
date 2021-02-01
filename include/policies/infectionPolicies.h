@@ -7,16 +7,8 @@
 
 template<class SimulationType>
 class BasicInfection {
-public:
-    struct Parameters {
-        double v, h, s;
-        double a, b;
-
-        Parameters() = default;
-    };
-
 private:
-    Parameters par;
+    double k;
     unsigned dumpToFile = 0;
     bool flagInfectionAtLocations = false;
     std::string dumpDirectory = "";
@@ -28,15 +20,9 @@ private:
 
 public:
     static void addProgramParameters(cxxopts::Options& options) {
-        options.add_options()("m,Imax",
-            "Infection: [0 1] :max value ",
-            cxxopts::value<double>()->default_value("0.05664"))("v,Iasymmetry",
-            "Infection: 1< :longer small phase [0 1] :longer high phase",
-            cxxopts::value<double>()->default_value("1.0"))("H,Ihorizontal",
-            "sigmoid: horizotal move of inflexcion point; <-1 or >1 :exponential like",
-            cxxopts::value<double>()->default_value("-0.48311"))("s,Ishape",
-            "shape: bigger, more steep",
-            cxxopts::value<double>()->default_value("48.81962"))("dumpLocationInfections",
+        options.add_options()("k,infectionCoefficient",
+            "Infection: >0 :infectiousness coefficient ",
+            cxxopts::value<double>()->default_value("0.000291642"))("dumpLocationInfections",
             "Dump per-location statistics every N timestep ",
             cxxopts::value<unsigned>()->default_value("0"))("dumpLocationInfectiousList",
             "Dump per-location list of infectious people ",
@@ -45,15 +31,7 @@ public:
 
 protected:
     void initializeArgs(const cxxopts::ParseResult& result) {
-        auto m = result["Imax"].as<double>() / 2;
-        par.v = result["Iasymmetry"].as<double>();
-        par.h = result["Ihorizontal"].as<double>();
-        par.s = result["Ishape"].as<double>();
-        double min = 1.0 / (1.0 + par.v * std::exp(-par.s * 2 * (0.0 - par.h - 0.5)));
-        double max = 1.0 / (1.0 + par.v * std::exp(-par.s * 2 * (1.0 - par.h - 0.5)));
-
-        par.a = m / (max - min);
-        par.b = -m * min / (max - min);
+        this->k = result["infectionCoefficient"].as<double>();
         dumpToFile = result["dumpLocationInfections"].as<unsigned>();
         dumpDirectory = result["dumpLocationInfectiousList"].as<std::string>();
         flagInfectionAtLocations = (dumpDirectory == "") ? false : true;
@@ -443,7 +421,7 @@ public:
         //
         // Step 2 - calculate infection ratios, based on density of infected people
         //
-        auto parTMP = par;
+        double tmpK = this->k;
         thrust::transform(thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.begin(),
                               locationListOffsets.begin(),
                               locationListOffsets.begin() + 1,
@@ -460,14 +438,15 @@ public:
                 unsigned num_agents = offset1 - offset0;
                 if (numInfectedAgentsPresent == 0.0) { return 0.0; }
                 double densityOfInfected = numInfectedAgentsPresent / num_agents;
-                double y =
+                /*double y =
                     1.0
                     / (1.0
                         + parTMP.v
                               * std::exp(-parTMP.s * 2 * (densityOfInfected - parTMP.h - 0.5)));
                 y = parTMP.a * y + parTMP.b;
                 y *= thrust::get<3>(tuple);// Weighted by infectiousness
-                return y / (60.0 * 24.0 / static_cast<double>(timeStep));
+                return y / (60.0 * 24.0 / static_cast<double>(timeStep));*/
+                return 1.0-exp(-tmpK*densityOfInfected*thrust::get<3>(tuple)*static_cast<double>(timeStep));
             });
 
         //

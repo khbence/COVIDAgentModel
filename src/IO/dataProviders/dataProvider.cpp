@@ -135,7 +135,6 @@ void DataProvider::randomAgents(unsigned N) {
         current.age = RandomGenerator::randomUnsigned(90);
         current.sex = (RandomGenerator::randomUnit() < 0.5) ? "M" : "F";
         current.preCond = randomSelect(configRandom.preCondDistibution.begin());
-        auto ageToCapture = current.age;
         auto statediag = calculateSingleRandomState(current.age);
         current.state = statediag.first;
         current.diagnosed = RandomGenerator::randomUnit() < statediag.second;

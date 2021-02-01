@@ -36,4 +36,6 @@ public:
     void addSchedule(unsigned ID,
         std::pair<states::WBStates, Days> state,
         const std::vector<Event>& schedule);
+    void unsetStayHome(double probability, unsigned homeType);
+    void setStayHome(double probability, unsigned homeType);
 };
