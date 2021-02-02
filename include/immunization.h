@@ -46,7 +46,7 @@ class Immunization {
             "number of immunizations per day",
             cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))))
             ("immunizationOrder",
-            "Order of immunization (starting at 1, 0 to skip) for agents in different categories health workers, nursery home worker/resident, 60+, 16-60 with underlying condition, essential worker, 18+",
+            "Order of immunization (starting at 1, 0 to skip) for agents in different categories health workers, nursery home worker/resident, 60+, 18-60 with underlying condition, essential worker, 18+",
             cxxopts::value<std::string>()->default_value("1,2,3,4,5,6"));
     }
 

@@ -276,9 +276,9 @@ namespace RealMovementOps {
             return;
         }
 
-        unsigned agentHome = RealMovementOps::findActualLocationForType(
-                i, a.hospitalType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
-                a.homeType, a.schoolType, a.workType,0,nullptr);
+        unsigned agentHome = RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr,
+                                 a.possibleLocationsPtr, a.possibleTypesPtr,
+                                 a.homeType, a.schoolType, a.workType,0,nullptr);
         
         //if non-COVID hospitalization, go to hospital
         if (a.agentStatsPtr[i].hospitalizedTimestamp <= a.timestamp && 
@@ -849,8 +849,10 @@ namespace RealMovementOps {
         checkLarger(i,a);
         if (agentHome != std::numeric_limits<unsigned>::max() 
                         && a.agentLocationsPtr[i] != agentHome 
-                        && a.stepsUntilMovePtr[i] > 60 / a.timeStep)
+                        && a.stepsUntilMovePtr[i] > 60 / a.timeStep) {
                         a.stayedHomePtr[i] = false;
+                        if (i == a.tracked) printf("\tdid not stay home %d %d\n",a.agentLocationsPtr[i], agentHome);
+        }
         a.stepsUntilMovePtr[i]--;
     }
 

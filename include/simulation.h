@@ -322,6 +322,7 @@ public:
         }
 
         //Stayed home count
+        stayedHome = stayedHome - stats[10] - stats[11]; //Subtract dead
         std::cout << stayedHome;
         stats.push_back(stayedHome);
 
