@@ -349,7 +349,7 @@ namespace RealMovementOps {
                        == a.schoolType// Only send agent to quarantine if this
                                       // is home, work or school
                 || a.locationTypePtr[a.agentLocationsPtr[i]] == a.classroomType
-                || a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType)) {
+                /*|| a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType*/)) {
             if (a.quarantinedPtr[i] == false) {
                 if (i == a.tracked)
                     printf(
@@ -590,7 +590,7 @@ namespace RealMovementOps {
             // Check if location is open/closed. If closed, go home instead
             unsigned wasClosed = std::numeric_limits<unsigned>::max();
             bool schoolAndTooOld = (newLocationType == a.schoolType || newLocationType == a.classroomType) && a.agentMetaDataPtr[i].getAge() >= a.schoolAgeRestriction;
-            if (schoolAndTooOld || a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) {
+            if (schoolAndTooOld || ((a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) && newLocationType != a.workType)) {
                 //If closed, but there is another option to go to different type location, try that
                 if (numPotentialEvents>1) {
                     double rand = RandomGenerator::randomReal(1.0);
@@ -613,7 +613,7 @@ namespace RealMovementOps {
                         a.homeType, a.schoolType, a.workType, 0, nullptr);
                     wasClosed = std::numeric_limits<unsigned>::max();
                     //is that closed too?
-                    if (a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) {
+                    if ((a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) && newLocationType != a.workType) {
                         wasClosed = newLocation;
                         newLocation = RealMovementOps::findActualLocationForType(
                             i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
@@ -743,7 +743,7 @@ namespace RealMovementOps {
                        == a.schoolType// Only send agent to quarantine if this
                                       // is home, work or school
                 || a.locationTypePtr[a.agentLocationsPtr[i]] == a.classroomType
-                || a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType)) {
+                /*|| a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType*/)) {
             //if not currently under quarantine
             if (!a.quarantinedPtr[i]) {
                     RealMovementOps::quarantineAgent(i, a,
@@ -1078,10 +1078,10 @@ public:
                 std::to_string(std::numeric_limits<unsigned>::max())))("quarantinePolicy",
             "Quarantine policy: 0 - None, 1 - Agent only, 2 - Agent and "
             "household, 3 - + classroom/work, 4 - + school",
-            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))))
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(3))))
             ("quarantineLength",
             "Length of quarantine in days",
-            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(14))));
+            cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(10))));
     }
     void initializeArgs(const cxxopts::ParseResult& result) {
         tracked = result["trace"].as<unsigned>();

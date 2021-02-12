@@ -72,7 +72,7 @@ class RuleClosure {
     static void addProgramParameters(cxxopts::Options& options) {
         options.add_options()("enableClosures",
             "Enable(1)/disable(0) closure rules defined in closureRules.json",
-            cxxopts::value<unsigned>()->default_value("0"));
+            cxxopts::value<unsigned>()->default_value("1"));
     }
     unsigned enableClosures;
     unsigned diagnosticLevel=0;

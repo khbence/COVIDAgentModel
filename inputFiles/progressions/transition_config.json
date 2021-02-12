@@ -357,14 +357,14 @@
 {
 "stateName":"I5_h",
 "WB":"S",
-"infectious":0.2,
+"infectious":0.1,
 "accuracyPCR":1.0,
 "accuracyAntigen":0.1
 },
 {
 "stateName":"I6_h",
 "WB":"S",
-"infectious":0.2,
+"infectious":0.1,
 "accuracyPCR":1.0,
 "accuracyAntigen":0.1
 },
