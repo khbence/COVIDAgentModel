@@ -74,14 +74,26 @@
     {
       "name": "HolidayMode",
       "conditionType": "afterDays",
-      "threshold": 91,
-      "openAfter": 11,
+      "threshold": 92,
+      "openAfter": 4,
       "parameter": 1.0,
       "closeAfter": -1,
       "locationTypesToClose": [
 
       ]
     },
+    {
+      "name": "HolidayMode",
+      "conditionType": "afterDays",
+      "threshold": 100,
+      "openAfter": 3,
+      "parameter": 1.0,
+      "closeAfter": -1,
+      "locationTypesToClose": [
+
+      ]
+    },
+
     {
       "name": "Masks","parameter": 1.0,
       "conditionType": "afterDays",
@@ -93,10 +105,10 @@
       ]
     },
     {
-      "name": "ReduceMovement","parameter": 0.0208157,
+      "name": "ReduceMovement","parameter": 0.02326618,
       "conditionType": "afterDays",
       "threshold": 49,
-      "openAfter": 300,
+      "openAfter": 52,
       "closeAfter": -1,
       "locationTypesToClose": [
 

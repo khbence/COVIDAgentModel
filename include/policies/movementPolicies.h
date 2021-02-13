@@ -349,7 +349,7 @@ namespace RealMovementOps {
                        == a.schoolType// Only send agent to quarantine if this
                                       // is home, work or school
                 || a.locationTypePtr[a.agentLocationsPtr[i]] == a.classroomType
-                /*|| a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType*/)) {
+                || a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType)) {
             if (a.quarantinedPtr[i] == false) {
                 if (i == a.tracked)
                     printf(
@@ -743,7 +743,7 @@ namespace RealMovementOps {
                        == a.schoolType// Only send agent to quarantine if this
                                       // is home, work or school
                 || a.locationTypePtr[a.agentLocationsPtr[i]] == a.classroomType
-                /*|| a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType*/)) {
+                || a.locationTypePtr[a.agentLocationsPtr[i]] == a.workType)) {
             //if not currently under quarantine
             if (!a.quarantinedPtr[i]) {
                     RealMovementOps::quarantineAgent(i, a,
