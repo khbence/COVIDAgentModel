@@ -107,79 +107,28 @@
                 },
                 {
                     "value": "I6_h",
-                    "chance": 1.67339E-05
-                    ,
+                    "chance": 1.67339E-05,
                     "diagnosedChance": 1.0
                 },
                 {
                     "value": "R_h",
-                    "chance": 0
+                    "chance": 0,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "R",
-                    "chance": 0.001400236
+                    "chance": 0.001400236,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "D1",
-                    "chance": 6.29069E-06
+                    "chance": 6.29069E-06,
+                    "diagnosedChance": 0.0
                 },
                 {
                     "value": "D2",
-                    "chance": 0
-                }
-            ]
-        },
-        {
-            "ageStart": 200,
-            "ageEnd": 1000,
-            "distribution": [
-                {
-                    "value": "S",
-                    "chance": 0.99960000000000004405
-                },
-                {
-                    "value": "E",
-                    "chance": 0.000195648905663827
-                },
-                {
-                    "value": "I1",
-                    "chance": 0.000171086453203937
-                },
-                {
-                    "value": "I2",
-                    "chance": 0.0000762152376846830
-                },
-                {
-                    "value": "I3",
-                    "chance": 0.0000762152376846830
-                },
-                {
-                    "value": "I4",
-                    "chance": 0.0000762152376846830
-                },
-                {
-                    "value": "I5_h",
-                    "chance": 0.00000265156347579970
-                },
-                {
-                    "value": "I6_h",
-                    "chance": 0.00000110419215564955
-                },
-                {
-                    "value": "R_h",
-                    "chance": 0.000000393409221211067
-                },
-                {
-                    "value": "R",
-                    "chance": 0.000299119048478177
-                },
-                {
-                    "value": "D1",
-                    "chance": 0.000000260386370533970
-                },
-                {
-                    "value": "D2",
-                    "chance": 0
+                    "chance": 0,
+                    "diagnosedChance": 0.0
                 }
             ]
         }
