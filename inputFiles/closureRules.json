@@ -105,7 +105,7 @@
       ]
     },
     {
-      "name": "ReduceMovement","parameter": 0.02326618,
+      "name": "ReduceMovement","parameter": 0.041840667,
       "conditionType": "afterDays",
       "threshold": 49,
       "openAfter": 52,
