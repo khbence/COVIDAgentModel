@@ -1,6 +1,6 @@
 
 ## Input options
-Details about the format and contents in input json files are discussed [here](blob/master/inputFiles/README.md)
+Details about the format and contents in input json files are discussed [here](inputFiles/README.md)
 |short|long|details
 |--- | --- | ---
 |  -w| --weeks                   | Length of simulation in weeks (default: 12)
