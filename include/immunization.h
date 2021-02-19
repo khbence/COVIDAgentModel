@@ -28,6 +28,7 @@ class Immunization {
     std::vector<uint8_t> vaccinationOrder;
     unsigned startAfterDay = 0;
     unsigned dailyDoses = 0;
+    unsigned diagnosticLevel = 0;
 
     unsigned numberOfVaccinesToday(Timehandler& simTime) {
         if (simTime.getTimestamp()/(24*60/simTime.getTimeStep()) >= startAfterDay) return dailyDoses;
@@ -53,6 +54,10 @@ class Immunization {
     void initializeArgs(const cxxopts::ParseResult& result) {
         startAfterDay = result["immunizationStart"].as<unsigned>();
         dailyDoses = result["immunizationsPerDay"].as<unsigned>();
+        try {
+            diagnosticLevel = result["diags"].as<unsigned>();
+        } catch (std::exception &e) {}
+
         std::string orderString = result["immunizationOrder"].as<std::string>();
         std::stringstream ss(orderString);
         std::string arg;
@@ -219,8 +224,8 @@ class Immunization {
                                  if (thrust::get<0>(tup) == currentCategoryLocal &&  //TODO how many days since diagnosis?
                                      thrust::get<1>(tup).immunizationTimestamp == 0 &&
                                      thrust::get<2>(tup).getWBState() == states::WBStates::W &&
-                                     ((timestamp < (24*60/timeStep)*6*30 && thrust::get<1>(tup).diagnosedTimestamp == 0) ||
-                                      (timestamp >= (24*60/timeStep)*6*30 && thrust::get<1>(tup).diagnosedTimestamp < timestamp - (24*60/timeStep)*6*30))) {
+                                     ((timestamp < (24*60/timeStep)*3*30 && thrust::get<1>(tup).diagnosedTimestamp == 0) ||
+                                      (timestamp >= (24*60/timeStep)*3*30 && thrust::get<1>(tup).diagnosedTimestamp < timestamp - (24*60/timeStep)*3*30))) {
                                           return true;
                                       }
                                  return false;
@@ -243,12 +248,13 @@ class Immunization {
                                  if (thrust::get<0>(tup) == currentCategoryLocal &&  //TODO how many days since diagnosis?
                                      thrust::get<1>(tup).immunizationTimestamp == 0 &&
                                      thrust::get<2>(tup).getWBState() == states::WBStates::W &&
-                                     ((timestamp < (24*60/timeStep)*6*30 && thrust::get<1>(tup).diagnosedTimestamp == 0) ||
-                                      (timestamp >= (24*60/timeStep)*6*30 && thrust::get<1>(tup).diagnosedTimestamp < timestamp - (24*60/timeStep)*6*30))) {
+                                     ((timestamp < (24*60/timeStep)*3*30 && thrust::get<1>(tup).diagnosedTimestamp == 0) ||
+                                      (timestamp >= (24*60/timeStep)*3*30 && thrust::get<1>(tup).diagnosedTimestamp < timestamp - (24*60/timeStep)*3*30))) {
                                           if (prob == 1.0f || RandomGenerator::randomUnit() < prob)
                                           thrust::get<1>(tup).immunizationTimestamp = timestamp;
                                       }
                              });
+            if (diagnosticLevel>0) std::cout << "Immunized " << (count < available? count : available) << " people from group " << currentCategory << std::endl;
 
             //subtract from available
             if (count < available) available -= count;

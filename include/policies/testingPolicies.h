@@ -260,7 +260,7 @@ public:
     static void addProgramParameters(cxxopts::Options& options) {
         options.add_options()("testingProbabilities",
             "Testing probabilities for random, if someone else was diagnosed at home/work/school, and random for hospital workers: comma-delimited string random,home,work,school,hospital,nurseryHome",
-            cxxopts::value<std::string>()->default_value("0.0001,0.02,0.001,0.001,0.01,0.1"))
+            cxxopts::value<std::string>()->default_value("0.00005,0.01,0.0005,0.0005,0.005,0.05"))
             ("testingRepeatDelay",
             "Minimum number of days between taking tests",
             cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(5))))
