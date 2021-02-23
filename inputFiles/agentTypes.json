@@ -543,7 +543,14 @@
                             "chance":1, 
                             "start":7, 
                             "end":8, 
-                            "duration":6
+                            "duration":1
+                        }, 
+                        {
+                            "type":33, 
+                            "chance":1, 
+                            "start":8, 
+                            "end":9, 
+                            "duration":5
                         }, 
                         {
                             "type":3, 
@@ -626,7 +633,14 @@
                             "chance":0.35, 
                             "start":7, 
                             "end":8, 
-                            "duration":6
+                            "duration":5
+                        },
+                         {
+                            "type":33, 
+                            "chance":0.35, 
+                            "start":8, 
+                            "end":13, 
+                            "duration":5
                         }, 
                         {
                             "type":14, 
@@ -634,6 +648,13 @@
                             "start":8, 
                             "end":13, 
                             "duration":1.3
+                        }, 
+                        {
+                            "type":2, 
+                            "chance":0.5, 
+                            "start":8, 
+                            "end":13, 
+                            "duration":5
                         }, 
                         {
                             "type":3, 
@@ -709,7 +730,7 @@
                             "chance":0.1, 
                             "start":7, 
                             "end":8, 
-                            "duration":6
+                            "duration":1
                         }, 
                         {
                             "type":2, 
@@ -717,7 +738,21 @@
                             "start":7, 
                             "end":8, 
                             "duration":6
+                        },
+                         {
+                            "type":33, 
+                            "chance":0.1, 
+                            "start":8, 
+                            "end":9, 
+                            "duration":5
                         }, 
+                        {
+                            "type":2, 
+                            "chance":0.9, 
+                            "start":8, 
+                            "end":9, 
+                            "duration":5
+                        },
                         {
                             "type":14, 
                             "chance":0.2, 
@@ -997,7 +1032,14 @@
                             "chance":1, 
                             "start":7, 
                             "end":8, 
-                            "duration":6
+                            "duration":1
+                        },
+                         {
+                            "type":33, 
+                            "chance":1, 
+                            "start":8, 
+                            "end":9, 
+                            "duration":5
                         }, 
                         {
                             "type":3, 
@@ -1150,7 +1192,7 @@
                             "chance":0.5, 
                             "start":7, 
                             "end":8, 
-                            "duration":6
+                            "duration":1
                         }, 
                         {
                             "type":14, 
@@ -1158,6 +1200,20 @@
                             "start":8, 
                             "end":13, 
                             "duration":1.3
+                        },
+                        {
+                            "type":2, 
+                            "chance":0.35, 
+                            "start":8, 
+                            "end":13, 
+                            "duration":5
+                        }, 
+                         {
+                            "type":33, 
+                            "chance":0.5, 
+                            "start":8, 
+                            "end":13, 
+                            "duration":5
                         }, 
                         {
                             "type":3, 
@@ -1261,7 +1317,7 @@
                             "chance":0.1, 
                             "start":7, 
                             "end":8, 
-                            "duration":6
+                            "duration":1
                         }, 
                         {
                             "type":2, 
@@ -1269,6 +1325,20 @@
                             "start":7, 
                             "end":8, 
                             "duration":6
+                        }, 
+                        {
+                            "type":33,
+                            "chance":0.1, 
+                            "start":8, 
+                            "end":13, 
+                            "duration":5
+                        }, 
+                       {
+                            "type":2, 
+                            "chance":0.9, 
+                            "start":8, 
+                            "end":13, 
+                            "duration":5
                         }, 
                         {
                             "type":3, 
