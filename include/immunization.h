@@ -24,7 +24,7 @@ class Immunization {
     Simulation *sim;
     thrust::device_vector<uint8_t> immunizationRound;
     unsigned currentCategory = 0;
-#define numberOfCategories 6
+#define numberOfCategories 9
     std::vector<uint8_t> vaccinationOrder;
     unsigned startAfterDay = 0;
     unsigned dailyDoses = 0;
@@ -47,8 +47,8 @@ class Immunization {
             "number of immunizations per day",
             cxxopts::value<unsigned>()->default_value(std::to_string(unsigned(0))))
             ("immunizationOrder",
-            "Order of immunization (starting at 1, 0 to skip) for agents in different categories health workers, nursery home worker/resident, 60+, 18-60 with underlying condition, essential worker, 18+",
-            cxxopts::value<std::string>()->default_value("1,2,3,4,5,6"));
+            "Order of immunization (starting at 1, 0 to skip) for agents in different categories health workers, nursery home worker/resident, 60+, 18-60 with underlying condition, essential worker, 18+, 60+underlying, school teachers, children",
+            cxxopts::value<std::string>()->default_value("1,2,3,4,5,6,0,0,0"));
     }
 
     void initializeArgs(const cxxopts::ParseResult& result) {
@@ -113,6 +113,12 @@ class Immunization {
             return thrust::make_pair(false,0.0f);
         };
 
+        //Category elderly with underlying condition
+        auto cat_elderly_underlying = [agentMetaDataPtr] HD (unsigned id) -> thrust::pair<bool,float> {
+            if (agentMetaDataPtr[id].getPrecondIdx()>0 && agentMetaDataPtr[id].getAge()>=60) return thrust::make_pair(true, 0.8f);
+            else return thrust::make_pair(false,0.0f);
+        };
+
         //Category elderly
         auto cat_elderly = [agentMetaDataPtr] HD (unsigned id) -> thrust::pair<bool,float> {
             if (agentMetaDataPtr[id].getAge()>=60) return thrust::make_pair(true, 0.7f);
@@ -128,8 +134,17 @@ class Immunization {
         //Category essential workers
         auto cat_essential = [locationOffsetPtr, possibleTypesPtr,essentialPtr,possibleLocationsPtr] HD (unsigned id) -> thrust::pair<bool,float> {
             for (unsigned idx = locationOffsetPtr[id]; idx < locationOffsetPtr[id+1]; idx++) {
-                if ((possibleTypesPtr[idx] == 4 || possibleTypesPtr[idx] == 2) && essentialPtr[possibleLocationsPtr[idx]]==1) //TODO pull these params from config
-                    return thrust::make_pair(true, 0.9f);
+                if (possibleTypesPtr[idx] == 4 && essentialPtr[possibleLocationsPtr[idx]]==1) //TODO pull these params from config
+                    return thrust::make_pair(true, 0.6f);
+            }
+            return thrust::make_pair(false,0.0f);
+        };
+
+        //Category school workers
+        auto cat_school = [locationOffsetPtr, possibleTypesPtr,locationTypePtr,possibleLocationsPtr] HD (unsigned id) -> thrust::pair<bool,float> {
+            for (unsigned idx = locationOffsetPtr[id]; idx < locationOffsetPtr[id+1]; idx++) {
+                if (possibleTypesPtr[idx] == 4 && locationTypePtr[possibleLocationsPtr[idx]]==3)
+                    return thrust::make_pair(true, 0.7f);
             }
             return thrust::make_pair(false,0.0f);
         };
@@ -140,58 +155,91 @@ class Immunization {
             else return thrust::make_pair(false,0.0f);
         };
 
+        //Category over 3-18
+        auto cat_child = [agentMetaDataPtr] HD (unsigned id) -> thrust::pair<bool,float> {
+            if (agentMetaDataPtr[id].getAge()>=3 && agentMetaDataPtr[id].getAge()<18) return thrust::make_pair(true, 0.7f);
+            else return thrust::make_pair(false,0.0f);
+        };
+
         uint8_t lorder[numberOfCategories];
         for (unsigned i = 0; i < numberOfCategories; i++) lorder[i] = vaccinationOrder[i];
-        //Figure out which round of immunizations agent belongs to, and decide if agent wants to get it.
-        thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.begin(), thrust::make_counting_iterator(0))),
-                         thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.end()  , thrust::make_counting_iterator((int)immunizationRound.size()))),
-                            [cat_healthworker,cat_nursery,cat_elderly,cat_underlying,cat_essential,cat_adult,lorder] HD (thrust::tuple<uint8_t&, int> tup) {
+
+        for (unsigned currentCategory = 0; currentCategory < numberOfCategories; currentCategory++) {
+            auto it = std::find(vaccinationOrder.begin(), vaccinationOrder.end(), currentCategory+1);
+            if (it == vaccinationOrder.end()) continue;
+            unsigned groupIdx = std::distance(vaccinationOrder.begin(),it);
+            //Figure out which round of immunizations agent belongs to, and decide if agent wants to get it.
+            thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.begin(), thrust::make_counting_iterator(0))),
+                             thrust::make_zip_iterator(thrust::make_tuple(immunizationRound.end()  , thrust::make_counting_iterator((int)immunizationRound.size()))),
+                            [cat_healthworker,cat_nursery,cat_elderly,cat_underlying,cat_essential,cat_adult,cat_elderly_underlying,cat_school,cat_child,lorder,groupIdx] HD (thrust::tuple<uint8_t&, int> tup) {
                                 uint8_t& round = thrust::get<0>(tup);
                                 unsigned id = thrust::get<1>(tup);
 
                                 auto ret = cat_healthworker(id);
-                                if (ret.first && round == 0) {
+                                if (groupIdx == 0 && ret.first && round==0) {
                                     if (RandomGenerator::randomUnit() < ret.second) round = lorder[0];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
 
                                 ret = cat_nursery(id);
-                                if (ret.first && round == 0) {
+                                if (groupIdx == 1 && ret.first && round==0) {
                                     if (RandomGenerator::randomUnit() < ret.second) round = lorder[1];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
 
                                 ret = cat_elderly(id);
-                                if (ret.first && round == 0) {
+                                if (groupIdx == 2 && ret.first && round==0) {
                                     if (RandomGenerator::randomUnit() < ret.second) round = lorder[2];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
 
                                 ret = cat_underlying(id);
-                                if (ret.first && round == 0) {
+                                if (groupIdx == 3 && ret.first && round==0) {
                                     if (RandomGenerator::randomUnit() < ret.second) round = lorder[3];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
 
                                 ret = cat_essential(id);
-                                if (ret.first && round == 0) {
+                                if (groupIdx == 4 && ret.first && round==0) {
                                     if (RandomGenerator::randomUnit() < ret.second) round = lorder[4];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
 
                                 ret = cat_adult(id);
-                                if (ret.first && round == 0) {
+                                if (groupIdx == 5 && ret.first && round==0) {
                                     if (RandomGenerator::randomUnit() < ret.second) round = lorder[5];
+                                    else round = (uint8_t)-1;
+                                    return;
+                                }
+
+                                ret = cat_elderly_underlying(id);
+                                if (groupIdx == 6 && ret.first && round==0) {
+                                    if (RandomGenerator::randomUnit() < ret.second) round = lorder[6];
+                                    else round = (uint8_t)-1;
+                                    return;
+                                }
+
+                                ret = cat_school(id);
+                                if (groupIdx == 7 && ret.first && round==0) {
+                                    if (RandomGenerator::randomUnit() < ret.second) round = lorder[7];
+                                    else round = (uint8_t)-1;
+                                    return;
+                                }
+
+                                ret = cat_child(id);
+                                if (groupIdx == 8 && ret.first && round==0) {
+                                    if (RandomGenerator::randomUnit() < ret.second) round = lorder[8];
                                     else round = (uint8_t)-1;
                                     return;
                                 }
                             }
                         );
+        }
     }
     void update(Timehandler& simTime, unsigned timeStep) {
         unsigned timestamp = simTime.getTimestamp();
@@ -254,7 +302,11 @@ class Immunization {
                                           thrust::get<1>(tup).immunizationTimestamp = timestamp;
                                       }
                              });
-            if (diagnosticLevel>0) std::cout << "Immunized " << (count < available? count : available) << " people from group " << currentCategory << std::endl;
+            if (diagnosticLevel>0) {
+                auto it = std::find(vaccinationOrder.begin(), vaccinationOrder.end(), currentCategory+1);
+                unsigned groupIdx = std::distance(vaccinationOrder.begin(),it);
+                std::cout << "Immunized " << (count < available? count : available) << " people from group " << groupIdx << std::endl;
+            }
 
             //subtract from available
             if (count < available) available -= count;
