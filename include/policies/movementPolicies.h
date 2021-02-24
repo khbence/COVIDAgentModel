@@ -612,8 +612,9 @@ namespace RealMovementOps {
                         a.possibleTypesPtr,
                         a.homeType, a.schoolType, a.workType, 0, nullptr);
                     wasClosed = std::numeric_limits<unsigned>::max();
+                    bool schoolAndTooOld2 = (newLocationType == a.schoolType || newLocationType == a.classroomType) && a.agentMetaDataPtr[i].getAge() >= a.schoolAgeRestriction;
                     //is that closed too?
-                    if ((a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) && newLocationType != a.workType) {
+                    if (schoolAndTooOld || (a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) && newLocationType != a.workType) {
                         wasClosed = newLocation;
                         newLocation = RealMovementOps::findActualLocationForType(
                             i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
