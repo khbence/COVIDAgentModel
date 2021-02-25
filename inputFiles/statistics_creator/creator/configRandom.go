@@ -7,6 +7,7 @@ import (
 	"os"
 	"statistics_creator/utils"
 	"strconv"
+	"sync"
 )
 
 type chanceDict struct {
@@ -172,32 +173,40 @@ func (crf *ConfigRandomFormat) addLocation(location map[string]interface{}) {
 
 // CreateConfigRandomData create configRandom data from the agents and locations JSON files
 func CreateConfigRandomData(agentsFile string, locationFile string, ages []AgeInterval) (ConfigRandomFormat, error) {
-	result := makeConfigRandomformat(ages)
-	utils.InfoLogger.Println("Parsing agents file")
-	agentsData, err := readJSON(agentsFile)
-	if err != nil {
-		return result, err
-	}
 	defer func() {
 		if err := recover(); err != nil {
 			utils.ErrorLogger.Println(err)
 		}
 	}()
-	people := mapGet(agentsData, "people").([]interface{})
-	for _, person := range people {
-		result.addPerson(person.(map[string]interface{}))
-	}
+	result := makeConfigRandomformat(ages)
+	utils.InfoLogger.Println("Parsing agents file")
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		agentsData, err := readJSON(agentsFile)
+		if err != nil {
+			panic(err)
+		}
+		people := mapGet(agentsData, "people").([]interface{})
+		for _, person := range people {
+			result.addPerson(person.(map[string]interface{}))
+		}
+	}()
 
 	utils.InfoLogger.Println("Parsing locations file")
-	locationsData, err := readJSON(locationFile)
-	if err != nil {
-		return result, err
-	}
-	places := mapGet(locationsData, "places").([]interface{})
-	for _, location := range places {
-		result.addLocation(location.(map[string]interface{}))
-	}
-
+	go func() {
+		defer wg.Done()
+		locationsData, err := readJSON(locationFile)
+		if err != nil {
+			panic(err)
+		}
+		places := mapGet(locationsData, "places").([]interface{})
+		for _, location := range places {
+			result.addLocation(location.(map[string]interface{}))
+		}
+	}()
+	wg.Wait()
 	return result, nil
 }
 
