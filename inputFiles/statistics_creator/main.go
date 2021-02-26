@@ -7,18 +7,10 @@ import (
 
 func main() {
 	utils.Init()
-	data, err := creator.CreateConfigRandomData("../../inputFiles/KamiData/agents.json", "../../inputFiles/KamiData/locations.json", []creator.AgeInterval{
+	data, err := creator.CreateConfigRandomData("files/agents.json", "files/locations.json", []creator.AgeInterval{
 		{
 			Begin: 0,
-			End:   50,
-		},
-		{
-			Begin: 50,
-			End:   75,
-		},
-		{
-			Begin: 75,
-			End:   500,
+			End:   200,
 		},
 	})
 	if err != nil {

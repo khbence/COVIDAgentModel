@@ -10,49 +10,56 @@ import (
 	"sync"
 )
 
-type chanceDict struct {
-	Value  string  `json:"value"`
-	Chance float64 `json:"chance"`
-}
+type (
+	chanceDict struct {
+		Value  string  `json:"value"`
+		Chance float64 `json:"chance"`
+	}
 
-type chanceDictDiag struct {
-	Value      string  `json:"value"`
-	Chance     float64 `json:"chance"`
-	DiagChance float64 `json:"diagnosedChance"`
-}
+	chanceDictDiag struct {
+		Value      string  `json:"value"`
+		Chance     float64 `json:"chance"`
+		DiagChance float64 `json:"diagnosedChance"`
+	}
 
-type chanceSlice []chanceDict
-type stateSlice []stateData
-type ageIntervalSlice []AgeInterval
-type chanceDictDiagSlice []chanceDictDiag
+	chanceSlice         []chanceDict
+	stateSlice          []stateData
+	ageIntervalSlice    []AgeInterval
+	chanceDictDiagSlice []chanceDictDiag
 
-type stateData struct {
-	AgeStart     int                 `json:"ageStart"`
-	AgeEnd       int                 `json:"ageEnd"`
-	Distribution chanceDictDiagSlice `json:"diagnosedChance"`
-	agentCounter int
-}
+	stateData struct {
+		AgeStart     int                 `json:"ageStart"`
+		AgeEnd       int                 `json:"ageEnd"`
+		Distribution chanceDictDiagSlice `json:"diagnosedChance"`
+		agentCounter int
+	}
 
-// ConfigRandomFormat stores the entire file
-type ConfigRandomFormat struct {
-	IrregularLocChance      float64     `json:"irregulalLocationChance"`
-	LocationTypeDistibution chanceSlice `json:"locationTypeDistibution"`
-	PreCondDistibution      chanceSlice `json:"preCondDistibution"`
-	StateDistribution       stateSlice  `json:"stateDistibution"`
-	AgentTypeDistribution   chanceSlice `json:"agentTypeDistribution"`
-	agentCounter            int
-	locationCounter         int
-}
+	// ConfigRandomFormat stores the entire file
+	ConfigRandomFormat struct {
+		IrregularLocChance      float64     `json:"irregulalLocationChance"`
+		LocationTypeDistibution chanceSlice `json:"locationTypeDistibution"`
+		PreCondDistibution      chanceSlice `json:"preCondDistibution"`
+		StateDistribution       stateSlice  `json:"stateDistibution"`
+		AgentTypeDistribution   chanceSlice `json:"agentTypeDistribution"`
+		agentCounter            int
+		locationCounter         int
+		usedLocationCounter     int
+		locationMap             map[string]string
+		signalLocation          chan bool
+	}
 
-// AgeInterval is used to define what are the intervals to get the state distributions
-type AgeInterval struct {
-	Begin int
-	End   int
-}
+	// AgeInterval is used to define what are the intervals to get the state distributions
+	AgeInterval struct {
+		Begin int
+		End   int
+	}
+)
 
 func makeConfigRandomformat(ages []AgeInterval) ConfigRandomFormat {
 	newCFG := ConfigRandomFormat{
 		StateDistribution: make(stateSlice, len(ages)),
+		locationMap:       make(map[string]string),
+		signalLocation:    make(chan bool),
 	}
 	for idx := range newCFG.StateDistribution {
 		newCFG.StateDistribution[idx].AgeStart = ages[idx].Begin
@@ -171,6 +178,79 @@ func (crf *ConfigRandomFormat) addLocation(location map[string]interface{}) {
 	crf.LocationTypeDistibution.increment(mapGetString(location, "type"))
 }
 
+func (crf *ConfigRandomFormat) calculateIrregularLocations(agents []interface{}, wg *sync.WaitGroup) {
+	defer wg.Done()
+	ok := <-crf.signalLocation
+	utils.InfoLogger.Println("Starting to calculate irregular locations")
+	if !ok {
+		return
+	}
+	for _, person := range agents {
+		locations := mapGet(person.(map[string]interface{}), "locations").([]interface{})
+		for _, loc := range locations {
+			crf.usedLocationCounter++
+			locMap := loc.(map[string]interface{})
+			locID := mapGetString(locMap, "locID")
+			originalTypeID, ok := crf.locationMap[locID]
+			if !ok {
+				panic(fmt.Errorf("Location ID (%s) in agents file does not exists in locations file", locID))
+			}
+			if originalTypeID != mapGetString(locMap, "typeID") {
+				crf.IrregularLocChance++
+			}
+		}
+	}
+	utils.InfoLogger.Println("Finished calculating irregular locations")
+}
+
+func (crf *ConfigRandomFormat) readAgents(file string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	utils.InfoLogger.Println("Parsing agents file")
+	agentsData, err := readJSON(file)
+	if err != nil {
+		panic(err)
+	}
+	people := mapGet(agentsData, "people").([]interface{})
+	wg.Add(1)
+	go crf.calculateIrregularLocations(people, wg)
+	for _, person := range people {
+		crf.addPerson(person.(map[string]interface{}))
+	}
+	utils.InfoLogger.Println("Finished parsing agents file")
+}
+
+func (crf *ConfigRandomFormat) readLocations(file string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	isChannelClosed := false
+	isChannelClosedPtr := &isChannelClosed
+	defer func(channelClosed *bool) {
+		if err := recover(); err != nil {
+			if !(*channelClosed) {
+				crf.signalLocation <- false
+				close(crf.signalLocation)
+			}
+			panic(err)
+		}
+	}(isChannelClosedPtr)
+	utils.InfoLogger.Println("Parsing locations file")
+	locationsData, err := readJSON(file)
+	if err != nil {
+		panic(err)
+	}
+	places := mapGet(locationsData, "places").([]interface{})
+	for _, location := range places {
+		tmp := location.(map[string]interface{})
+		crf.locationMap[mapGetString(tmp, "ID")] = mapGetString(tmp, "type")
+	}
+	crf.signalLocation <- true
+	close(crf.signalLocation)
+	isChannelClosed = true
+	for _, location := range places {
+		crf.addLocation(location.(map[string]interface{}))
+	}
+	utils.InfoLogger.Println("Finished parsing locations file")
+}
+
 // CreateConfigRandomData create configRandom data from the agents and locations JSON files
 func CreateConfigRandomData(agentsFile string, locationFile string, ages []AgeInterval) (ConfigRandomFormat, error) {
 	defer func() {
@@ -179,34 +259,13 @@ func CreateConfigRandomData(agentsFile string, locationFile string, ages []AgeIn
 		}
 	}()
 	result := makeConfigRandomformat(ages)
-	utils.InfoLogger.Println("Parsing agents file")
 	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		agentsData, err := readJSON(agentsFile)
-		if err != nil {
-			panic(err)
-		}
-		people := mapGet(agentsData, "people").([]interface{})
-		for _, person := range people {
-			result.addPerson(person.(map[string]interface{}))
-		}
-	}()
 
-	utils.InfoLogger.Println("Parsing locations file")
-	go func() {
-		defer wg.Done()
-		locationsData, err := readJSON(locationFile)
-		if err != nil {
-			panic(err)
-		}
-		places := mapGet(locationsData, "places").([]interface{})
-		for _, location := range places {
-			result.addLocation(location.(map[string]interface{}))
-		}
-	}()
+	wg.Add(2)
+	go result.readAgents(agentsFile, &wg)
+	go result.readLocations(locationFile, &wg)
 	wg.Wait()
+
 	return result, nil
 }
 
@@ -231,6 +290,7 @@ func (sd *stateSlice) calculatePercentages() {
 }
 
 func (crf *ConfigRandomFormat) calculatePercentages() {
+	crf.IrregularLocChance /= float64(crf.usedLocationCounter)
 	crf.AgentTypeDistribution.divideChances(crf.agentCounter)
 	crf.LocationTypeDistibution.divideChances(crf.locationCounter)
 	crf.PreCondDistibution.divideChances(crf.agentCounter)
