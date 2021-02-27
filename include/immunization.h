@@ -31,11 +31,20 @@ class Immunization {
     unsigned diagnosticLevel = 0;
 
     unsigned numberOfVaccinesToday(Timehandler& simTime) {
-        if (simTime.getTimestamp()/(24*60/simTime.getTimeStep()) >= startAfterDay) return dailyDoses;
+        //float availPerWeek[] = {1115.178518, 486.88636, 895.271552, 1876.9132, 1955.46154, 4943.59527, 8544.33033, 8563.97919, 9160.88972, 9612.38930, 10252.4613, 10276.0211, 9361.10071, 9553.48985, 9977.56585, 9722.31922, 8823.13674, 8823.13674, 8756.36833, 8783.88615, 8799.57697, 5717.15701, 5705.37712, 5670.0374, 5662.16849, 5799.61623, 5795.70531, 5772.14553, 3852.02365, 3043.12224, 3031.34235, 934.522142};
+        //float availPerWeek[] = {1115.178518, 486.88636, 895.271552, 1876.9132, 1955.46154, 2471.797635, 4272.165165, 4281.989595, 4580.44486, 4806.19465, 5126.23065, 5138.01055, 4680.550355, 4776.744925, 4988.782925, 4861.15961, 4411.56837, 4411.56837, 4378.184165, 4391.943075, 4399.788485, 4399.788485, 4399.788485, 4399.788485, 4399.788485, 4399.788485, 4399.788485, 4399.788485, 4399.788485, 4399.788485, 4399.788485, 4399.788485};
+        if (simTime.getTimestamp()/(24*60/simTime.getTimeStep()) >= startAfterDay) {
+            //unsigned day = simTime.getTimestamp()/(24*60/simTime.getTimeStep())-startAfterDay;
+            //unsigned week = day/7;
+            //return availPerWeek[week>31?31:week]/7.0;
+            return dailyDoses;
+        }
         else return 0;
     }
 
     public:
+    unsigned immunizedToday = 0;
+
     Immunization (Simulation *s) {
         this->sim = s;
     }
@@ -257,6 +266,7 @@ class Immunization {
                                  else if (daysSinceImmunization>=12) thrust::get<0>(tup).setSusceptible(0.48); //52%
                              });
 
+        this->immunizedToday = 0;
         //no vaccines today, or everybody already immunized, return
         if (numberOfVaccinesToday(simTime) == 0 || currentCategory >= numberOfCategories) return;
 
@@ -307,7 +317,7 @@ class Immunization {
                 unsigned groupIdx = std::distance(vaccinationOrder.begin(),it);
                 std::cout << "Immunized " << (count < available? count : available) << " people from group " << groupIdx << std::endl;
             }
-
+            this->immunizedToday += (count < available? count : available);
             //subtract from available
             if (count < available) available -= count;
             else available = 0;
