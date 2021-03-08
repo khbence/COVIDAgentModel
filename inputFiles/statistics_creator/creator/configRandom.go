@@ -60,10 +60,10 @@ func (crf *ConfigRandomFormat) addLocation(location map[string]interface{}) {
 func (crf *ConfigRandomFormat) calculateIrregularLocations(agents []interface{}, wg *sync.WaitGroup) {
 	defer wg.Done()
 	ok := <-crf.signalLocation
-	utils.InfoLogger.Println("Starting to calculate irregular locations")
 	if !ok {
 		return
 	}
+	utils.InfoLogger.Println("Starting to calculate irregular locations")
 	for _, person := range agents {
 		locations := mapGet(person.(map[string]interface{}), "locations").([]interface{})
 		for _, loc := range locations {
@@ -73,7 +73,7 @@ func (crf *ConfigRandomFormat) calculateIrregularLocations(agents []interface{},
 			if !ok {
 				panic(fmt.Errorf("Location ID (%s) in agents file does not exists in locations file", locID))
 			}
-			crf.IrregularLocChance.addCase(originalTypeID, mapGetString(locMap, "typeID"))
+			crf.IrregularLocChance.addCase(mapGetString(locMap, "typeID"), originalTypeID)
 		}
 	}
 	utils.InfoLogger.Println("Finished calculating irregular locations")
