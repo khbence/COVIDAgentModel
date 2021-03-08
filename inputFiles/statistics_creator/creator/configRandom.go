@@ -17,15 +17,29 @@ type (
 	}
 
 	chanceDictDiag struct {
-		Value      string  `json:"value"`
-		Chance     float64 `json:"chance"`
+		chanceDict
 		DiagChance float64 `json:"diagnosedChance"`
+	}
+
+	irregularChance struct {
+		Value                  string      `json:"value"`
+		ChanceForType          float64     `json:"chanceForType"`
+		ChanceFromAllIrregular float64     `json:"chanceFromAllIrregular"`
+		SwitchedToWhat         chanceSlice `json:"switchedToWhat"`
+		counter                int
+	}
+
+	irregularGlobal struct {
+		GeneralChance       float64        `json:"generalChance"`
+		Details             irregularSlice `json:"detailsOfChances"`
+		usedLocationCounter int
 	}
 
 	chanceSlice         []chanceDict
 	stateSlice          []stateData
 	ageIntervalSlice    []AgeInterval
 	chanceDictDiagSlice []chanceDictDiag
+	irregularSlice      []irregularChance
 
 	stateData struct {
 		AgeStart     int                 `json:"ageStart"`
@@ -36,14 +50,13 @@ type (
 
 	// ConfigRandomFormat stores the entire file
 	ConfigRandomFormat struct {
-		IrregularLocChance      float64     `json:"irregulalLocationChance"`
-		LocationTypeDistibution chanceSlice `json:"locationTypeDistibution"`
-		PreCondDistibution      chanceSlice `json:"preCondDistibution"`
-		StateDistribution       stateSlice  `json:"stateDistibution"`
-		AgentTypeDistribution   chanceSlice `json:"agentTypeDistribution"`
+		IrregularLocChance      irregularGlobal `json:"irregulalLocationChance"`
+		LocationTypeDistibution chanceSlice     `json:"locationTypeDistibution"`
+		PreCondDistibution      chanceSlice     `json:"preCondDistibution"`
+		StateDistribution       stateSlice      `json:"stateDistibution"`
+		AgentTypeDistribution   chanceSlice     `json:"agentTypeDistribution"`
 		agentCounter            int
 		locationCounter         int
-		usedLocationCounter     int
 		locationMap             map[string]string
 		signalLocation          chan bool
 	}
@@ -150,11 +163,53 @@ func (d *chanceDictDiagSlice) increment(state string) {
 	}
 	if !found {
 		*d = append(*d, chanceDictDiag{
-			Value:      state,
-			Chance:     1.0,
+			chanceDict: chanceDict{
+				Value:  state,
+				Chance: 1.0,
+			},
 			DiagChance: 0.0,
 		})
 	}
+}
+
+func (ic *irregularSlice) increment(expected, real string) bool {
+	found := false
+	irregular := false
+	for i, value := range *ic {
+		if value.Value == expected {
+			found = true
+			current := &(*ic)[i]
+			current.counter++
+			if expected != real {
+				current.ChanceForType++
+				current.ChanceFromAllIrregular++
+				current.SwitchedToWhat.increment(real)
+				irregular = true
+			}
+			break
+		}
+	}
+	if !found {
+		newElement := irregularChance{
+			Value:   expected,
+			counter: 1,
+		}
+		if irregular {
+			newElement.ChanceForType++
+			newElement.ChanceFromAllIrregular++
+			newElement.SwitchedToWhat.increment(real)
+		}
+		*ic = append(*ic, newElement)
+	}
+	return irregular
+}
+
+func (ig *irregularGlobal) addCase(expected, real string) {
+	ig.usedLocationCounter++
+	if !ig.Details.increment(expected, real) {
+		return
+	}
+	ig.GeneralChance++
 }
 
 func (sd *stateSlice) increment(age int, state string) {
@@ -188,16 +243,13 @@ func (crf *ConfigRandomFormat) calculateIrregularLocations(agents []interface{},
 	for _, person := range agents {
 		locations := mapGet(person.(map[string]interface{}), "locations").([]interface{})
 		for _, loc := range locations {
-			crf.usedLocationCounter++
 			locMap := loc.(map[string]interface{})
 			locID := mapGetString(locMap, "locID")
 			originalTypeID, ok := crf.locationMap[locID]
 			if !ok {
 				panic(fmt.Errorf("Location ID (%s) in agents file does not exists in locations file", locID))
 			}
-			if originalTypeID != mapGetString(locMap, "typeID") {
-				crf.IrregularLocChance++
-			}
+			crf.IrregularLocChance.addCase(originalTypeID, mapGetString(locMap, "typeID"))
 		}
 	}
 	utils.InfoLogger.Println("Finished calculating irregular locations")
@@ -269,7 +321,27 @@ func CreateConfigRandomData(agentsFile string, locationFile string, ages []AgeIn
 	return result, nil
 }
 
+func (ic *irregularChance) divideChances(number int) {
+	ic.ChanceFromAllIrregular /= float64(number)
+	ic.SwitchedToWhat.divideChances(int(ic.ChanceForType))
+	ic.ChanceForType /= float64(ic.counter)
+}
+
+func (ic *irregularSlice) divideChances(allCounter int) {
+	for i := range *ic {
+		(*ic)[i].divideChances(allCounter)
+	}
+}
+
+func (ig *irregularGlobal) divideChances() {
+	ig.Details.divideChances(int(ig.GeneralChance))
+	ig.GeneralChance /= float64(ig.usedLocationCounter)
+}
+
 func (pcd *chanceSlice) divideChances(number int) {
+	if number == 0 {
+		return
+	}
 	numberF := float64(number)
 	for i := range *pcd {
 		(*pcd)[i].Chance /= numberF
@@ -290,7 +362,7 @@ func (sd *stateSlice) calculatePercentages() {
 }
 
 func (crf *ConfigRandomFormat) calculatePercentages() {
-	crf.IrregularLocChance /= float64(crf.usedLocationCounter)
+	crf.IrregularLocChance.divideChances()
 	crf.AgentTypeDistribution.divideChances(crf.agentCounter)
 	crf.LocationTypeDistibution.divideChances(crf.locationCounter)
 	crf.PreCondDistibution.divideChances(crf.agentCounter)
