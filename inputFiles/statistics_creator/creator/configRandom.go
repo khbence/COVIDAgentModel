@@ -6,66 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"statistics_creator/utils"
-	"strconv"
 	"sync"
-)
-
-type (
-	chanceDict struct {
-		Value  string  `json:"value"`
-		Chance float64 `json:"chance"`
-	}
-
-	chanceDictDiag struct {
-		chanceDict
-		DiagChance float64 `json:"diagnosedChance"`
-	}
-
-	irregularChance struct {
-		Value                  string      `json:"value"`
-		ChanceForType          float64     `json:"chanceForType"`
-		ChanceFromAllIrregular float64     `json:"chanceFromAllIrregular"`
-		SwitchedToWhat         chanceSlice `json:"switchedToWhat"`
-		counter                int
-	}
-
-	irregularGlobal struct {
-		GeneralChance       float64        `json:"generalChance"`
-		Details             irregularSlice `json:"detailsOfChances"`
-		usedLocationCounter int
-	}
-
-	chanceSlice         []chanceDict
-	stateSlice          []stateData
-	ageIntervalSlice    []AgeInterval
-	chanceDictDiagSlice []chanceDictDiag
-	irregularSlice      []irregularChance
-
-	stateData struct {
-		AgeStart     int                 `json:"ageStart"`
-		AgeEnd       int                 `json:"ageEnd"`
-		Distribution chanceDictDiagSlice `json:"diagnosedChance"`
-		agentCounter int
-	}
-
-	// ConfigRandomFormat stores the entire file
-	ConfigRandomFormat struct {
-		IrregularLocChance      irregularGlobal `json:"irregulalLocationChance"`
-		LocationTypeDistibution chanceSlice     `json:"locationTypeDistibution"`
-		PreCondDistibution      chanceSlice     `json:"preCondDistibution"`
-		StateDistribution       stateSlice      `json:"stateDistibution"`
-		AgentTypeDistribution   chanceSlice     `json:"agentTypeDistribution"`
-		agentCounter            int
-		locationCounter         int
-		locationMap             map[string]string
-		signalLocation          chan bool
-	}
-
-	// AgeInterval is used to define what are the intervals to get the state distributions
-	AgeInterval struct {
-		Begin int
-		End   int
-	}
 )
 
 func makeConfigRandomformat(ages []AgeInterval) ConfigRandomFormat {
@@ -96,129 +37,12 @@ func readJSON(filePath string) (map[string]interface{}, error) {
 	return result, err
 }
 
-func mapGet(dict map[string]interface{}, key string) interface{} {
-	ret, ok := dict[key]
-	if !ok {
-		panic(fmt.Errorf("Key (%s) did not found in the file", key))
-	}
-	return ret
-}
-
-func mapGetString(dict map[string]interface{}, key string) string {
-	tmp, ok := dict[key]
-	if !ok {
-		panic(fmt.Errorf("Key (%s) did not found in the file", key))
-	}
-	switch v := tmp.(type) {
-	case string:
-		return v
-	case float64:
-		return strconv.FormatFloat(v, 'f', 0, 64)
-	default:
-		panic(fmt.Errorf("Key (%s) could not transform directly or indirectly to string", key))
-	}
-}
-
-func mapGetInt(dict map[string]interface{}, key string) int {
-	tmp, ok := dict[key]
-	if !ok {
-		panic(fmt.Errorf("Key (%s) did not found in the file", key))
-	}
-	switch v := tmp.(type) {
-	case float64:
-		return int(v)
-	case string:
-		vInteger, err := strconv.Atoi(v)
-		if err != nil {
-			panic(fmt.Errorf("String to int conversion error for key (%s), error is : %v", key, err))
-		}
-		return vInteger
-	default:
-		panic(fmt.Errorf("Key (%s) could not transform directly or indirectly to int", key))
-	}
-}
-
-func (pcd *chanceSlice) increment(key string) {
-	found := false
-	for i, value := range *pcd {
-		if value.Value == key {
-			(*pcd)[i].Chance += 1.0
-			found = true
-			break
-		}
-	}
-	if !found {
-		*pcd = append(*pcd, chanceDict{Value: key, Chance: 1.0})
-	}
-}
-
-func (d *chanceDictDiagSlice) increment(state string) {
-	found := false
-	for i, value := range *d {
-		if value.Value == state {
-			(*d)[i].Chance++
-			found = true
-			break
-		}
-	}
-	if !found {
-		*d = append(*d, chanceDictDiag{
-			chanceDict: chanceDict{
-				Value:  state,
-				Chance: 1.0,
-			},
-			DiagChance: 0.0,
-		})
-	}
-}
-
-func (ic *irregularSlice) increment(expected, real string) bool {
-	found := false
-	irregular := false
-	for i, value := range *ic {
-		if value.Value == expected {
-			found = true
-			current := &(*ic)[i]
-			current.counter++
-			if expected != real {
-				current.ChanceForType++
-				current.ChanceFromAllIrregular++
-				current.SwitchedToWhat.increment(real)
-				irregular = true
-			}
-			break
-		}
-	}
-	if !found {
-		newElement := irregularChance{
-			Value:   expected,
-			counter: 1,
-		}
-		if irregular {
-			newElement.ChanceForType++
-			newElement.ChanceFromAllIrregular++
-			newElement.SwitchedToWhat.increment(real)
-		}
-		*ic = append(*ic, newElement)
-	}
-	return irregular
-}
-
 func (ig *irregularGlobal) addCase(expected, real string) {
 	ig.usedLocationCounter++
 	if !ig.Details.increment(expected, real) {
 		return
 	}
 	ig.GeneralChance++
-}
-
-func (sd *stateSlice) increment(age int, state string) {
-	for i, value := range *sd {
-		if value.AgeStart < age && age < value.AgeEnd {
-			(*sd)[i].agentCounter++
-			(*sd)[i].Distribution.increment(state)
-		}
-	}
 }
 
 func (crf *ConfigRandomFormat) addPerson(person map[string]interface{}) {
@@ -319,54 +143,6 @@ func CreateConfigRandomData(agentsFile string, locationFile string, ages []AgeIn
 	wg.Wait()
 
 	return result, nil
-}
-
-func (ic *irregularChance) divideChances(number int) {
-	ic.ChanceFromAllIrregular /= float64(number)
-	ic.SwitchedToWhat.divideChances(int(ic.ChanceForType))
-	ic.ChanceForType /= float64(ic.counter)
-}
-
-func (ic *irregularSlice) divideChances(allCounter int) {
-	for i := range *ic {
-		(*ic)[i].divideChances(allCounter)
-	}
-}
-
-func (ig *irregularGlobal) divideChances() {
-	ig.Details.divideChances(int(ig.GeneralChance))
-	ig.GeneralChance /= float64(ig.usedLocationCounter)
-}
-
-func (pcd *chanceSlice) divideChances(number int) {
-	if number == 0 {
-		return
-	}
-	numberF := float64(number)
-	for i := range *pcd {
-		(*pcd)[i].Chance /= numberF
-	}
-}
-
-func (d *chanceDictDiagSlice) divideChances(number int) {
-	numberF := float64(number)
-	for i := range *d {
-		(*d)[i].Chance /= numberF
-	}
-}
-
-func (sd *stateSlice) calculatePercentages() {
-	for i := range *sd {
-		(*sd)[i].Distribution.divideChances((*sd)[i].agentCounter)
-	}
-}
-
-func (crf *ConfigRandomFormat) calculatePercentages() {
-	crf.IrregularLocChance.divideChances()
-	crf.AgentTypeDistribution.divideChances(crf.agentCounter)
-	crf.LocationTypeDistibution.divideChances(crf.locationCounter)
-	crf.PreCondDistibution.divideChances(crf.agentCounter)
-	crf.StateDistribution.calculatePercentages()
 }
 
 // WriteToFile writes out it's data in JSON format to the file path
