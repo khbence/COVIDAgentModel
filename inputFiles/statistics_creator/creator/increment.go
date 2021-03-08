@@ -53,8 +53,9 @@ func (ic *irregularSlice) increment(expected, real string) bool {
 	}
 	if !found {
 		newElement := irregularChance{
-			Value:   expected,
-			counter: 1,
+			Value:          expected,
+			counter:        1,
+			SwitchedToWhat: make(chanceSlice, 0),
 		}
 		if irregular {
 			newElement.ChanceForType++
