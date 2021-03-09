@@ -32,6 +32,7 @@ class DataProvider {
     parser::ConfigRandom configRandom;
     std::map<unsigned, std::vector<unsigned>> aTypeToLocationTypes;
     std::map<unsigned, std::vector<std::string>> typeToLocationMapping;
+    std::map<std::string, parser::ConfigRandom::IrregularChances::Detail> typesIrregularChancesMap;
 
     void readParameters(const std::string& fileName);
     std::map<ProgressionType, std::string> readProgressionConfig(const std::string& fileName);
