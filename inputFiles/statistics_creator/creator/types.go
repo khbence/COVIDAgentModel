@@ -34,7 +34,7 @@ type (
 	stateData struct {
 		AgeStart     int                 `json:"ageStart"`
 		AgeEnd       int                 `json:"ageEnd"`
-		Distribution chanceDictDiagSlice `json:"diagnosedChance"`
+		Distribution chanceDictDiagSlice `json:"distribution"`
 		agentCounter int
 	}
 

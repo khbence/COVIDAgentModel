@@ -288,7 +288,7 @@
         {
             "ageStart": 0,
             "ageEnd": 200,
-            "diagnosedChance": [
+            "distribution": [
                 {
                     "value": "S",
                     "chance": 1,
