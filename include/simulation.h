@@ -368,12 +368,12 @@ public:
             statesHeader = header + "H\tT\tP1\tP2\tQ\tQT\tNQ\tMUT\tHOM";
             std::cout << statesHeader << '\n';
             ClosurePolicy<Simulation>::init(data.acquireLocationTypes(), data.acquireClosureRules(), statesHeader);
+            locs->initialize();
+            immunization->initCategories();
         } catch (const CustomErrors& e) {
-            std::cerr << e.what();
+            std::cerr << e.what() << '\n';
             succesfullyInitialized = false;
         }
-        locs->initialize();
-        immunization->initCategories();
     }
 
     void runSimulation() {

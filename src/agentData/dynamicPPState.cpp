@@ -291,7 +291,7 @@ bool HD DynamicPPState::update(float scalingSymptons,
                     oldWBState,
                     this->getWBState());
             }
-            if (this->isInfected() == false) {
+            if (!this->isInfected()) {
                 return true;// recovered
             }
         }
