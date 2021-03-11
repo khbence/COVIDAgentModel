@@ -63,7 +63,7 @@ void DataProvider::readProgressionMatrices(const std::string& fileName) {
 
 void DataProvider::readConfigRandom(const std::string& fileName) {
     configRandom = DECODE_JSON_FILE(fileName, decltype(configRandom));
-    for (const auto& chance : configRandom.irregulalLocationChance.detailsOfChances) {
+    for (const auto& chance : configRandom.irregularChances.detailsOfChances) {
         typesIrregularChancesMap[chance.value] = chance;
     }
 }
@@ -100,8 +100,8 @@ void DataProvider::readAgents(const std::string& fileName) {
 }
 
 std::pair<std::string, double> DataProvider::calculateSingleRandomState(unsigned age) const {
-    auto it = std::find_if(configRandom.stateDistibution.begin(),
-        configRandom.stateDistibution.end(),
+    auto it = std::find_if(configRandom.stateDistribution.begin(),
+        configRandom.stateDistribution.end(),
         [age](const auto& e) { return (e.ageStart <= age) && (age < e.ageEnd); });
     return randomSelectPair(it->distribution.begin());
 }
@@ -113,7 +113,16 @@ void DataProvider::randomLocations(unsigned N) {
     for (unsigned i = 0; i < N; ++i) {
         parser::Locations::Place current{};
         current.ID = std::to_string(i);
-        current.type = std::stoi(randomSelect(configRandom.locationTypeDistibution.begin()));
+        current.type = std::stoi(randomSelect(configRandom.locationTypeDistribution.begin()));
+        if(current.type == 33) {
+            if(typeToLocationMapping.find(3) != typeToLocationMapping.end()) {
+                auto& schools = typeToLocationMapping[3];
+                auto schoolName = schools[RandomGenerator::randomUnsigned(schools.size())];
+                current.ID += "_" + schoolName;
+            } else {
+                current.type = 3;
+            }
+        }
         typeToLocationMapping[current.type].push_back(current.ID);
         current.coordinates = std::vector<double>{ 0.0, 0.0 };
         current.area = 1;
@@ -137,7 +146,7 @@ void DataProvider::randomAgents(unsigned N) {
         parser::Agents::Person current{};
         current.age = RandomGenerator::randomUnsigned(90);
         current.sex = (RandomGenerator::randomUnit() < 0.5) ? "M" : "F";
-        current.preCond = randomSelect(configRandom.preCondDistibution.begin());
+        current.preCond = randomSelect(configRandom.preCondDistribution.begin());
         auto statediag = calculateSingleRandomState(current.age);
         current.state = statediag.first;
         current.diagnosed = RandomGenerator::randomUnit() < statediag.second;
@@ -147,19 +156,35 @@ void DataProvider::randomAgents(unsigned N) {
         for (const auto& l : requestedLocations) {
             parser::Agents::Person::Location currentLoc{};
             currentLoc.typeID = l;
-            const auto& possibleLocations = typeToLocationMapping[currentLoc.typeID];
             const auto& irregularChances = typesIrregularChancesMap[std::to_string(currentLoc.typeID)];
-            if (possibleLocations.size() == 0) {
+            bool foundLocation = false;
+            if(RandomGenerator::randomUnit() < irregularChances.chanceForType){
+                auto irregularTypeID = randomSelect(irregularChances.switchedToWhat.begin());
+                auto& newPossibleLocations = typeToLocationMapping[std::stoi(irregularTypeID)];
+                if(newPossibleLocations.empty()) {
+                    for(const auto& switcher : irregularChances.switchedToWhat) {
+                        newPossibleLocations = typeToLocationMapping[std::stoi(switcher.value)];
+                        if(!newPossibleLocations.empty()) {
+                            foundLocation = true;
+                            break;
+                        }
+                    }
+                }
+                if(foundLocation) {
+                    auto r = RandomGenerator::randomUnsigned(newPossibleLocations.size());
+                    currentLoc.locID = newPossibleLocations[r];
+                }
+            } else {
+                const auto& possibleLocations = typeToLocationMapping[currentLoc.typeID];
+                if(!possibleLocations.empty()) {
+                    auto r = RandomGenerator::randomUnsigned(possibleLocations.size());
+                    currentLoc.locID = possibleLocations[r];
+                    foundLocation = true;
+                }
+            }
+            if(!foundLocation) {
                 currentLoc.locID =
                     locations.places[RandomGenerator::randomUnsigned(locations.places.size())].ID;
-            } else if(RandomGenerator::randomUnit() < irregularChances.chanceForType){
-                auto irregularTypeID = randomSelect(irregularChances.switchedToWhat.begin());
-                const auto& newPossibleLocations = typeToLocationMapping[std::stoi(irregularTypeID)];
-                auto r = RandomGenerator::randomUnsigned(newPossibleLocations.size());
-                currentLoc.locID = newPossibleLocations[r];
-            } else {
-                auto r = RandomGenerator::randomUnsigned(possibleLocations.size());
-                currentLoc.locID = possibleLocations[r];
             }
             current.locations.push_back(currentLoc);
         }

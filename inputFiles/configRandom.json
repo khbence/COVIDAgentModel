@@ -1,5 +1,5 @@
 {
-    "irregulalLocationChance": {
+    "irregularChances": {
         "generalChance": 0.12921110824085474,
         "detailsOfChances": [
             {
@@ -188,7 +188,7 @@
             }
         ]
     },
-    "locationTypeDistibution": [
+    "locationTypeDistribution": [
         {
             "value": "2",
             "chance": 0.9034160002948004
@@ -262,7 +262,7 @@
             "chance": 0.00006141676186264755
         }
     ],
-    "preCondDistibution": [
+    "preCondDistribution": [
         {
             "value": "0",
             "chance": 0.7924562878640882
@@ -284,7 +284,7 @@
             "chance": 0.019662376301662246
         }
     ],
-    "stateDistibution": [
+    "stateDistribution": [
         {
             "ageStart": 0,
             "ageEnd": 200,

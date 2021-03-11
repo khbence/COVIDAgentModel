@@ -65,10 +65,10 @@ namespace parser {
         };
 
         BEGIN_MEMBER_DECLARATIONS();
-        DECODABLE_MEMBER(IrregularChances, irregulalLocationChance);
-        DECODABLE_MEMBER(std::vector<LocationTypeChance>, locationTypeDistibution);
-        DECODABLE_MEMBER(std::vector<PreCondChance>, preCondDistibution);
-        DECODABLE_MEMBER(std::vector<StatesForAge>, stateDistibution);
+        DECODABLE_MEMBER(IrregularChances, irregularChances);
+        DECODABLE_MEMBER(std::vector<LocationTypeChance>, locationTypeDistribution);
+        DECODABLE_MEMBER(std::vector<PreCondChance>, preCondDistribution);
+        DECODABLE_MEMBER(std::vector<StatesForAge>, stateDistribution);
         DECODABLE_MEMBER(std::vector<AgentTypeChance>, agentTypeDistribution);
         END_MEMBER_DECLARATIONS();
     };

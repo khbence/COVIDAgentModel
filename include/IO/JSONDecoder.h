@@ -372,7 +372,7 @@ namespace jsond {
         struct __decode_member<::jsond::impl::JSONDecodableMemberPrimitive<T, ID>> {
             static void decode(const rapidjson::Value::Object& obj) {
                 typedef ::jsond::impl::JSONDecodableMemberPrimitive<T, ID> member_t;
-                auto tmpMemberName = member_t::member_name;
+                auto& tmpMemberName = member_t::member_name;
                 auto it = obj.FindMember(tmpMemberName.c_str());
                 assert(it != obj.end());
                 *member_t::member_ptr =
@@ -385,7 +385,8 @@ namespace jsond {
         struct __decode_member<::jsond::impl::JSONDecodableMemberObject<T, ID>> {
             static void decode(const rapidjson::Value::Object& obj) {
                 typedef ::jsond::impl::JSONDecodableMemberObject<T, ID> member_t;
-                auto it = obj.FindMember(member_t::member_name.c_str());
+                std::string& tmp = member_t::member_name;
+                auto it = obj.FindMember(tmp.c_str());
                 assert(it != obj.end());
                 assert(it->value.IsObject());
                 *member_t::member_ptr =
@@ -397,7 +398,7 @@ namespace jsond {
         struct __decode_member<::jsond::impl::JSONDecodableMemberArray<T, V, ID>> {
             static void decode(const rapidjson::Value::Object& obj) {
                 typedef ::jsond::impl::JSONDecodableMemberArray<T, V, ID> member_t;
-                std::string tmp = member_t::member_name;
+                std::string& tmp = member_t::member_name;
                 auto it = obj.FindMember(tmp.c_str());
                 // auto it = obj.FindMember(member_t::member_name.c_str());
                 assert(it != obj.end());
