@@ -7,3 +7,6 @@ compile_commands.json
 build/*
 cmake/config/out/*
 !cmake/config/out/.keepDirectory
+.idea
+cmake-build-debug
+build

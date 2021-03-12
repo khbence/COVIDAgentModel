@@ -6,60 +6,12 @@
         },
         {
             "name": "F",
-            "symptoms": 0.7
+            "symptoms": 1
         }
     ],
     "age": [
         {
             "from": 0,
-            "to": 3,
-            "symptoms": 0.1,
-            "transmission": 0.2
-        },
-        {
-            "from": 3,
-            "to": 6,
-            "symptoms": 0.1,
-            "transmission": 0.2
-        },
-        {
-            "from": 6,
-            "to": 14,
-            "symptoms": 0.1,
-            "transmission": 0.5
-        },
-        {
-            "from": 14,
-            "to": 19,
-            "symptoms": 0.1,
-            "transmission": 1
-        },
-        {
-            "from": 19,
-            "to": 25,
-            "symptoms": 0.25,
-            "transmission": 1
-        },
-        {
-            "from": 25,
-            "to": 40,
-            "symptoms": 0.5,
-            "transmission": 1
-        },
-        {
-            "from": 40,
-            "to": 65,
-            "symptoms": 0.7,
-            "transmission": 1
-        },
-        {
-            "from": 65,
-            "to": 75,
-            "symptoms": 1,
-            "transmission": 1
-        },
-        {
-            "from": 75,
             "to": -1,
             "symptoms": 1,
             "transmission": 1
