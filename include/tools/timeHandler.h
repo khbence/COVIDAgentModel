@@ -19,7 +19,8 @@ enum class Days { MONDAY = 0, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SU
 class Timehandler {
     std::chrono::system_clock::time_point current = std::chrono::system_clock::now();
     std::chrono::minutes timeStep;
-    Days day;
+    Days startDay = Days::MONDAY;
+    unsigned dayOffset = 0;
 
     static constexpr unsigned hoursPerWeek = 168;
     static constexpr unsigned minsPerDay = 1440;
@@ -67,7 +68,7 @@ public:
 
     [[nodiscard]] static std::vector<Days> parseDays(const std::string& rawDays);
 
-    explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0);
+    explicit Timehandler(unsigned timeStep_p, unsigned weeksInTheFuture = 0, Days startDay = Days::MONDAY);
 
     bool HD operator<(const Timehandler& rhs) { return current < rhs.current; }
     bool HD operator>(const Timehandler& rhs) { return current > rhs.current; }

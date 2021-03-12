@@ -77,6 +77,7 @@ public:
     int enableOtherDisease = 1;
     Immunization<Simulation> *immunization;
     float mutationMultiplier;
+    float mutationProgressionScaling=1.0;
     Timehandler simTime;
 
     friend class MovementPolicy<Simulation>;
@@ -90,7 +91,13 @@ public:
             cxxopts::value<int>()->default_value("1"))
             ("mutationMultiplier",
             "infectiousness multiplier for mutated virus ",
-            cxxopts::value<float>()->default_value("1.0"));
+            cxxopts::value<float>()->default_value("1.0"))
+            ("mutationProgressionScaling",
+            "disease progression scaling for mutated virus ",
+            cxxopts::value<float>()->default_value("1.0"))
+            ("startDay",
+            "day of the week to start the simulation with (Monday is 0) ",
+            cxxopts::value<unsigned>()->default_value("0"));
             
         InfectionPolicy<Simulation>::addProgramParameters(options);
         MovementPolicy<Simulation>::addProgramParameters(options);
@@ -236,6 +243,7 @@ public:
         auto& diagnosed = agents->diagnosed;
         unsigned timestamp = simTime.getTimestamp();
         unsigned tracked = locs->tracked;
+        float progressionScaling = mutationProgressionScaling;
         // Update states
         thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(ppstates.begin(),
                              agentMeta.begin(),
@@ -247,7 +255,7 @@ public:
                 agentStats.end(),
                 diagnosed.end(),
                 thrust::make_counting_iterator<unsigned>(0) + ppstates.size())),
-            [timestamp, tracked] HD(
+            [timestamp, tracked, progressionScaling] HD(
                 thrust::tuple<PPState&, AgentMeta&, AgentStats&, bool&, unsigned> tup) {
                 auto& ppstate = thrust::get<0>(tup);
                 auto& meta = thrust::get<1>(tup);
@@ -255,7 +263,7 @@ public:
                 auto& diagnosed = thrust::get<3>(tup);
                 unsigned agentID = thrust::get<4>(tup);
                 bool recovered = ppstate.update(
-                    meta.getScalingSymptoms(), agentStat, timestamp, agentID, tracked);
+                    meta.getScalingSymptoms()*(ppstate.getVariant()==1?progressionScaling:1.0), agentStat, timestamp, agentID, tracked);
                 if (recovered) diagnosed = false;
             });
     }
@@ -347,7 +355,8 @@ public:
 public:
     explicit Simulation(const cxxopts::ParseResult& result)
         : timeStep(result["deltat"].as<decltype(timeStep)>()),
-          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()), simTime(timeStep) {
+          lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()), 
+          simTime(timeStep,0,static_cast<Days>(result["startDay"].as<unsigned>())) {
         PROFILE_FUNCTION();
         outAgentStat = result["outAgentStat"].as<std::string>();
         InfectionPolicy<Simulation>::initializeArgs(result);
@@ -359,6 +368,7 @@ public:
         agents->initializeArgs(result);
         enableOtherDisease = result["otherDisease"].as<int>();
         mutationMultiplier = result["mutationMultiplier"].as<float>();
+        mutationProgressionScaling = result["mutationProgressionScaling"].as<float>();
         DataProvider data{ result };
         try {
             std::string header = PPState_t::initTransitionMatrix(
@@ -393,7 +403,7 @@ public:
     void runSimulation() {
         if (!succesfullyInitialized) { return; }
         PROFILE_FUNCTION();
-        const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks);
+        const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks, Days::MONDAY);
         while (simTime < endOfSimulation) {
             //std::cout << simTime.getTimestamp() << std::endl;
             if (simTime.isMidnight()) {
