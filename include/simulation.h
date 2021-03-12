@@ -323,8 +323,22 @@ public:
 
         //Stayed home count
         stayedHome = stayedHome - stats[10] - stats[11]; //Subtract dead
-        std::cout << stayedHome;
+        std::cout << stayedHome << "\t";
         stats.push_back(stayedHome);
+
+        //Number of immunized
+        stats.push_back(immunization->immunizedToday);
+        std::cout << immunization->immunizedToday << "\t";
+
+        //Number of new infections
+        unsigned timeStepL = timeStep;
+        unsigned newInfected = 
+            thrust::count_if(agentStats.begin(), agentStats.end(),
+                         [timestamp,timeStepL] HD (AgentStats agentStat) {
+                             return (agentStat.infectedTimestamp > timestamp - 24*60/timeStepL && agentStat.infectedTimestamp <= timestamp);
+                         });
+        stats.push_back(newInfected);
+        std::cout << newInfected;
 
         std::cout << '\n';
         return stats;
@@ -365,7 +379,7 @@ public:
                 data.acquireProgressionMatrices(),
                 data.acquireLocationTypes());
             RandomGenerator::resize(agents->PPValues.size());
-            statesHeader = header + "H\tT\tP1\tP2\tQ\tQT\tNQ\tMUT\tHOM";
+            statesHeader = header + "H\tT\tP1\tP2\tQ\tQT\tNQ\tMUT\tHOM\tVAC\tNI";
             std::cout << statesHeader << '\n';
             ClosurePolicy<Simulation>::init(data.acquireLocationTypes(), data.acquireClosureRules(), statesHeader);
         } catch (const CustomErrors& e) {

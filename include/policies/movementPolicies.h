@@ -237,26 +237,41 @@ namespace RealMovementOps {
 #endif
         void
         doMovement(unsigned i, MovementArguments<PPState, AgentMeta, LocationType>& a) {
+        unsigned& agentType = a.agentTypesPtr[i];
 
         //if not dead or not in hospital (covid or non-covid) go home at curfew
         if (a.enableCurfew && a.curfewBegin == a.simTime.getMinutes()/a.timeStep) {
             states::WBStates wBState = a.agentStatesPtr[i].getWBState();
-            if (wBState != states::WBStates::D && wBState != states::WBStates::S &&
-                !(a.agentStatsPtr[i].hospitalizedTimestamp <= a.timestamp && 
-                  a.agentStatsPtr[i].hospitalizedUntilTimestamp > a.timestamp))
-              a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
-              a.agentLocationsPtr[i] =
-                RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
+            bool deadOrHospitalized  = (wBState == states::WBStates::D || wBState == states::WBStates::S);
+            bool hospitalizedWithNonCOVID = (a.agentStatsPtr[i].hospitalizedTimestamp <= a.timestamp && 
+                  a.agentStatsPtr[i].hospitalizedUntilTimestamp > a.timestamp);
+            if (!deadOrHospitalized &&
+                !hospitalizedWithNonCOVID)
+              if (agentType+1 == 7) { //afternoon shift worker
+                //if currently at work, do nothing
+                unsigned workplace = RealMovementOps::findActualLocationForType(i, a.workType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
                                                             a.homeType, a.schoolType, a.workType,0,nullptr);
-              if (a.tracked == i)
-                printf("Agent %d day %d at %d:%d WBState %d moved to home %d due to curfew\n",
-                i,
-                (int)a.day,
-                a.simTime.getMinutes() / 60,
-                a.simTime.getMinutes() % 60,
-                (int)wBState,
-                a.agentLocationsPtr[i]);
-            return;
+                //if not at workplace, move home, but allow movement later
+                if (a.agentLocationsPtr[i] != workplace)
+                    a.agentLocationsPtr[i] =
+                    RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
+                                                                a.homeType, a.schoolType, a.workType,0,nullptr);
+                    
+              } else {
+                a.stepsUntilMovePtr[i] = a.simTime.getStepsUntilMidnight(a.timeStep);
+                a.agentLocationsPtr[i] =
+                    RealMovementOps::findActualLocationForType(i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
+                                                                a.homeType, a.schoolType, a.workType,0,nullptr);
+                if (a.tracked == i)
+                    printf("Agent %d day %d at %d:%d WBState %d moved to home %d due to curfew\n",
+                    i,
+                    (int)a.day,
+                    a.simTime.getMinutes() / 60,
+                    a.simTime.getMinutes() % 60,
+                    (int)wBState,
+                    a.agentLocationsPtr[i]);
+                return;
+              }
         }
 
         if (a.stepsUntilMovePtr[i] > 0) {
@@ -268,7 +283,6 @@ namespace RealMovementOps {
             a.quarantinedPtr[i] = false;
         }
 
-        unsigned& agentType = a.agentTypesPtr[i];
         states::WBStates wBState = a.agentStatesPtr[i].getWBState();
         if (wBState == states::WBStates::D) {// If dead, do not go anywhere
             a.stepsUntilMovePtr[i] = std::numeric_limits<unsigned>::max();
@@ -612,8 +626,9 @@ namespace RealMovementOps {
                         a.possibleTypesPtr,
                         a.homeType, a.schoolType, a.workType, 0, nullptr);
                     wasClosed = std::numeric_limits<unsigned>::max();
+                    bool schoolAndTooOld2 = (newLocationType == a.schoolType || newLocationType == a.classroomType) && a.agentMetaDataPtr[i].getAge() >= a.schoolAgeRestriction;
                     //is that closed too?
-                    if ((a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) && newLocationType != a.workType) {
+                    if (schoolAndTooOld || (a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp) && newLocationType != a.workType) {
                         wasClosed = newLocation;
                         newLocation = RealMovementOps::findActualLocationForType(
                             i, a.homeType, a.locationOffsetPtr, a.possibleLocationsPtr, a.possibleTypesPtr,
@@ -670,6 +685,22 @@ namespace RealMovementOps {
                     checkLarger(i,a);
                 }
             }
+            if (agentType+1 == 7 && a.enableCurfew && (a.curfewBegin <= a.simTime.getMinutes()/a.timeStep || a.curfewEnd > a.simTime.getMinutes()/a.timeStep)) {
+                bool workButClosed = (newLocationType == a.workType && (a.locationStatesPtr[newLocation] == false || a.closedUntilPtr[newLocation]>a.timestamp));
+                if (workButClosed || (newLocationType != a.workType && newLocationType != a.homeType)) {
+                    a.agentLocationsPtr[i] = agentHome;
+                    if (i == a.tracked) {
+                        printf(
+                        "\tCase 2&4- Night shift worker tried moving to locType %d location %d, "
+                        "but it's curfew, moving home to %d for %d steps\n",
+                        newLocationType,
+                        newLocation,
+                        agentHome,
+                        a.stepsUntilMovePtr[i] - 1);
+                    }
+                }
+            }
+
             if (i == a.tracked) {
                 if (wasClosed == std::numeric_limits<unsigned>::max())
                     printf(
