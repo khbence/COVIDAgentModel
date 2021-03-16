@@ -1,4 +1,4 @@
-function solution = transition_healthy(stateName_data, average_days, maximum_days, parameters)
+function solution = transition_average(stateName_data, average_days, maximum_days, parameters)
     %number of states: 11 --> length of average_days: 11, length of maximum_days: 11
     
     solution.states = states(stateName_data, average_days, maximum_days, parameters);

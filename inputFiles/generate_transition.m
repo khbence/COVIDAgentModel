@@ -20,9 +20,10 @@ basic = 0.0064;
 %illnesses
 illnesses=["diabetes",0.0412; "cardiovascular", 0.0637; "chronickidney", 0.0784; "chronicobstructivepulmonary", 0.0862];
 %ratio, cube root
-illnesses_multiplier = [nthroot(str2double(illnesses(1,2))/basic,3); nthroot(str2double(illnesses(2,2))/basic,3); nthroot(str2double(illnesses(3,2))/basic,3); nthroot(str2double(illnesses(4,2))/basic,3)];
-%% Inputs: decreasing fatal outcome directly for healthy agents (and indirectly for agents with preconds)
-parameters_ages(:,4) = parameters_ages(:,4)*0.9;
+illnesses_MultiplierToHealthy = [nthroot(str2double(illnesses(1,2))/basic,3); nthroot(str2double(illnesses(2,2))/basic,3); nthroot(str2double(illnesses(3,2))/basic,3); nthroot(str2double(illnesses(4,2))/basic,3)];
+%% Inputs: decreasing the prob. of path towards the fatal outcome directly for healthy agents (and indirectly for agents with preconds)
+%parameters_ages(:,4) = parameters_ages(:,4)*0.9; %modifying only the prob. of mortaility
+healthy_MultiplierToAverage = nthroot(0.9,3);
 %% generate config
 fid = fopen(strcat('transition_config.json'),'wt');
 solution_config = transition_config(stateNames, WB, ages, illnesses);
@@ -41,8 +42,26 @@ fprintf(fid, str);
 fclose(fid);
 %%
 for i_age=1:size(parameters_ages,1)
+    
+    solution_average = transition_average(stateNames, average_days, maximum_days, parameters_ages(i_age,:)); %from Gergely Röst et al.
+    %generate healthy:
+    for i_states=1:length(solution_average.states)
+        if (strcmp(solution_average.states(i_states).stateName, 'I1'))
+            solution_healthy = updating_parameters(solution_average, i_states, 'I3', healthy_MultiplierToAverage, true); %I3 and I4
+        end
+        if (strcmp(solution_average.states(i_states).stateName, 'I3'))
+            solution_healthy = updating_parameters(solution_healthy, i_states, 'I6_h', healthy_MultiplierToAverage, false);
+        end
+        if (strcmp(solution_average.states(i_states).stateName, 'I4'))
+            solution_healthy = updating_parameters(solution_healthy, i_states, 'I6_h', healthy_MultiplierToAverage, false);
+        end
+        if (strcmp(solution_average.states(i_states).stateName, 'I6_h'))
+            solution_healthy = updating_parameters(solution_healthy, i_states, 'D1', healthy_MultiplierToAverage, false);
+            break
+        end
+    end
+    
     fid = fopen(strcat('transition_illness0_',num2str(i_age),'.json'),'wt');
-    solution_healthy = transition_healthy(stateNames, average_days, maximum_days, parameters_ages(i_age,:));
     str = jsonencode(solution_healthy);
     str = strrep(str, ',', sprintf(',\r'));
     str = strrep(str, '{', sprintf('{\r'));
@@ -53,20 +72,20 @@ for i_age=1:size(parameters_ages,1)
     str = strrep(str, '}]', sprintf('\r}\r]'));    
     fprintf(fid, str);
     fclose(fid);
-    
-    for i_illness=1:length(illnesses_multiplier)
+    %generate illnesses:
+    for i_illness=1:length(illnesses_MultiplierToHealthy)
         for i_states=1:length(solution_healthy.states)
             if (strcmp(solution_healthy.states(i_states).stateName, 'I1'))
-                solution = updating_parameters(solution_healthy, i_states, 'I3', illnesses_multiplier(i_illness), true); %I3 and I4
+                solution = updating_parameters(solution_healthy, i_states, 'I3', illnesses_MultiplierToHealthy(i_illness), true); %I3 and I4
             end
             if (strcmp(solution_healthy.states(i_states).stateName, 'I3'))
-                solution = updating_parameters(solution, i_states, 'I6_h', illnesses_multiplier(i_illness), false);
+                solution = updating_parameters(solution, i_states, 'I6_h', illnesses_MultiplierToHealthy(i_illness), false);
             end
             if (strcmp(solution_healthy.states(i_states).stateName, 'I4'))
-                solution = updating_parameters(solution, i_states, 'I6_h', illnesses_multiplier(i_illness), false);
+                solution = updating_parameters(solution, i_states, 'I6_h', illnesses_MultiplierToHealthy(i_illness), false);
             end
             if (strcmp(solution_healthy.states(i_states).stateName, 'I6_h'))
-                solution = updating_parameters(solution, i_states, 'D1', illnesses_multiplier(i_illness), false);
+                solution = updating_parameters(solution, i_states, 'D1', illnesses_MultiplierToHealthy(i_illness), false);
                 break
             end
         end
@@ -85,38 +104,38 @@ for i_age=1:size(parameters_ages,1)
     end
 end
 
-function solution_new = updating_parameters(solution, from_number, to, illnesses_multiplier, special)
-for i_progressions = 1:length(solution.states(from_number).progressions) %osszes szomszed
-    if (strcmp(solution.states(from_number).progressions{1, i_progressions}.name, to)) %ha a szomszed = to
+function solution_new = updating_parameters(solution, from_number, to, multiplier, special)
+for i_progressions = 1:length(solution.states(from_number).progressions) %every neighbours
+    if (strcmp(solution.states(from_number).progressions{1, i_progressions}.name, to)) %if the neighbour = to
         if (~special)
             remainder_prev = 1 - solution.states(from_number).progressions{1, i_progressions}.chance; %save 1-p
             %modify p:
-            if (solution.states(from_number).progressions{1, i_progressions}.chance*illnesses_multiplier <= 1)
-                solution.states(from_number).progressions{1, i_progressions}.chance = solution.states(from_number).progressions{1, i_progressions}.chance*illnesses_multiplier;
+            if (solution.states(from_number).progressions{1, i_progressions}.chance*multiplier <= 1)
+                solution.states(from_number).progressions{1, i_progressions}.chance = solution.states(from_number).progressions{1, i_progressions}.chance*multiplier;
             else
                 solution.states(from_number).progressions{1, i_progressions}.chance = 1;
             end
             
             remainder_new = 1 - solution.states(from_number).progressions{1, i_progressions}.chance; %save new 1-p
-            for i_progressions_2 = 1:length(solution.states(from_number).progressions) %osszes szomszed
-                if (~strcmp(solution.states(from_number).progressions{1, i_progressions_2}.name, to)) %ha szomszed != to
+            for i_progressions_2 = 1:length(solution.states(from_number).progressions) %every neighbours
+                if (~strcmp(solution.states(from_number).progressions{1, i_progressions_2}.name, to)) %if the neighbour != to
                     solution.states(from_number).progressions{1, i_progressions_2}.chance = solution.states(from_number).progressions{1, i_progressions_2}.chance/remainder_prev*remainder_new; %modify !p
                 end
             end
         else
             remainder_prev = 1 - 2*solution.states(from_number).progressions{1, i_progressions}.chance; %save 1-p
             %modify p:
-            if (solution.states(from_number).progressions{1, i_progressions}.chance*illnesses_multiplier <= 0.5)
-                solution.states(from_number).progressions{1, i_progressions}.chance = solution.states(from_number).progressions{1, i_progressions}.chance*illnesses_multiplier;
-                solution.states(from_number).progressions{1, i_progressions+1}.chance = solution.states(from_number).progressions{1, i_progressions+1}.chance*illnesses_multiplier;
+            if (solution.states(from_number).progressions{1, i_progressions}.chance*multiplier <= 0.5)
+                solution.states(from_number).progressions{1, i_progressions}.chance = solution.states(from_number).progressions{1, i_progressions}.chance*multiplier;
+                solution.states(from_number).progressions{1, i_progressions+1}.chance = solution.states(from_number).progressions{1, i_progressions+1}.chance*multiplier;
             else
                 solution.states(from_number).progressions{1, i_progressions}.chance = 0.5;
                 solution.states(from_number).progressions{1, i_progressions+1}.chance = 0.5;
             end
             
             remainder_new = 1 - 2*solution.states(from_number).progressions{1, i_progressions}.chance; %save new 1-p
-            for i_progressions_2 = 1:length(solution.states(from_number).progressions) %osszes szomszed
-                if (~strcmp(solution.states(from_number).progressions{1, i_progressions_2}.name, to) && ~strcmp(solution.states(from_number).progressions{1, i_progressions_2}.name, 'I4')) %ha szomszed != to
+            for i_progressions_2 = 1:length(solution.states(from_number).progressions) %every neighbours
+                if (~strcmp(solution.states(from_number).progressions{1, i_progressions_2}.name, to) && ~strcmp(solution.states(from_number).progressions{1, i_progressions_2}.name, 'I4')) %if the neighbour != to
                     solution.states(from_number).progressions{1, i_progressions_2}.chance = solution.states(from_number).progressions{1, i_progressions_2}.chance/remainder_prev*remainder_new; %modify !p
                 end
             end
