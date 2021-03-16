@@ -13,10 +13,10 @@
       ]
     },
     {
-      "name": "nov_11_jan11",
+      "name": "nov_11-",
       "conditionType": "afterDays",
       "threshold": 49,
-      "openAfter": 59,
+      "openAfter": 400,
       "closeAfter": -1,
       "parameter": 0,
       "locationTypesToClose": [
@@ -27,22 +27,11 @@
       ]
     },
     {
-      "name": "jan11-",
+      "name": "ExposeToMutation",
       "conditionType": "afterDays",
-      "threshold": 108,
-      "openAfter": 320,
-      "closeAfter": -1,
-      "parameter": 0,
-      "locationTypesToClose": [
-        5,6,
-        22,44
-      ]
-    },
-    {
-      "name": "ExposeToMutation","threshold": 100,
-      "parameter": 27e-5,
-      "conditionType": "afterDays",
-      "openAfter": 1,
+      "threshold": 110,
+      "openAfter": 6,
+      "parameter": 10e-5,
       "closeAfter": -1,
       "locationTypesToClose": [
 
@@ -57,7 +46,7 @@
       "parameter": 14,
       "locationTypesToClose": [
         3
-        ]
+      ]
     },
     {
       "name": "Curfew",
@@ -94,17 +83,19 @@
     },
 
     {
-      "name": "Masks","parameter": 1.0,
+      "name": "Masks",
+      "parameter": 1.0,
       "conditionType": "afterDays",
       "threshold": 0,
-      "openAfter": 400,
+      "openAfter": 370,
       "closeAfter": -1,
       "locationTypesToClose": [
 
       ]
     },
     {
-      "name": "ReduceMovement","parameter": 0.094929,
+      "name": "ReduceMovement",
+      "parameter": 0.094929,
       "conditionType": "afterDays",
       "threshold": 49,
       "openAfter": 52,

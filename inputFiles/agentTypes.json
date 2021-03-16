@@ -19,82 +19,175 @@
                 }, 
                 {
                     "WB":"N", 
-                    "dayType":"WEEKDAYS", 
-                    "schedule":[
-                        {
-                            "type":14, 
-                            "chance":0.3, 
-                            "start":8, 
-                            "end":17, 
-                            "duration":1.3
-                        }
-                    ]
+                    "dayType":"WEEKDAYS",
+                  "schedule": [
+                    {
+                      "type": 14,
+                      "chance": 0.15,
+                      "start": 8,
+                      "end": 12,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.85,
+                      "start": 8,
+                      "end": 12,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 14,
+                      "chance": 0.15,
+                      "start": 12,
+                      "end": 16,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.85,
+                      "start": 12,
+                      "end": 16,
+                      "duration": 1.3
+                    }
+
+                  ]
                 }, 
                 {
                     "WB":"M", 
-                    "dayType":"WEEKDAYS", 
-                    "schedule":[
-                        {
-                            "type":14, 
-                            "chance":0.6, 
-                            "start":8, 
-                            "end":17, 
-                            "duration":1.3
-                        }, 
-                        {
-                            "type":12, 
-                            "chance":0.2, 
-                            "start":8, 
-                            "end":17, 
-                            "duration":1.3
-                        }
-                    ]
+                    "dayType":"WEEKDAYS",
+                  "schedule": [
+                    {
+                      "type": 14,
+                      "chance": 0.3,
+                      "start": 8,
+                      "end": 12,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.7,
+                      "start": 8,
+                      "end": 12,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 14,
+                      "chance": 0.3,
+                      "start": 12,
+                      "end": 16,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 12,
+                      "chance": 0.2,
+                      "start": 12,
+                      "end": 16,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.5,
+                      "start": 12,
+                      "end": 16,
+                      "duration": 1.3
+                    }
+
+                  ]
                 }, 
                 {
                     "WB":"W", 
-                    "dayType":"WEEKENDS", 
-                    "schedule":[
-                        {
-                            "type":10, 
-                            "chance":0.85, 
-                            "start":8, 
-                            "end":17, 
-                            "duration":2
-                        }
-                    ]
+                    "dayType":"WEEKENDS",
+                  "schedule": [
+                    {
+                      "type": 10,
+                      "chance": 0.85,
+                      "start": 8,
+                      "end": 17,
+                      "duration": 2
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.15,
+                      "start": 8,
+                      "end": 17,
+                      "duration": 1.3
+                    }
+                  ]
                 }, 
                 {
                     "WB":"N", 
-                    "dayType":"WEEKENDS", 
-                    "schedule":[
-                        {
-                            "type":14, 
-                            "chance":0.3, 
-                            "start":8, 
-                            "end":17, 
-                            "duration":1.3
-                        }
-                    ]
+                    "dayType":"WEEKENDS",
+                  "schedule": [
+                    {
+                      "type": 14,
+                      "chance": 0.15,
+                      "start": 8,
+                      "end": 12,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.85,
+                      "start": 8,
+                      "end": 12,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 14,
+                      "chance": 0.15,
+                      "start": 12,
+                      "end": 16,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.85,
+                      "start": 12,
+                      "end": 16,
+                      "duration": 1.3
+                    }
+                  ]
                 }, 
                 {
                     "WB":"M", 
-                    "dayType":"WEEKENDS", 
-                    "schedule":[
-                        {
-                            "type":14, 
-                            "chance":0.6, 
-                            "start":8, 
-                            "end":17, 
-                            "duration":1.3
-                        }, 
-                        {
-                            "type":12, 
-                            "chance":0.2, 
-                            "start":8, 
-                            "end":17, 
-                            "duration":1.3
-                        }
-                    ]
+                    "dayType":"WEEKENDS",
+                  "schedule": [
+                    {
+                      "type": 14,
+                      "chance": 0.3,
+                      "start": 8,
+                      "end": 12,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.7,
+                      "start": 8,
+                      "end": 12,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 14,
+                      "chance": 0.3,
+                      "start": 12,
+                      "end": 16,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 12,
+                      "chance": 0.2,
+                      "start": 12,
+                      "end": 16,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.5,
+                      "start": 12,
+                      "end": 16,
+                      "duration": 1.3
+                    }
+                  ]
                 }, 
                 {
                     "WB":"S", 
@@ -501,18 +594,25 @@
                         }, 
                         {
                             "type":2, 
-                            "chance":0.7, 
+                            "chance":0.5, 
                             "start":13, 
                             "end":14, 
                             "duration":6
-                        }, 
-                        {
-                            "type":14, 
-                            "chance":0.3, 
-                            "start":13, 
-                            "end":14, 
-                            "duration":1.3
-                        }
+                        },
+                      {
+                        "type": 14,
+                        "chance": 0.3,
+                        "start": 13,
+                        "end": 14,
+                        "duration": 1.3
+                      },
+                      {
+                        "type": 12,
+                        "chance": 0.2,
+                        "start": 13,
+                        "end": 14,
+                        "duration": 1.3
+                      }
                     ]
                 }, 
                 {
@@ -748,7 +848,7 @@
                         }, 
                         {
                             "type":2, 
-                            "chance":0.9, 
+                            "chance":0.7, 
                             "start":8, 
                             "end":9, 
                             "duration":5
@@ -757,7 +857,7 @@
                             "type":14, 
                             "chance":0.2, 
                             "start":8, 
-                            "end":13, 
+                            "end":9, 
                             "duration":1.3
                         }, 
                         {
@@ -1294,7 +1394,7 @@
                         }, 
                         {
                             "type":2, 
-                            "chance":0.9, 
+                            "chance":0.925, 
                             "start":18, 
                             "end":20, 
                             "duration":6
@@ -2030,7 +2130,7 @@
                     },
                     {
                       "type": 2,
-                      "chance": 0.4,
+                      "chance": 0.45,
                       "start": 16,
                       "end": 18,
                       "duration": 6
@@ -2065,7 +2165,7 @@
                     },
                     {
                       "type": 2,
-                      "chance": 0.55,
+                      "chance": 0.5,
                       "start": 18,
                       "end": 20,
                       "duration": 6
@@ -2100,7 +2200,7 @@
                     },
                     {
                       "type": 2,
-                      "chance": 0.75,
+                      "chance": 0.8,
                       "start": 20,
                       "end": 21,
                       "duration": 6
@@ -2288,7 +2388,7 @@
                     },
                     {
                       "type": 2,
-                      "chance": 0.775,
+                      "chance": 0.825,
                       "start": 18,
                       "end": 20,
                       "duration": 6
@@ -2323,7 +2423,7 @@
                     },
                     {
                       "type": 2,
-                      "chance": 0.875,
+                      "chance": 0.9,
                       "start": 20,
                       "end": 21,
                       "duration": 6
@@ -2378,7 +2478,7 @@
                         }, 
                         {
                             "type":2, 
-                            "chance":0.825, 
+                            "chance":0.925, 
                             "start":8, 
                             "end":10, 
                             "duration":6
@@ -2776,7 +2876,7 @@
                     },
                     {
                       "type": 2,
-                      "chance": 0.75,
+                      "chance": 0.8,
                       "start": 13,
                       "end": 15,
                       "duration": 6
@@ -2791,8 +2891,8 @@
                     {
                       "type": 5,
                       "chance": 0.05,
-                      "start": 18,
-                      "end": 20,
+                      "start": 13,
+                      "end": 15,
                       "duration": 2
                     },
                     {
@@ -3056,7 +3156,7 @@
                       "type": 4,
                       "chance": 1,
                       "start": 9,
-                      "end": 14,
+                      "end": 12,
                       "duration": 8
                     },
                     {
@@ -3065,6 +3165,13 @@
                       "start": 12,
                       "end": 14,
                       "duration": 2
+                    },
+                    {
+                      "type": 4,
+                      "chance": 0.9,
+                      "start": 12,
+                      "end": 14,
+                      "duration": 8
                     },
                     {
                       "type": 4,
@@ -3124,7 +3231,7 @@
                     },
                     {
                       "type": 2,
-                      "chance": 0.4,
+                      "chance": 0.5,
                       "start": 16,
                       "end": 17,
                       "duration": 6
@@ -3201,7 +3308,7 @@
                     },
                     {
                       "type": 2,
-                      "chance": 0.65,
+                      "chance": 0.7,
                       "start": 18,
                       "end": 20,
                       "duration": 6
@@ -3231,7 +3338,7 @@
                       "type": 7,
                       "chance": 0.05,
                       "start": 20,
-                      "end": 21,
+                      "end": 22,
                       "duration": 0.3
                     },
                     {
@@ -3269,6 +3376,13 @@
                       "duration": 6
                     },
                     {
+                      "type": 14,
+                      "chance": 0.15,
+                      "start": 7,
+                      "end": 9,
+                      "duration": 1.3
+                    },
+                    {
                       "type": 4,
                       "chance": 0.5,
                       "start": 7,
@@ -3281,6 +3395,13 @@
                       "start": 12,
                       "end": 14,
                       "duration": 2
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.95,
+                      "start": 12,
+                      "end": 14,
+                      "duration": 6
                     },
                     {
                       "type": 2,
@@ -3354,7 +3475,7 @@
                     },
                     {
                       "type": 2,
-                      "chance": 0.825,
+                      "chance": 0.85,
                       "start": 18,
                       "end": 20,
                       "duration": 6
@@ -3384,7 +3505,7 @@
                       "type": 7,
                       "chance": 0.025,
                       "start": 20,
-                      "end": 21,
+                      "end": 22,
                       "duration": 0.3
                     },
                     {
@@ -3412,163 +3533,177 @@
                 }, 
                 {
                     "WB":"M", 
-                    "dayType":"WEEKDAYS", 
-                    "schedule":[
-                        {
-                            "type":2, 
-                            "chance":0.8, 
-                            "start":7, 
-                            "end":8, 
-                            "duration":6
-                        }, 
-                        {
-                            "type":4, 
-                            "chance":0.2, 
-                            "start":7, 
-                            "end":8, 
-                            "duration":8
-                        }, 
-                        {
-                            "type":14, 
-                            "chance":0.3, 
-                            "start":8, 
-                            "end":14, 
-                            "duration":1.3
-                        }, 
-                        {
-                            "type":4, 
-                            "chance":0.1, 
-                            "start":14, 
-                            "end":16, 
-                            "duration":8
-                        }, 
-                        {
-                            "type":2, 
-                            "chance":0.8, 
-                            "start":14, 
-                            "end":16, 
-                            "duration":6
-                        }, 
-                        {
-                            "type":8, 
-                            "chance":0.02, 
-                            "start":14, 
-                            "end":16, 
-                            "duration":1
-                        }, 
-                        {
-                            "type":10, 
-                            "chance":0.03, 
-                            "start":14, 
-                            "end":16, 
-                            "duration":2
-                        }, 
-                        {
-                            "type":7, 
-                            "chance":0.05, 
-                            "start":14, 
-                            "end":16, 
-                            "duration":0.3
-                        }, 
-                        {
-                            "type":2, 
-                            "chance":0.5, 
-                            "start":16, 
-                            "end":17, 
-                            "duration":6
-                        }, 
-                        {
-                            "type":14, 
-                            "chance":0.3, 
-                            "start":16, 
-                            "end":17, 
-                            "duration":1.3
-                        }, 
-                        {
-                            "type":12, 
-                            "chance":0.2, 
-                            "start":16, 
-                            "end":17, 
-                            "duration":1.3
-                        }, 
-                        {
-                            "type":4, 
-                            "chance":0.1, 
-                            "start":17, 
-                            "end":18, 
-                            "duration":8
-                        }, 
-                        {
-                            "type":7, 
-                            "chance":0.025, 
-                            "start":17, 
-                            "end":18, 
-                            "duration":0.3
-                        }, 
-                        {
-                            "type":2, 
-                            "chance":0.825, 
-                            "start":17, 
-                            "end":18, 
-                            "duration":6
-                        }, 
-                        {
-                            "type":10, 
-                            "chance":0.025, 
-                            "start":17, 
-                            "end":18, 
-                            "duration":2
-                        }, 
-                        {
-                            "type":8, 
-                            "chance":0.025, 
-                            "start":17, 
-                            "end":18, 
-                            "duration":1
-                        }, 
-                        {
-                            "type":7, 
-                            "chance":0.025, 
-                            "start":18, 
-                            "end":20, 
-                            "duration":0.3
-                        }, 
-                        {
-                            "type":2, 
-                            "chance":0.925, 
-                            "start":18, 
-                            "end":20, 
-                            "duration":6
-                        }, 
-                        {
-                            "type":8, 
-                            "chance":0.025, 
-                            "start":18, 
-                            "end":20, 
-                            "duration":1
-                        }, 
-                        {
-                            "type":7, 
-                            "chance":0.025, 
-                            "start":20, 
-                            "end":22, 
-                            "duration":0.3
-                        }, 
-                        {
-                            "type":2, 
-                            "chance":0.925, 
-                            "start":20, 
-                            "end":22, 
-                            "duration":6
-                        }, 
-                        {
-                            "type":8, 
-                            "chance":0.025, 
-                            "start":20, 
-                            "end":22, 
-                            "duration":1
-                        }
-                    ]
+                    "dayType":"WEEKDAYS",
+                  "schedule": [
+                    {
+                      "type": 2,
+                      "chance": 0.8,
+                      "start": 7,
+                      "end": 8,
+                      "duration": 6
+                    },
+                    {
+                      "type": 4,
+                      "chance": 0.2,
+                      "start": 7,
+                      "end": 8,
+                      "duration": 8
+                    },
+                    {
+                      "type": 14,
+                      "chance": 0.3,
+                      "start": 8,
+                      "end": 14,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.5,
+                      "start": 7,
+                      "end": 8,
+                      "duration": 6
+                    },
+                    {
+                      "type": 4,
+                      "chance": 0.2,
+                      "start": 7,
+                      "end": 8,
+                      "duration": 8
+                    },
+                    {
+                      "type": 4,
+                      "chance": 0.1,
+                      "start": 14,
+                      "end": 16,
+                      "duration": 8
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.8,
+                      "start": 14,
+                      "end": 16,
+                      "duration": 6
+                    },
+                    {
+                      "type": 8,
+                      "chance": 0.02,
+                      "start": 14,
+                      "end": 16,
+                      "duration": 1
+                    },
+                    {
+                      "type": 10,
+                      "chance": 0.03,
+                      "start": 14,
+                      "end": 16,
+                      "duration": 2
+                    },
+                    {
+                      "type": 7,
+                      "chance": 0.05,
+                      "start": 14,
+                      "end": 16,
+                      "duration": 0.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.5,
+                      "start": 16,
+                      "end": 17,
+                      "duration": 6
+                    },
+                    {
+                      "type": 14,
+                      "chance": 0.3,
+                      "start": 16,
+                      "end": 17,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 12,
+                      "chance": 0.2,
+                      "start": 16,
+                      "end": 17,
+                      "duration": 1.3
+                    },
+                    {
+                      "type": 4,
+                      "chance": 0.1,
+                      "start": 17,
+                      "end": 18,
+                      "duration": 8
+                    },
+                    {
+                      "type": 7,
+                      "chance": 0.025,
+                      "start": 17,
+                      "end": 18,
+                      "duration": 0.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.825,
+                      "start": 17,
+                      "end": 18,
+                      "duration": 6
+                    },
+                    {
+                      "type": 10,
+                      "chance": 0.025,
+                      "start": 17,
+                      "end": 18,
+                      "duration": 2
+                    },
+                    {
+                      "type": 8,
+                      "chance": 0.025,
+                      "start": 17,
+                      "end": 18,
+                      "duration": 1
+                    },
+                    {
+                      "type": 7,
+                      "chance": 0.025,
+                      "start": 18,
+                      "end": 20,
+                      "duration": 0.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.95,
+                      "start": 18,
+                      "end": 20,
+                      "duration": 6
+                    },
+                    {
+                      "type": 8,
+                      "chance": 0.025,
+                      "start": 18,
+                      "end": 20,
+                      "duration": 1
+                    },
+                    {
+                      "type": 7,
+                      "chance": 0.025,
+                      "start": 20,
+                      "end": 22,
+                      "duration": 0.3
+                    },
+                    {
+                      "type": 2,
+                      "chance": 0.95,
+                      "start": 20,
+                      "end": 22,
+                      "duration": 6
+                    },
+                    {
+                      "type": 8,
+                      "chance": 0.025,
+                      "start": 20,
+                      "end": 22,
+                      "duration": 1
+                    }
+                  ]
                 }, 
                 {
                     "WB":"W", 
@@ -4216,7 +4351,7 @@
                 },
                 {
                   "type": 2,
-                  "chance": 0.25,
+                  "chance": 0.3,
                   "start": 18,
                   "end": 20,
                   "duration": 6
@@ -4383,7 +4518,7 @@
                 },
                 {
                   "type": 2,
-                  "chance": 0.625,
+                  "chance": 0.65,
                   "start": 18,
                   "end": 20,
                   "duration": 6
@@ -4529,7 +4664,7 @@
                 },
                 {
                   "type": 2,
-                  "chance": 0.775,
+                  "chance": 0.85,
                   "start": 18,
                   "end": 20,
                   "duration": 6
@@ -5119,7 +5254,7 @@
                     },
                     {
                       "type": 2,
-                      "chance": 0.6,
+                      "chance": 0.7,
                       "start": 12,
                       "end": 14,
                       "duration": 6
@@ -6951,9 +7086,10 @@
                             "end":22, 
                             "duration":1.3
                         }
-                    ]
+				    ]
                 }
             ]
         }
     ]
 }
+						
