@@ -1,5 +1,5 @@
 %% Inputs
-% relative infectiousness: 0.75 for I2; 0.2 for I5_h and I6_h
+% relative infectiousness: 0.75 for I2; 0.1 for I5_h and I6_h
 % accuracyPCR: 1 for E, I...
 % accuracyAntigen: 0.25 for E; 0.5 for I1-I4; 0.25 for I5_h and Ih_6
 
@@ -184,7 +184,7 @@ function solution=transition_config(stateName_data, WB_data, ages, illnesses)
                     solution.states(i).accuracyAntigen = 0.5;
                 else
                     if (endsWith(solution.states(i).stateName,'_h'))
-                        solution.states(i).infectious = 0.2;
+                        solution.states(i).infectious = 0.1;
                         solution.states(i).accuracyAntigen = 0.1;
                     else
                         solution.states(i).infectious = 1;
