@@ -51,17 +51,17 @@ void Util::updatePerLocationAgentLists(const thrust::device_vector<unsigned>& lo
     thrust::device_vector<unsigned>& locationIdsOfAgents,
     thrust::device_vector<unsigned>& locationAgentList,
     thrust::device_vector<unsigned>& locationListOffsets) {
-    PROFILE_FUNCTION();
+//    PROFILE_FUNCTION();
 
     // Make a copy of locationOfAgents
     thrust::copy(locationOfAgents.begin(), locationOfAgents.end(), locationIdsOfAgents.begin());
     thrust::sequence(locationAgentList.begin(), locationAgentList.end());
     // Now sort by location, so locationAgentList contains agent IDs sorted by
     // location
-    BEGIN_PROFILING("sort")
+    //BEGIN_PROFILING("sort")
     thrust::stable_sort_by_key(
         locationIdsOfAgents.begin(), locationIdsOfAgents.end(), locationAgentList.begin());
-    END_PROFILING("sort")
+    //END_PROFILING("sort")
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     //Count number of people at any given location
     thrust::fill(locationListOffsets.begin(), locationListOffsets.end(), 0);

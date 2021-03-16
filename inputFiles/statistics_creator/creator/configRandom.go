@@ -148,6 +148,9 @@ func CreateConfigRandomData(agentsFile string, locationFile string, ages []AgeIn
 // WriteToFile writes out it's data in JSON format to the file path
 func (crf *ConfigRandomFormat) WriteToFile(file string) error {
 	utils.InfoLogger.Println("Writing out file")
+	utils.InfoLogger.Printf("Number of agents: %d", crf.agentCounter)
+	utils.InfoLogger.Printf("Number of locations: %d", crf.locationCounter)
+	utils.InfoLogger.Printf("Ratio agent/loc: %f", float64(crf.agentCounter)/float64(crf.locationCounter))
 	crf.calculatePercentages()
 	data, err := json.MarshalIndent(crf, "", "    ")
 	if err != nil {

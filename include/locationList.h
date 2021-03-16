@@ -226,7 +226,7 @@ public:
         thrust::device_vector<unsigned>& newlyInfectedAgents,
         bool flagInfectionsAtLocation,
         Timehandler& simTime, uint8_t variant) {
-        PROFILE_FUNCTION();
+//        PROFILE_FUNCTION();
         auto& ppstates = SimulationType::AgentListType::getInstance()->PPValues;
         auto& agentStats = SimulationType::AgentListType::getInstance()->agentStats;
         unsigned timestamp = simTime.getTimestamp();

@@ -376,7 +376,7 @@ public:
 
 
     void infectionsAtLocations(Timehandler& simTime, unsigned timeStep, uint8_t variant) {
-        PROFILE_FUNCTION();
+//        PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
         thrust::device_vector<unsigned>& locationListOffsets =
             realThis->locs

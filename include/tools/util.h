@@ -54,7 +54,7 @@ void reduce_by_location(thrust::device_vector<unsigned>& locationListOffsets,
     unsigned* locationAgentListPtr = thrust::raw_pointer_cast(locationAgentList.data());
     unsigned numAgents = PPValues.size();
 
-    PROFILE_FUNCTION();
+//    PROFILE_FUNCTION();
 
     if (numLocations == 1) {
         fullInfectedCounts[0] =

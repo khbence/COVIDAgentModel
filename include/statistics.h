@@ -31,7 +31,7 @@ public:
 
     const decltype(states)& refreshandGetAfterMidnight(const std::pair<unsigned, unsigned>& agents,
         const thrust::device_vector<unsigned>& locationAgentList) {
-        PROFILE_FUNCTION();
+//        PROFILE_FUNCTION();
         // Extract Idxs
         unsigned numAgentsAtLocation = agents.second - agents.first;
         thrust::device_vector<char> idxs(numAgentsAtLocation);

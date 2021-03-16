@@ -201,7 +201,7 @@ void DataProvider::randomStates() {
 }
 
 DataProvider::DataProvider(const cxxopts::ParseResult& result) {
-    PROFILE_FUNCTION();
+//    PROFILE_FUNCTION();
     readParameters(result["parameters"].as<std::string>());
     readProgressionMatrices(result["progression"].as<std::string>());
     readClosureRules(result["closures"].as<std::string>());
