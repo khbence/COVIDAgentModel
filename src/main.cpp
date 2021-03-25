@@ -63,7 +63,7 @@ cxxopts::Options defineProgramParameters() {
 }
 
 int main(int argc, char** argv) {
-    BEGIN_PROFILING("main");
+    BEGIN_PROFILING("init");
 
     auto options = defineProgramParameters();
     config::Simulation_t::addProgramParameters(options);
@@ -81,9 +81,10 @@ int main(int argc, char** argv) {
 
     RandomGenerator::init(omp_get_max_threads());
     config::Simulation_t s{ result };
-
+    END_PROFILING("init");
+    BEGIN_PROFILING("runSimulation");
     s.runSimulation();
-    END_PROFILING("main");
+    END_PROFILING("runSimulation");
     Timing::report();
     return EXIT_SUCCESS;
 }

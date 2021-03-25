@@ -417,11 +417,17 @@ public:
                 immunization->update(simTime, timeStep);
                 END_PROFILING("midnight");
             }
+            BEGIN_PROFILING("movementUpper");
             MovementPolicy<Simulation>::movement(simTime, timeStep);
+            END_PROFILING("movementUpper");
+            BEGIN_PROFILING("step");
             ClosurePolicy<Simulation>::step(simTime, timeStep);
+            END_PROFILING("step");
+            BEGIN_PROFILING("infect");
             InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep, 0);
             if (mutationMultiplier != 1.0f)
                 InfectionPolicy<Simulation>::infectionsAtLocations(simTime, timeStep, 1);
+            END_PROFILING("infect");
             ++simTime;
         }
         agents->printAgentStatJSON(outAgentStat);
