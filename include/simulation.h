@@ -108,7 +108,7 @@ public:
     }
 
     void otherDisease(Timehandler& simTime, unsigned timeStep) {
-        PROFILE_FUNCTION();
+        //PROFILE_FUNCTION();
         auto& ppstates = agents->PPValues;
         auto& agentStats = agents->agentStats;
         auto& agentMeta = agents->agentMetaData;
@@ -236,7 +236,7 @@ public:
     }
 
     void updateAgents(Timehandler& simTime) {
-        PROFILE_FUNCTION();
+        //PROFILE_FUNCTION();
         auto& ppstates = agents->PPValues;
         auto& agentStats = agents->agentStats;
         auto& agentMeta = agents->agentMetaData;
@@ -269,7 +269,7 @@ public:
     }
 
     std::vector<unsigned> refreshAndPrintStatistics(Timehandler& simTime) {
-        PROFILE_FUNCTION();
+        //PROFILE_FUNCTION();
         //COVID
         auto result = locs->refreshAndGetStatistic();
         for (auto val : result) { std::cout << val << "\t"; }
@@ -357,7 +357,7 @@ public:
         : timeStep(result["deltat"].as<decltype(timeStep)>()),
           lengthOfSimulationWeeks(result["weeks"].as<decltype(lengthOfSimulationWeeks)>()), 
           simTime(timeStep,0,static_cast<Days>(result["startDay"].as<unsigned>())) {
-        PROFILE_FUNCTION();
+        //PROFILE_FUNCTION();
         outAgentStat = result["outAgentStat"].as<std::string>();
         InfectionPolicy<Simulation>::initializeArgs(result);
         MovementPolicy<Simulation>::initializeArgs(result);
@@ -402,11 +402,12 @@ public:
 
     void runSimulation() {
         if (!succesfullyInitialized) { return; }
-        PROFILE_FUNCTION();
+        //PROFILE_FUNCTION();
         const Timehandler endOfSimulation(timeStep, lengthOfSimulationWeeks, Days::MONDAY);
         while (simTime < endOfSimulation) {
             //std::cout << simTime.getTimestamp() << std::endl;
             if (simTime.isMidnight()) {
+                BEGIN_PROFILING("midnight");
                 if (simTime.getTimestamp() > 0) TestingPolicy<Simulation>::performTests(simTime, timeStep);
                 if (simTime.getTimestamp() > 0) updateAgents(simTime);// No disease progression at launch
                 if (enableOtherDisease) otherDisease(simTime,timeStep);
@@ -414,6 +415,7 @@ public:
                 ClosurePolicy<Simulation>::midnight(simTime, timeStep, stats);
                 MovementPolicy<Simulation>::planLocations(simTime, timeStep);
                 immunization->update(simTime, timeStep);
+                END_PROFILING("midnight");
             }
             MovementPolicy<Simulation>::movement(simTime, timeStep);
             ClosurePolicy<Simulation>::step(simTime, timeStep);

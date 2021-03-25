@@ -27,6 +27,7 @@ void extractOffsets(unsigned* locOfAgents,
     unsigned* locationListOffsets,
     unsigned length,
     unsigned nLocs) {
+    PROFILE_FUNCTION();
 #if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_OMP
     locationListOffsets[0] = 0;
 #pragma omp parallel for
@@ -62,7 +63,7 @@ void Util::updatePerLocationAgentLists(const thrust::device_vector<unsigned>& lo
     thrust::stable_sort_by_key(
         locationIdsOfAgents.begin(), locationIdsOfAgents.end(), locationAgentList.begin());
     END_PROFILING("sort")
-#if THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
+#if 0 // THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
     //Count number of people at any given location
     thrust::fill(locationListOffsets.begin(), locationListOffsets.end(), 0);
     reduce_by_location(locationListOffsets,

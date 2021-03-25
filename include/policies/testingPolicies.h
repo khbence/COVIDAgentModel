@@ -319,7 +319,7 @@ public:
     }
 
     void performTests(Timehandler simTime, unsigned timeStep) {
-        PROFILE_FUNCTION();
+        //PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
         DetailedTestingOps::TestingArguments<typename SimulationType::PPState_t, typename SimulationType::TypeOfLocation_t> a;
 

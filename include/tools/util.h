@@ -54,7 +54,7 @@ void reduce_by_location(thrust::device_vector<unsigned>& locationListOffsets,
     unsigned* locationAgentListPtr = thrust::raw_pointer_cast(locationAgentList.data());
     unsigned numAgents = PPValues.size();
 
-    PROFILE_FUNCTION();
+    //PROFILE_FUNCTION();
 
     if (numLocations == 1) {
         fullInfectedCounts[0] =
@@ -72,12 +72,12 @@ void reduce_by_location(thrust::device_vector<unsigned>& locationListOffsets,
             }
         }
 #elif THRUST_DEVICE_SYSTEM == THRUST_DEVICE_SYSTEM_CUDA
-#define ATOMICS
+//#define ATOMICS
 #ifdef ATOMICS
         reduce_by_location_kernel_atomics<<<(numAgents - 1) / 256 + 1, 256>>>(
             agentLocationsPtr, fullInfectedCountsPtr, PPValuesPtr, numAgents, lam);
 #else
-#error "util.cpp's locationListOffsets computation CUDA pathway relies on atomics version, as this one needs locationListOffsets to already exist"
+//#error "util.cpp's locationListOffsets computation CUDA pathway relies on atomics version, as this one needs locationListOffsets to already exist"
         reduce_by_location_kernel<<<(numLocations - 1) / 256 + 1, 256>>>(
             locationListOffsetsPtr, locationAgentListPtr, fullInfectedCountsPtr, PPValuesPtr, numLocations, lam);
 #endif

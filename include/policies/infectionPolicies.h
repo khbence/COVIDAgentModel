@@ -376,7 +376,7 @@ public:
 
 
     void infectionsAtLocations(Timehandler& simTime, unsigned timeStep, uint8_t variant) {
-        PROFILE_FUNCTION();
+        //PROFILE_FUNCTION();
         auto realThis = static_cast<SimulationType*>(this);
         thrust::device_vector<unsigned>& locationListOffsets =
             realThis->locs
@@ -402,6 +402,7 @@ public:
         //
         // Step 1 - Count up infectious people - those who are Infectious
         //
+        BEGIN_PROFILING("InfectiousCounting");
         reduce_by_location(locationListOffsets,
             locationAgentList,
             fullInfectedCounts,
@@ -410,6 +411,7 @@ public:
             [variant] HD(const typename SimulationType::PPState_t& ppstate) -> float {
                 return ppstate.isInfectious(variant);
             });
+        END_PROFILING("InfectiousCounting");
 
         dumpToFileStep1(locationListOffsets,
             locationAgentList,
@@ -421,6 +423,7 @@ public:
         //
         // Step 2 - calculate infection ratios, based on density of infected people
         //
+        BEGIN_PROFILING("InfectiousRatios");
         double tmpK = this->k;
         thrust::transform(thrust::make_zip_iterator(thrust::make_tuple(fullInfectedCounts.begin(),
                               locationListOffsets.begin(),
@@ -448,11 +451,12 @@ public:
                 return y / (60.0 * 24.0 / static_cast<double>(timeStep));*/
                 return 1.0-exp(-tmpK*densityOfInfected*thrust::get<3>(tuple)*static_cast<double>(timeStep));
             });
+        END_PROFILING("InfectiousRatios");
 
         //
         // Step 3 - randomly infect susceptible people
         //
-
+        BEGIN_PROFILING("InfectingAgents");
         LocationsList<SimulationType>::infectAgents(infectionRatios,
             agentLocations,
             infectionFlagAtLocations,
@@ -484,6 +488,7 @@ public:
                 numberOfNewInfectionsAtLocations,
                 simTime, variant);
         }
+        END_PROFILING("InfectingAgents");
 
         dumpToFileStep2(locationListOffsets, locationAgentList, ppstates, agentLocations, simTime, variant);
     }
