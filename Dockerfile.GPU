@@ -1,4 +1,10 @@
-FROM khbence/covid_ppcu:base_cpu as builder
+FROM nvidia/cuda:11.2.1-devel as builder
+CMD [ "nvidia-smi" ]
+
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update
+RUN apt-get -y install cmake
+RUN apt-get -y install libthrust-dev
 
 RUN mkdir -p workdir
 COPY cxxopts workdir/cxxopts
@@ -11,8 +17,8 @@ COPY Makefile workdir/
 COPY CMakeLists.txt workdir/
 
 WORKDIR /workdir
-RUN make buildCPU
+RUN make buildGPU
 
-FROM archlinux/base
+FROM nvidia/cuda:11.2.1-runtime
 COPY --from=builder /workdir/build/covid .
 ENTRYPOINT [ "./covid" ]

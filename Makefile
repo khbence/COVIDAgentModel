@@ -1,8 +1,13 @@
-.PHONY: build buildBaseCPU pushBaseCPU dockerCPU dockerRunCPU
+.PHONY: buildCPU buildGPU buildBaseCPU pushBaseCPU dockerCPU dockerRunCPU dockerGPU dockerRunGPU
 
-build:
+buildCPU:
 	mkdir -p build;
 	cd build; cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_GPU=OFF
+	cd build; make -j
+
+buildGPU:
+	mkdir -p build;
+	cd build; cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_GPU=ON -DARCHITECTURE=61 -DTHRUST_INCLUDE_CUB_CMAKE=ON
 	cd build; make -j
 
 buildBaseCPU:
@@ -16,3 +21,9 @@ dockerCPU:
 
 dockerRunCPU: dockerCPU
 	docker run khbence/covid_ppcu:cpu
+
+dockerGPU:
+	docker build . -f Dockerfile.GPU -t khbence/covid_ppcu:gpu
+
+dockerRunGPU: dockerGPU
+	docker run khbence/covid_ppcu:gpu
